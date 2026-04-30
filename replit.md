@@ -30,6 +30,12 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ### LEXO (`artifacts/oxford-flashcards`)
 
+A bilingual (English + Arabic) English-learning platform. Two pages so far, routed with `wouter`:
+- `/` — public **Landing page** (`src/pages/LandingPage.tsx`): header, hero ("Master English the smart way"), Foundation Package (CEFR A1→B1, Levels 1-3) and Fluency Package (CEFR B1+→C1, Levels 4-6), modules grid (Vocabulary live, Lessons/Speaking/Writing/Listening/Reading/Final Test as Coming Soon), CTA, footer.
+- `/app` — the **Flashcard app** (`src/pages/FlashcardApp.tsx`).
+
+Roadmap: Phase 1 landing (done) → Phase 2 database + auth (PostgreSQL, register-with-access-code, sessions) → Phase 3 student dashboard listing the 7 modules → Phase 4 teacher admin at `/admin` (generate/track access codes per package, approve/reject pending students, manage Vimeo lessons tagged by package) → Phase 5+ build the remaining modules.
+
 Oxford 3000 flashcards with Arabic translations, day/night theme, and consistent native British TTS via OpenAI `fable` voice.
 
 Word list (`src/data/oxford-words.ts`) is parsed from the official Oxford 3000 by CEFR PDF (`attached_assets/The_Oxford_3000_by_CEFR_level_*.pdf`). Words appearing at multiple CEFR levels (homonyms with different POS) are assigned to their lowest level. Total: 2988 words (A1: 898, A2: 795, B1: 690, B2: 605).

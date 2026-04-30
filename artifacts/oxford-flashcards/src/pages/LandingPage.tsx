@@ -281,25 +281,25 @@ export default function LandingPage() {
                   </div>
 
                   {/* Mock flashcard */}
-                  <div className="rounded-2xl bg-gradient-to-br from-violet-500 to-purple-700 p-8 text-center text-white shadow-lg">
-                    <p className="text-4xl font-extrabold tracking-tight">excellent</p>
-                    <p className="mt-2 text-sm italic opacity-90">/ˈek.səl.ənt/</p>
-                    <p className="mt-1 text-[11px] uppercase tracking-widest opacity-80">Adjective</p>
-                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 text-xs font-semibold">
+                  <div className="rounded-2xl bg-gradient-to-br from-violet-100 via-violet-50 to-purple-100 dark:from-violet-900/40 dark:via-violet-900/30 dark:to-purple-900/40 border border-violet-200/70 dark:border-violet-700/40 p-8 text-center shadow-md">
+                    <p className="text-4xl font-extrabold tracking-tight text-violet-900 dark:text-violet-100">excellent</p>
+                    <p className="mt-2 text-sm italic text-violet-600/80 dark:text-violet-300/80">/ˈek.səl.ənt/</p>
+                    <p className="mt-1 text-[11px] uppercase tracking-widest text-violet-500/70 dark:text-violet-300/70">Adjective</p>
+                    <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 dark:bg-violet-800/40 text-violet-700 dark:text-violet-200 text-xs font-semibold border border-violet-200/60 dark:border-violet-700/50">
                       <Volume2 size={12} /> British
                     </div>
                   </div>
 
                   <div className="mt-4 grid grid-cols-4 gap-2">
                     {[
-                      { label: "A1", color: "bg-emerald-500" },
-                      { label: "A2", color: "bg-sky-500" },
-                      { label: "B1", color: "bg-violet-500" },
-                      { label: "B2", color: "bg-amber-500" },
+                      { label: "A1", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300" },
+                      { label: "A2", color: "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300" },
+                      { label: "B1", color: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300" },
+                      { label: "B2", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" },
                     ].map((l) => (
                       <div
                         key={l.label}
-                        className={`${l.color} rounded-lg py-2 text-center text-white text-xs font-bold`}
+                        className={`${l.color} rounded-lg py-2 text-center text-xs font-bold`}
                       >
                         {l.label}
                       </div>

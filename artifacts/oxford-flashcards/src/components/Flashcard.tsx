@@ -113,8 +113,8 @@ function ExampleSpeakButton({ text }: { text: string }) {
         inline-flex items-center justify-center w-8 h-8 rounded-full
         transition-all duration-200 flex-shrink-0 mt-0.5
         ${speaking
-          ? "bg-indigo-500 text-white scale-110"
-          : "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 hover:scale-110 active:scale-95"
+          ? "bg-gradient-to-br from-amber-400 to-orange-500 text-white scale-110 shadow-md"
+          : "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/60 hover:scale-110 active:scale-95"
         }
       `}
     >
@@ -338,7 +338,7 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                     <p
                       dir="rtl"
                       lang="ar"
-                      className="text-base text-gray-700 dark:text-gray-200 text-right leading-loose bg-indigo-50 dark:bg-indigo-900/20 rounded-xl px-4 py-3"
+                      className="text-base text-gray-700 dark:text-gray-200 text-right leading-loose bg-violet-50 dark:bg-violet-900/20 rounded-xl px-4 py-3"
                       style={{ fontFamily: "'Cairo', 'Amiri', 'Noto Sans Arabic', sans-serif" }}
                     >
                       {exampleTranslation}

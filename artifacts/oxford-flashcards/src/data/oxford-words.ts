@@ -310,8 +310,8 @@ export const allWords: OxfordWord[] = Object.entries(oxfordWordsByLevel).flatMap
 );
 
 export const levelColors: Record<CEFRLevel, { bg: string; text: string; badge: string }> = {
-  A1: { bg: "from-emerald-400 to-teal-500", text: "text-emerald-600", badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300" },
-  A2: { bg: "from-blue-400 to-cyan-500", text: "text-blue-600", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300" },
-  B1: { bg: "from-violet-400 to-purple-500", text: "text-violet-600", badge: "bg-violet-100 text-violet-700 dark:bg-violet-900 dark:text-violet-300" },
-  B2: { bg: "from-rose-400 to-pink-500", text: "text-rose-600", badge: "bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-300" },
+  A1: { bg: "from-violet-400 to-purple-500", text: "text-violet-600", badge: "bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300" },
+  A2: { bg: "from-purple-500 to-violet-600", text: "text-purple-600", badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300" },
+  B1: { bg: "from-violet-600 to-fuchsia-700", text: "text-fuchsia-600", badge: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-900/50 dark:text-fuchsia-300" },
+  B2: { bg: "from-amber-400 to-orange-500", text: "text-orange-600", badge: "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300" },
 };

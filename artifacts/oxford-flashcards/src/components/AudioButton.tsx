@@ -54,9 +54,9 @@ export function AudioButton({ url, size = "md", className = "", label }: AudioBu
         ${sizeMap[size]}
         ${url
           ? `cursor-pointer
-             bg-indigo-100 dark:bg-indigo-900/40
-             text-indigo-600 dark:text-indigo-400
-             hover:bg-indigo-200 dark:hover:bg-indigo-800/60
+             bg-violet-100 dark:bg-violet-900/40
+             text-violet-700 dark:text-violet-300
+             hover:bg-violet-200 dark:hover:bg-violet-800/60
              hover:scale-110 active:scale-95
              shadow-sm hover:shadow-md`
           : "cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400 opacity-50"

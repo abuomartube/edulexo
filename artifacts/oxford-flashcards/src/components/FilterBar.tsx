@@ -27,7 +27,7 @@ export function FilterBar({ selectedLevel, onLevelChange, onShuffle, total }: Fi
                 hover:scale-105 active:scale-95
                 ${isActive
                   ? level === "all"
-                    ? "bg-gray-900 dark:bg-white text-white dark:text-gray-900 shadow-md"
+                    ? "bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-md"
                     : `bg-gradient-to-r ${color!.bg} text-white shadow-md`
                   : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                 }
@@ -45,7 +45,7 @@ export function FilterBar({ selectedLevel, onLevelChange, onShuffle, total }: Fi
         </span>
         <button
           onClick={onShuffle}
-          className="px-4 py-1.5 rounded-full text-sm font-semibold bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 transition-all duration-200 hover:scale-105 active:scale-95"
+          className="px-4 py-1.5 rounded-full text-sm font-semibold bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105 active:scale-95"
         >
           Shuffle
         </button>

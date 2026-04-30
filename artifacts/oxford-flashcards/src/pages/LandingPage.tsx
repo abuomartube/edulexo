@@ -114,8 +114,8 @@ const packages = [
     badge: null as string | null,
   },
   {
-    name: "Complete",
-    nameAr: "الشاملة",
+    name: "Mastery",
+    nameAr: "الإتقان",
     levels: "A1 → C1",
     levelsLabel: "Levels 1 – 6",
     levelsLabelAr: "المستويات 1 - 6",

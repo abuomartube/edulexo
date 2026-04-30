@@ -31,8 +31,13 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 ### LEXO (`artifacts/oxford-flashcards`)
 
 A bilingual (English + Arabic) English-learning platform. Two pages so far, routed with `wouter`:
-- `/` — public **Landing page** (`src/pages/LandingPage.tsx`): header, hero ("Master English the smart way"), Foundation Package (CEFR A1→B1, Levels 1-3) and Fluency Package (CEFR B1+→C1, Levels 4-6), modules grid (Vocabulary live, Lessons/Speaking/Writing/Listening/Reading/Final Test as Coming Soon), CTA, footer.
+- `/` — public **Landing page** (`src/pages/LandingPage.tsx`): header, hero ("Master English the smart way"), three packages (Foundation A1→B1, Mastery A1→C1, Fluency B1+→C1), modules grid (Vocabulary live, Lessons/Speaking/Writing/Listening/Reading/Final Test as Coming Soon), CTA, footer.
 - `/app` — the **Flashcard app** (`src/pages/FlashcardApp.tsx`).
+
+**Package naming convention (locked):** internally the three packages are referenced as **A**, **B**, **C** in the database schema, access codes, and lesson tags:
+- **A** = Foundation Package (CEFR A1→B1, Levels 1-3)
+- **B** = Mastery Package (CEFR A1→C1, Levels 1-6) — featured "BEST VALUE" tier
+- **C** = Fluency Package (CEFR B1+→C1, Levels 4-6)
 
 Roadmap: Phase 1 landing (done) → Phase 2 database + auth (PostgreSQL, register-with-access-code, sessions) → Phase 3 student dashboard listing the 7 modules → Phase 4 teacher admin at `/admin` (generate/track access codes per package, approve/reject pending students, manage Vimeo lessons tagged by package) → Phase 5+ build the remaining modules.
 

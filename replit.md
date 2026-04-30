@@ -30,9 +30,10 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ### LEXO (`artifacts/oxford-flashcards`)
 
-A bilingual (English + Arabic) English-learning platform. Two pages so far, routed with `wouter`:
-- `/` — public **Landing page** (`src/pages/LandingPage.tsx`): header, hero ("Master English the smart way"), three packages (Foundation A1→B1, Mastery A1→C1, Fluency B1+→C1), modules grid (Vocabulary live, Lessons/Speaking/Writing/Listening/Reading/Final Test as Coming Soon), CTA, footer.
-- `/app` — the **Flashcard app** (`src/pages/FlashcardApp.tsx`).
+A bilingual (English + Arabic) English-learning platform. Three pages so far, routed with `wouter`:
+- `/` — public **Landing page** (`src/pages/LandingPage.tsx`): header, hero ("Master English the smart way"), three packages (Foundation A1→B1, Mastery A1→C1, Fluency B1+→C1), modules grid (Vocabulary live, Lessons/Speaking/Writing/Listening/Reading/Final Test as Coming Soon), CTA, footer. All "try" CTAs point to `/demo`.
+- `/demo` — public **Demo flashcards** (`src/pages/DemoFlashcards.tsx`): 40-word sample (10 per CEFR level, curated in `src/data/demo-words.ts`) for unregistered visitors, with a "Demo mode" banner inviting them to get an access code.
+- `/app` — the **full Flashcard app** (`src/pages/FlashcardApp.tsx`): all 2,988 words + 75 word families. Phase 2 will gate this route behind login.
 
 **Package naming convention (locked):** internally the three packages are referenced as **A**, **B**, **C** in the database schema, access codes, and lesson tags:
 - **A** = Foundation Package (CEFR A1→B1, Levels 1-3)

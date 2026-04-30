@@ -1,6 +1,7 @@
 import { Router, Route, Switch } from "wouter";
 import LandingPage from "@/pages/LandingPage";
 import FlashcardApp from "@/pages/FlashcardApp";
+import DemoFlashcards from "@/pages/DemoFlashcards";
 import NotFound from "@/pages/not-found";
 
 const baseRaw = import.meta.env.BASE_URL || "/";
@@ -11,6 +12,7 @@ export default function App() {
     <Router base={base}>
       <Switch>
         <Route path="/" component={LandingPage} />
+        <Route path="/demo" component={DemoFlashcards} />
         <Route path="/app" component={FlashcardApp} />
         <Route component={NotFound} />
       </Switch>

@@ -42,7 +42,7 @@ const modules: Module[] = [
     descriptionAr: "بطاقات أكسفورد 3000 بصوت بريطاني أصلي وترجمات عربية و75 مجموعة كلمات مترابطة.",
     gradient: "from-violet-500 to-purple-700",
     status: "ready",
-    href: "/app",
+    href: "/demo",
   },
   {
     icon: Video,
@@ -236,14 +236,14 @@ export default function LandingPage() {
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                 <Link
-                  href="/app"
+                  href="/demo"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 text-white font-bold shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:scale-[1.03] active:scale-95 transition"
                 >
                   Start Learning Free
                   <ArrowRight size={18} />
                 </Link>
                 <Link
-                  href="/app"
+                  href="/demo"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700/60 hover:scale-[1.03] active:scale-95 transition shadow-sm"
                 >
                   Try the Flashcards
@@ -498,10 +498,10 @@ export default function LandingPage() {
               جرّب وحدة المفردات الآن دون تسجيل.
             </p>
             <Link
-              href="/app"
+              href="/demo"
               className="mt-7 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white text-violet-700 font-bold shadow-xl hover:scale-105 active:scale-95 transition"
             >
-              Open Flashcards
+              Try the Demo
               <ArrowRight size={18} />
             </Link>
           </div>

@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "-u7WpzamJZsY2xOBcn0D7"
+uri = "file://exports/lexo-for-english.zip"
+type = "unspecified"
+title = "LEXO for English — full project (zip)"

@@ -222,7 +222,7 @@ export default function LandingPage() {
               </h2>
 
               <p className="mt-5 text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Your guided English journey — built around the Oxford 3000, native British audio, and AI-powered practice. From your first words to confident fluency, all in one place.
+                Your smart journey to learning English — built on the Oxford 3000, with native British audio and AI-powered practice. Video lessons with Abu Omar. Smart interactive exercises. Progress tracking that follows your level. From your first words to complete fluency, all in one place.
               </p>
 
               <p
@@ -231,7 +231,7 @@ export default function LandingPage() {
                 style={{ fontFamily: arabicFont }}
                 className="mt-3 text-sm sm:text-base text-gray-500 dark:text-gray-400 max-w-xl mx-auto lg:mr-0 lg:ml-auto leading-loose"
               >
-                رحلتك الذكية لتعلّم الإنجليزية — مبنية على مفردات أكسفورد 3000، بصوت بريطاني أصلي، وتدريب بالذكاء الاصطناعي. من أولى الكلمات إلى الطلاقة الكاملة، كل ذلك في مكان واحد.
+                رحلتك الذكية لتعلّم الإنجليزية — مبنية على مفردات أكسفورد 3000، بصوت بريطاني أصلي، وتدريب بالذكاء الاصطناعي. دروس مرئية مع أبو عمر. تمارين تفاعلية ذكية. متابعة مستوى تقدمك. من أولى الكلمات إلى الطلاقة الكاملة، كل ذلك في مكان واحد.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">

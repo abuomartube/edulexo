@@ -6,7 +6,14 @@ import { LevelBadge } from "@/components/LevelBadge";
 import type { OxfordWord } from "@/data/oxford-words";
 import { levelColors } from "@/data/oxford-words";
 import { Loader2, RefreshCw, Volume2 } from "lucide-react";
-import { getTtsUrl, setActiveTtsAudio, getActiveTtsAudio, stopActiveTtsAudio } from "@/lib/tts";
+import {
+  getTtsUrl,
+  setActiveTtsAudio,
+  getActiveTtsAudio,
+  stopActiveTtsAudio,
+  getCachedBlobUrl,
+  prefetchTts,
+} from "@/lib/tts";
 
 interface FlashcardProps {
   wordData: OxfordWord;
@@ -20,6 +27,10 @@ function ExampleSpeakButton({ text }: { text: string }) {
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef(0);
+
+  useEffect(() => {
+    if (text) prefetchTts(text);
+  }, [text]);
 
   const stop = useCallback(() => {
     tokenRef.current++;
@@ -51,9 +62,18 @@ function ExampleSpeakButton({ text }: { text: string }) {
     }
 
     const myToken = ++tokenRef.current;
-    setState("loading");
+    const cached = getCachedBlobUrl(text);
+    setState(cached ? "playing" : "loading");
+
     try {
-      const audio = new Audio(getTtsUrl(text));
+      let src = cached;
+      if (!src) {
+        const result = await prefetchTts(text);
+        if (tokenRef.current !== myToken) return;
+        src = result ?? getTtsUrl(text);
+      }
+
+      const audio = new Audio(src);
       audio.preload = "auto";
 
       if (tokenRef.current !== myToken) {
@@ -145,6 +165,10 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
       if (primaryExample) translate(primaryExample);
     }
   }, [flipped, word, primaryExample, translate]);
+
+  useEffect(() => {
+    if (primaryExample) prefetchTts(primaryExample);
+  }, [primaryExample]);
 
   const handleFlip = useCallback(() => {
     if (animating) return;

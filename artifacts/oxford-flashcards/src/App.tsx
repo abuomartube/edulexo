@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { allWords, oxfordWordsByLevel } from "@/data/oxford-words";
 import type { CEFRLevel, OxfordWord } from "@/data/oxford-words";
 import { Flashcard } from "@/components/Flashcard";
@@ -6,6 +6,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { useTheme } from "@/hooks/useTheme";
 import { Moon, Sun, GraduationCap } from "lucide-react";
 import lexoLogo from "@/assets/lexo-icon.png";
+import { prefetchTts } from "@/lib/tts";
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -36,6 +37,16 @@ function App() {
   }, [filteredWords, isShuffled, shuffledIndices]);
 
   const currentWord = displayWords[Math.min(cardIndex, displayWords.length - 1)];
+
+  useEffect(() => {
+    if (!displayWords.length) return;
+    const safeIdx = Math.min(cardIndex, displayWords.length - 1);
+    const nextIdx = (safeIdx + 1) % displayWords.length;
+    const prevIdx = (safeIdx - 1 + displayWords.length) % displayWords.length;
+    prefetchTts(displayWords[safeIdx]?.word);
+    prefetchTts(displayWords[nextIdx]?.word);
+    prefetchTts(displayWords[prevIdx]?.word);
+  }, [cardIndex, displayWords]);
 
   const handleLevelChange = useCallback((level: CEFRLevel | "all") => {
     setSelectedLevel(level);

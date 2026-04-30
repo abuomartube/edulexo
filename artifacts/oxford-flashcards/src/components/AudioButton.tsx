@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Volume2, Loader2 } from "lucide-react";
-import { getTtsUrl, setActiveTtsAudio, getActiveTtsAudio } from "@/lib/tts";
+import {
+  getTtsUrl,
+  setActiveTtsAudio,
+  getActiveTtsAudio,
+  getCachedBlobUrl,
+  prefetchTts,
+} from "@/lib/tts";
 
 interface AudioButtonProps {
   text: string | null;
@@ -13,6 +19,10 @@ export function AudioButton({ text, size = "md", className = "", label }: AudioB
   const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tokenRef = useRef(0);
+
+  useEffect(() => {
+    if (text) prefetchTts(text);
+  }, [text]);
 
   const stop = useCallback(() => {
     tokenRef.current++;
@@ -45,9 +55,18 @@ export function AudioButton({ text, size = "md", className = "", label }: AudioB
     }
 
     const myToken = ++tokenRef.current;
-    setState("loading");
+    const cached = getCachedBlobUrl(text);
+    setState(cached ? "playing" : "loading");
+
     try {
-      const audio = new Audio(getTtsUrl(text));
+      let src = cached;
+      if (!src) {
+        const result = await prefetchTts(text);
+        if (tokenRef.current !== myToken) return;
+        src = result ?? getTtsUrl(text);
+      }
+
+      const audio = new Audio(src);
       audio.preload = "auto";
 
       if (tokenRef.current !== myToken) return;

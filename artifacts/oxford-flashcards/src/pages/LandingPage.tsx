@@ -210,7 +210,7 @@ export default function LandingPage() {
             <div className="lg:col-span-7 text-center lg:text-left">
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-100 dark:bg-violet-900/40 border border-violet-200 dark:border-violet-700/50 text-violet-700 dark:text-violet-300 text-xs font-semibold uppercase tracking-wider">
                 <Sparkles size={14} />
-                Vocabulary Platform · منصة المفردات
+                EduLexo
               </span>
 
               <h2 className="mt-5 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">

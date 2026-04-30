@@ -101,9 +101,9 @@ function App() {
         <div className="grid grid-cols-4 gap-3 mb-8">
           {(["A1", "A2", "B1", "B2"] as CEFRLevel[]).map((level) => {
             const gradients = {
-              A1: "from-violet-400 to-purple-500",
-              A2: "from-purple-500 to-violet-600",
-              B1: "from-violet-600 to-fuchsia-700",
+              A1: "from-emerald-400 to-teal-500",
+              A2: "from-sky-400 to-blue-600",
+              B1: "from-violet-500 to-purple-700",
               B2: "from-amber-400 to-orange-500",
             };
             return (

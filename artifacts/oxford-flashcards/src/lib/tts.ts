@@ -22,6 +22,38 @@ export function getCachedBlobUrl(text: string, voice: "fable" = "fable"): string
   return blobCache.get(makeKey(text, voice)) ?? null;
 }
 
+function getApiBase(): string {
+  return (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+}
+
+const warmedSet = new Set<string>();
+
+export function warmTtsBatch(texts: string[], voice: "fable" = "fable"): void {
+  const fresh = texts
+    .map((t) => t?.trim())
+    .filter((t): t is string => !!t)
+    .filter((t) => {
+      const key = makeKey(t, voice);
+      if (warmedSet.has(key) || blobCache.has(key)) return false;
+      warmedSet.add(key);
+      return true;
+    });
+  if (fresh.length === 0) return;
+
+  const url = `${getApiBase()}/api/tts/warm`;
+  for (let i = 0; i < fresh.length; i += 50) {
+    const batch = fresh.slice(i, i + 50);
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ voice, texts: batch }),
+      keepalive: true,
+    }).catch(() => {
+      for (const t of batch) warmedSet.delete(makeKey(t, voice));
+    });
+  }
+}
+
 export function prefetchTts(
   text: string | null | undefined,
   voice: "fable" = "fable",

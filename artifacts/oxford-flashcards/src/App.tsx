@@ -6,7 +6,7 @@ import { FilterBar } from "@/components/FilterBar";
 import { useTheme } from "@/hooks/useTheme";
 import { Moon, Sun, GraduationCap } from "lucide-react";
 import lexoLogo from "@/assets/lexo-icon.png";
-import { prefetchTts } from "@/lib/tts";
+import { prefetchTts, warmTtsBatch } from "@/lib/tts";
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -41,11 +41,18 @@ function App() {
   useEffect(() => {
     if (!displayWords.length) return;
     const safeIdx = Math.min(cardIndex, displayWords.length - 1);
-    const nextIdx = (safeIdx + 1) % displayWords.length;
-    const prevIdx = (safeIdx - 1 + displayWords.length) % displayWords.length;
+    const len = displayWords.length;
+    const nextIdx = (safeIdx + 1) % len;
+    const prevIdx = (safeIdx - 1 + len) % len;
     prefetchTts(displayWords[safeIdx]?.word);
     prefetchTts(displayWords[nextIdx]?.word);
     prefetchTts(displayWords[prevIdx]?.word);
+
+    const lookahead: string[] = [];
+    for (let off = 2; off <= 30; off++) {
+      lookahead.push(displayWords[(safeIdx + off) % len]?.word);
+    }
+    warmTtsBatch(lookahead.filter(Boolean));
   }, [cardIndex, displayWords]);
 
   const handleLevelChange = useCallback((level: CEFRLevel | "all") => {

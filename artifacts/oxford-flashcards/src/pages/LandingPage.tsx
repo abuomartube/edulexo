@@ -111,6 +111,19 @@ const packages = [
     descriptionAr: "من أولى الكلمات إلى محادثات يومية بثقة.",
     gradient: "from-emerald-400 via-teal-500 to-sky-600",
     icon: GraduationCap,
+    badge: null as string | null,
+  },
+  {
+    name: "Complete",
+    nameAr: "الشاملة",
+    levels: "A1 → C1",
+    levelsLabel: "Levels 1 – 6",
+    levelsLabelAr: "المستويات 1 - 6",
+    description: "The full journey from first words to confident mastery — every level, every module.",
+    descriptionAr: "الرحلة الكاملة من أولى الكلمات إلى الإتقان التام — جميع المستويات وكل الوحدات.",
+    gradient: "from-violet-600 via-fuchsia-500 to-orange-500",
+    icon: Trophy,
+    badge: "BEST VALUE",
   },
   {
     name: "Fluency",
@@ -122,6 +135,7 @@ const packages = [
     descriptionAr: "إتقان ودقة ومفردات تعبّر بها عن أي فكرة.",
     gradient: "from-violet-500 via-purple-600 to-fuchsia-600",
     icon: Sparkles,
+    badge: null as string | null,
   },
 ];
 
@@ -307,13 +321,13 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
         <div className="text-center mb-10 sm:mb-12">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 dark:bg-amber-900/30 text-orange-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
-            Two Programs
+            Three Programs
           </span>
           <h3 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
             Pick the path for your level
           </h3>
           <p className="mt-2 text-gray-500 dark:text-gray-400">
-            Two carefully designed packages, one platform.
+            Three carefully designed packages, one platform.
           </p>
           <p
             dir="rtl"
@@ -321,58 +335,73 @@ export default function LandingPage() {
             style={{ fontFamily: arabicFont }}
             className="mt-1 text-sm text-gray-400 dark:text-gray-500"
           >
-            باقتان مصمّمتان بعناية على منصة واحدة.
+            ثلاث باقات مصمّمة بعناية على منصة واحدة.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {packages.map((pkg) => (
-            <div
-              key={pkg.name}
-              className="group relative rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/60 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1"
-            >
-              <div className={`h-2 bg-gradient-to-r ${pkg.gradient}`} />
-              <div className="p-7">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                      {pkg.levelsLabel}
-                    </p>
-                    <h4 className="mt-1 text-2xl font-extrabold text-gray-900 dark:text-white">
-                      {pkg.name} Package
-                    </h4>
-                    <p
-                      dir="rtl"
-                      lang="ar"
-                      style={{ fontFamily: arabicFont }}
-                      className="text-sm text-gray-500 dark:text-gray-400 mt-0.5"
-                    >
-                      باقة {pkg.nameAr}
-                    </p>
+        <div className="grid md:grid-cols-3 gap-6">
+          {packages.map((pkg) => {
+            const featured = pkg.badge !== null;
+            return (
+              <div
+                key={pkg.name}
+                className={`group relative rounded-3xl overflow-hidden border bg-white dark:bg-gray-900/60 shadow-sm hover:shadow-xl transition-all hover:-translate-y-1 ${
+                  featured
+                    ? "border-violet-300 dark:border-violet-600 md:scale-[1.04] shadow-lg ring-2 ring-violet-200/60 dark:ring-violet-700/40"
+                    : "border-gray-100 dark:border-gray-800"
+                }`}
+              >
+                <div className={`h-2 bg-gradient-to-r ${pkg.gradient}`} />
+                {featured && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-violet-600 to-orange-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-md">
+                      <Sparkles size={10} />
+                      {pkg.badge}
+                    </span>
                   </div>
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.gradient} flex items-center justify-center text-white shadow-lg`}>
-                    <pkg.icon size={26} />
+                )}
+                <div className="p-7">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                        {pkg.levelsLabel}
+                      </p>
+                      <h4 className="mt-1 text-2xl font-extrabold text-gray-900 dark:text-white">
+                        {pkg.name} Package
+                      </h4>
+                      <p
+                        dir="rtl"
+                        lang="ar"
+                        style={{ fontFamily: arabicFont }}
+                        className="text-sm text-gray-500 dark:text-gray-400 mt-0.5"
+                      >
+                        باقة {pkg.nameAr}
+                      </p>
+                    </div>
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${pkg.gradient} flex items-center justify-center text-white shadow-lg shrink-0`}>
+                      <pkg.icon size={26} />
+                    </div>
                   </div>
-                </div>
 
-                <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-200">
-                  CEFR {pkg.levels}
-                </div>
+                  <div className="mt-5 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-bold text-gray-700 dark:text-gray-200">
+                    CEFR {pkg.levels}
+                  </div>
 
-                <p className="mt-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
-                  {pkg.description}
-                </p>
-                <p
-                  dir="rtl"
-                  lang="ar"
-                  style={{ fontFamily: arabicFont }}
-                  className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-loose"
-                >
-                  {pkg.descriptionAr}
-                </p>
+                  <p className="mt-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
+                    {pkg.description}
+                  </p>
+                  <p
+                    dir="rtl"
+                    lang="ar"
+                    style={{ fontFamily: arabicFont }}
+                    className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-loose"
+                  >
+                    {pkg.descriptionAr}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

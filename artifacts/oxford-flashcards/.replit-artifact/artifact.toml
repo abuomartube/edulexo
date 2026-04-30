@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Oxford 3000 Flashcards"
+version = "1.0.0"
+id = "artifacts/oxford-flashcards"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 23227
+
+[services.development]
+run = "pnpm --filter @workspace/oxford-flashcards run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/oxford-flashcards", "run", "build" ]
+publicDir = "artifacts/oxford-flashcards/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "23227"
+BASE_PATH = "/"

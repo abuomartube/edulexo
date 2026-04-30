@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useDictionary } from "@/hooks/useDictionary";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AudioButton } from "@/components/AudioButton";
 import { LevelBadge } from "@/components/LevelBadge";
 import type { OxfordWord } from "@/data/oxford-words";
 import { levelColors } from "@/data/oxford-words";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Volume2 } from "lucide-react";
 
 interface FlashcardProps {
   wordData: OxfordWord;
@@ -13,6 +13,91 @@ interface FlashcardProps {
   onPrev: () => void;
   cardIndex: number;
   total: number;
+}
+
+function speakBritish(text: string) {
+  if (!("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-GB";
+  utterance.rate = 0.88;
+  utterance.pitch = 1;
+
+  const setVoice = () => {
+    const voices = window.speechSynthesis.getVoices();
+    const british =
+      voices.find((v) => v.lang === "en-GB" && v.name.toLowerCase().includes("female")) ??
+      voices.find((v) => v.lang === "en-GB") ??
+      voices.find((v) => v.lang.startsWith("en"));
+    if (british) utterance.voice = british;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  if (window.speechSynthesis.getVoices().length > 0) {
+    setVoice();
+  } else {
+    window.speechSynthesis.onvoiceschanged = setVoice;
+  }
+}
+
+function ExampleSpeakButton({ text }: { text: string }) {
+  const [speaking, setSpeaking] = useState(false);
+
+  const handleSpeak = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (speaking) {
+      window.speechSynthesis.cancel();
+      setSpeaking(false);
+      return;
+    }
+    setSpeaking(true);
+    if (!("speechSynthesis" in window)) { setSpeaking(false); return; }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-GB";
+    utterance.rate = 0.88;
+    utterance.pitch = 1;
+    utterance.onend = () => setSpeaking(false);
+    utterance.onerror = () => setSpeaking(false);
+
+    const go = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const british =
+        voices.find((v) => v.lang === "en-GB" && v.name.toLowerCase().includes("female")) ??
+        voices.find((v) => v.lang === "en-GB") ??
+        voices.find((v) => v.lang.startsWith("en"));
+      if (british) utterance.voice = british;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    if (window.speechSynthesis.getVoices().length > 0) {
+      go();
+    } else {
+      window.speechSynthesis.onvoiceschanged = go;
+    }
+  };
+
+  return (
+    <button
+      onClick={handleSpeak}
+      aria-label="Hear example sentence"
+      className={`
+        inline-flex items-center justify-center w-8 h-8 rounded-full
+        transition-all duration-200 flex-shrink-0 mt-0.5
+        ${speaking
+          ? "bg-indigo-500 text-white scale-110"
+          : "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-800/60 hover:scale-110 active:scale-95"
+        }
+      `}
+    >
+      {speaking ? (
+        <Loader2 size={14} className="animate-spin" />
+      ) : (
+        <Volume2 size={14} />
+      )}
+    </button>
+  );
 }
 
 export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: FlashcardProps) {
@@ -38,27 +123,27 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
   useEffect(() => {
     if (flipped) {
       translate(word);
-      if (primaryExample) {
-        translate(primaryExample);
-      }
+      if (primaryExample) translate(primaryExample);
     }
   }, [flipped, word, primaryExample, translate]);
 
-  const handleFlip = () => {
+  const handleFlip = useCallback(() => {
     if (animating) return;
     setAnimating(true);
     setFlipped((f) => !f);
     setTimeout(() => setAnimating(false), 600);
-  };
+  }, [animating]);
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
+    window.speechSynthesis?.cancel();
     setFlipped(false);
     setTimeout(onNext, 50);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
+    window.speechSynthesis?.cancel();
     setFlipped(false);
     setTimeout(onPrev, 50);
   };
@@ -84,27 +169,37 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
         aria-label={flipped ? "Click to see word" : "Click to reveal answer"}
       >
         <div
-          className="relative w-full transition-transform duration-500 ease-in-out"
+          className="relative w-full"
           style={{
             transformStyle: "preserve-3d",
             transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
+            transition: "transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)",
             height: "380px",
           }}
         >
+          {/* FRONT */}
           <div
-            className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl"
-            style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
+            className="absolute inset-0 rounded-3xl shadow-2xl"
+            style={{
+              backfaceVisibility: "hidden",
+              WebkitBackfaceVisibility: "hidden",
+              transform: "rotateY(0deg)",
+              zIndex: flipped ? 0 : 1,
+            }}
           >
-            <div className={`w-full h-full bg-gradient-to-br ${colors.bg} flex flex-col items-center justify-center p-8 relative`}>
-              <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden rounded-3xl">
-                <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-white/30 blur-xl" />
-                <div className="absolute -bottom-12 -left-12 w-64 h-64 rounded-full bg-white/20 blur-xl" />
+            <div
+              className={`w-full h-full rounded-3xl bg-gradient-to-br ${colors.bg} flex flex-col items-center justify-center p-8 relative`}
+              style={{ borderRadius: "1.5rem" }}
+            >
+              <div className="absolute inset-0 pointer-events-none rounded-3xl overflow-hidden">
+                <div className="absolute -top-12 -right-12 w-64 h-64 rounded-full bg-white/20 blur-xl" />
+                <div className="absolute -bottom-12 -left-12 w-64 h-64 rounded-full bg-white/15 blur-xl" />
               </div>
 
               {loading ? (
                 <Loader2 size={40} className="text-white/80 animate-spin" />
               ) : error ? (
-                <div className="text-center">
+                <div className="text-center z-10">
                   <p className="text-5xl font-bold text-white tracking-tight mb-3">{word}</p>
                   <p className="text-white/60 text-sm">Audio not available</p>
                 </div>
@@ -118,7 +213,12 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                     <p className="text-white/70 text-sm uppercase tracking-widest mb-5">{partOfSpeech}</p>
                   )}
                   <div className="flex items-center justify-center gap-3">
-                    <AudioButton url={audioUrl} size="lg" label={`Hear ${word}`} className="bg-white/20 hover:bg-white/35 text-white border-none shadow-none" />
+                    <AudioButton
+                      url={audioUrl}
+                      size="lg"
+                      label={`Hear ${word}`}
+                      className="!bg-white/20 hover:!bg-white/35 !text-white !border-none !shadow-none"
+                    />
                     {britishAudio && (
                       <span className="text-white/70 text-xs font-medium bg-white/15 px-2 py-1 rounded-full">
                         British
@@ -128,25 +228,26 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                 </div>
               )}
 
-              <div className="absolute bottom-5 right-5 opacity-30 pointer-events-none">
+              <div className="absolute bottom-5 right-5 opacity-25 pointer-events-none">
                 <RefreshCw size={22} className="text-white" />
               </div>
-
-              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/50 text-xs">
+              <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 text-xs tracking-wide">
                 Tap to flip
               </p>
             </div>
           </div>
 
+          {/* BACK */}
           <div
-            className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
+            className="absolute inset-0 rounded-3xl shadow-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800"
             style={{
               backfaceVisibility: "hidden",
               WebkitBackfaceVisibility: "hidden",
               transform: "rotateY(180deg)",
+              zIndex: flipped ? 1 : 0,
             }}
           >
-            <div className="w-full h-full flex flex-col p-7 overflow-y-auto">
+            <div className="w-full h-full flex flex-col p-7 rounded-3xl overflow-y-auto">
               <div className="flex items-start justify-between mb-5">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
@@ -176,7 +277,7 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                 ) : translating(word) ? (
                   <div className="flex items-center gap-2 text-gray-400">
                     <Loader2 size={14} className="animate-spin" />
-                    <span className="text-sm">Translating...</span>
+                    <span className="text-sm">Translating…</span>
                   </div>
                 ) : (
                   <p className="text-gray-400 text-sm italic">Translation unavailable</p>
@@ -190,19 +291,13 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                   </p>
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-3">
                     <div className="flex items-start gap-3">
-                      <div className="flex-1">
-                        <p className="text-gray-700 dark:text-gray-200 text-base leading-relaxed italic">
-                          "{primaryExample}"
-                        </p>
-                      </div>
-                      <AudioButton
-                        url={audioUrl}
-                        size="sm"
-                        label={`Hear example`}
-                        className="flex-shrink-0 mt-0.5"
-                      />
+                      <p className="flex-1 text-gray-700 dark:text-gray-200 text-base leading-relaxed italic">
+                        "{primaryExample}"
+                      </p>
+                      <ExampleSpeakButton text={primaryExample} />
                     </div>
                   </div>
+
                   <p className="text-xs uppercase tracking-widest font-semibold text-gray-400 dark:text-gray-500 mb-2">
                     Arabic Translation
                   </p>
@@ -215,10 +310,10 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                     >
                       {exampleTranslation}
                     </p>
-                  ) : primaryExample && translating(primaryExample) ? (
+                  ) : translating(primaryExample) ? (
                     <div className="flex items-center gap-2 text-gray-400">
                       <Loader2 size={14} className="animate-spin" />
-                      <span className="text-sm">Translating...</span>
+                      <span className="text-sm">Translating…</span>
                     </div>
                   ) : null}
                 </div>

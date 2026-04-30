@@ -6,6 +6,7 @@ import { LevelBadge } from "@/components/LevelBadge";
 import type { OxfordWord } from "@/data/oxford-words";
 import { levelColors } from "@/data/oxford-words";
 import { Loader2, RefreshCw, Volume2 } from "lucide-react";
+import { getTtsUrl, setActiveTtsAudio, getActiveTtsAudio, stopActiveTtsAudio } from "@/lib/tts";
 
 interface FlashcardProps {
   wordData: OxfordWord;
@@ -13,20 +14,6 @@ interface FlashcardProps {
   onPrev: () => void;
   cardIndex: number;
   total: number;
-}
-
-const ttsUrlCache = new Map<string, string>();
-let activeExampleAudio: HTMLAudioElement | null = null;
-
-function getExampleTtsUrl(text: string): string {
-  const key = text.trim();
-  let url = ttsUrlCache.get(key);
-  if (!url) {
-    const base = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
-    url = `${base}/api/tts?voice=fable&text=${encodeURIComponent(key)}`;
-    ttsUrlCache.set(key, url);
-  }
-  return url;
 }
 
 function ExampleSpeakButton({ text }: { text: string }) {
@@ -45,7 +32,7 @@ function ExampleSpeakButton({ text }: { text: string }) {
       current.src = "";
       audioRef.current = null;
     }
-    if (activeExampleAudio === current) activeExampleAudio = null;
+    if (getActiveTtsAudio() === current) setActiveTtsAudio(null);
     setState("idle");
   }, []);
 
@@ -63,23 +50,22 @@ function ExampleSpeakButton({ text }: { text: string }) {
       return;
     }
 
-    if (activeExampleAudio) {
-      activeExampleAudio.pause();
-      activeExampleAudio.src = "";
-      activeExampleAudio = null;
-    }
-
     const myToken = ++tokenRef.current;
     setState("loading");
     try {
-      const audio = new Audio(getExampleTtsUrl(text));
+      const audio = new Audio(getTtsUrl(text));
       audio.preload = "auto";
 
       if (tokenRef.current !== myToken) {
         return;
       }
       audioRef.current = audio;
-      activeExampleAudio = audio;
+      setActiveTtsAudio(audio, () => {
+        if (tokenRef.current === myToken) {
+          setState("idle");
+          audioRef.current = null;
+        }
+      });
 
       audio.onplaying = () => {
         if (tokenRef.current === myToken) setState("playing");
@@ -87,19 +73,25 @@ function ExampleSpeakButton({ text }: { text: string }) {
       audio.onended = () => {
         if (tokenRef.current !== myToken) return;
         setState("idle");
-        if (activeExampleAudio === audio) activeExampleAudio = null;
+        if (getActiveTtsAudio() === audio) setActiveTtsAudio(null);
         audioRef.current = null;
       };
       audio.onerror = () => {
         if (tokenRef.current !== myToken) return;
         setState("idle");
-        if (activeExampleAudio === audio) activeExampleAudio = null;
+        if (getActiveTtsAudio() === audio) setActiveTtsAudio(null);
         audioRef.current = null;
       };
 
       await audio.play();
     } catch {
-      if (tokenRef.current === myToken) setState("idle");
+      if (tokenRef.current === myToken) {
+        setState("idle");
+        if (audioRef.current && getActiveTtsAudio() === audioRef.current) {
+          setActiveTtsAudio(null);
+        }
+        audioRef.current = null;
+      }
     }
   };
 
@@ -133,7 +125,7 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
   const { word, level } = wordData;
   const colors = levelColors[level];
 
-  const { lookup, britishAudio, usAudio, phonetic, primaryExample, partOfSpeech, loading, error } =
+  const { lookup, phonetic, primaryExample, partOfSpeech, loading, error } =
     useDictionary();
   const { translate, getTranslation, isLoading: translating } = useTranslation();
 
@@ -163,27 +155,20 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (activeExampleAudio) {
-      activeExampleAudio.pause();
-      activeExampleAudio = null;
-    }
+    stopActiveTtsAudio();
     setFlipped(false);
     setTimeout(onNext, 50);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (activeExampleAudio) {
-      activeExampleAudio.pause();
-      activeExampleAudio = null;
-    }
+    stopActiveTtsAudio();
     setFlipped(false);
     setTimeout(onPrev, 50);
   };
 
   const wordTranslation = getTranslation(word);
   const exampleTranslation = primaryExample ? getTranslation(primaryExample) : null;
-  const audioUrl = britishAudio ?? usAudio;
 
   return (
     <div className="flex flex-col items-center gap-6 w-full max-w-2xl mx-auto select-none">
@@ -247,16 +232,14 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                   )}
                   <div className="flex items-center justify-center gap-3">
                     <AudioButton
-                      url={audioUrl}
+                      text={word}
                       size="lg"
                       label={`Hear ${word}`}
                       className="!bg-white/20 hover:!bg-white/35 !text-white !border-none !shadow-none"
                     />
-                    {britishAudio && (
-                      <span className="text-white/70 text-xs font-medium bg-white/15 px-2 py-1 rounded-full">
-                        British
-                      </span>
-                    )}
+                    <span className="text-white/70 text-xs font-medium bg-white/15 px-2 py-1 rounded-full">
+                      British
+                    </span>
                   </div>
                 </div>
               )}
@@ -285,7 +268,7 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h3 className={`text-3xl font-bold ${colors.text} dark:text-white`}>{word}</h3>
-                    <AudioButton url={audioUrl} size="sm" label={`Hear ${word}`} />
+                    <AudioButton text={word} size="sm" label={`Hear ${word}`} />
                   </div>
                   {phonetic && (
                     <p className="text-gray-500 dark:text-gray-400 text-sm italic">{phonetic}</p>

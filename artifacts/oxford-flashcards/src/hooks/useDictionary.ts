@@ -32,8 +32,6 @@ export interface DictionaryEntry {
 
 export interface ProcessedEntry {
   entry: DictionaryEntry | null;
-  britishAudio: string | null;
-  usAudio: string | null;
   phonetic: string | null;
   primaryExample: string | null;
   partOfSpeech: string | null;
@@ -41,14 +39,11 @@ export interface ProcessedEntry {
 
 const dataCache = new Map<string, ProcessedEntry>();
 const inflight = new Map<string, Promise<ProcessedEntry>>();
-const audioCache = new Map<string, HTMLAudioElement>();
 
 function processEntry(entry: DictionaryEntry | null): ProcessedEntry {
   if (!entry) {
     return {
       entry: null,
-      britishAudio: null,
-      usAudio: null,
       phonetic: null,
       primaryExample: null,
       partOfSpeech: null,
@@ -56,43 +51,14 @@ function processEntry(entry: DictionaryEntry | null): ProcessedEntry {
   }
 
   const phonetics = entry.phonetics ?? [];
-  const britishPhonetic = phonetics.find(
-    (p) =>
-      p.audio &&
-      (p.audio.includes("-gb") || p.audio.includes("-uk") || p.audio.includes("gb.mp3") || p.audio.includes("uk.mp3"))
-  );
-  const usPhonetic = phonetics.find(
-    (p) => p.audio && (p.audio.includes("-us") || p.audio.includes("us.mp3"))
-  );
-  const anyAudioPhonetic = phonetics.find((p) => p.audio);
-
-  const britishAudio = britishPhonetic?.audio ?? null;
-  const usAudio = usPhonetic?.audio ?? anyAudioPhonetic?.audio ?? null;
-
   const phonetic =
-    britishPhonetic?.text ??
-    usPhonetic?.text ??
-    phonetics.find((p) => p.text)?.text ??
-    entry.phonetic ??
-    null;
+    phonetics.find((p) => p.text)?.text ?? entry.phonetic ?? null;
 
   const allDefinitions = entry.meanings.flatMap((m) => m.definitions);
   const primaryExample = allDefinitions.find((d) => d.example)?.example ?? null;
   const partOfSpeech = entry.meanings[0]?.partOfSpeech ?? null;
 
-  return { entry, britishAudio, usAudio, phonetic, primaryExample, partOfSpeech };
-}
-
-function preloadAudio(url: string | null): HTMLAudioElement | null {
-  if (!url) return null;
-  if (audioCache.has(url)) return audioCache.get(url)!;
-  const audio = new Audio();
-  audio.preload = "auto";
-  audio.crossOrigin = "anonymous";
-  audio.src = url;
-  audio.load();
-  audioCache.set(url, audio);
-  return audio;
+  return { entry, phonetic, primaryExample, partOfSpeech };
 }
 
 async function fetchWord(word: string): Promise<ProcessedEntry> {
@@ -116,7 +82,6 @@ async function fetchWord(word: string): Promise<ProcessedEntry> {
     }
     dataCache.set(word, processed);
     inflight.delete(word);
-    preloadAudio(processed.britishAudio ?? processed.usAudio);
     return processed;
   })();
 
@@ -128,10 +93,6 @@ export function prefetchWord(word: string): void {
   void fetchWord(word);
 }
 
-export function getPreloadedAudio(url: string | null): HTMLAudioElement | null {
-  return preloadAudio(url);
-}
-
 export interface DictionaryResult extends ProcessedEntry {
   loading: boolean;
   error: string | null;
@@ -140,8 +101,6 @@ export interface DictionaryResult extends ProcessedEntry {
 export function useDictionary() {
   const [result, setResult] = useState<DictionaryResult>({
     entry: null,
-    britishAudio: null,
-    usAudio: null,
     phonetic: null,
     primaryExample: null,
     partOfSpeech: null,
@@ -156,7 +115,6 @@ export function useDictionary() {
 
     if (dataCache.has(word)) {
       const processed = dataCache.get(word)!;
-      preloadAudio(processed.britishAudio ?? processed.usAudio);
       setResult({ ...processed, loading: false, error: processed.entry ? null : "Word not found" });
       return;
     }

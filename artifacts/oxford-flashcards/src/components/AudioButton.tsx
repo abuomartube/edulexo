@@ -1,37 +1,89 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Volume2, Loader2 } from "lucide-react";
-import { getPreloadedAudio } from "@/hooks/useDictionary";
+import { getTtsUrl, setActiveTtsAudio, getActiveTtsAudio } from "@/lib/tts";
 
 interface AudioButtonProps {
-  url: string | null;
+  text: string | null;
   size?: "sm" | "md" | "lg";
   className?: string;
   label?: string;
 }
 
-export function AudioButton({ url, size = "md", className = "", label }: AudioButtonProps) {
-  const [playing, setPlaying] = useState(false);
+export function AudioButton({ text, size = "md", className = "", label }: AudioButtonProps) {
+  const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tokenRef = useRef(0);
+
+  const stop = useCallback(() => {
+    tokenRef.current++;
+    const current = audioRef.current;
+    if (current) {
+      current.onplaying = null;
+      current.onended = null;
+      current.onerror = null;
+      current.pause();
+      current.src = "";
+      audioRef.current = null;
+    }
+    if (getActiveTtsAudio() === current) setActiveTtsAudio(null);
+    setState("idle");
+  }, []);
 
   useEffect(() => {
-    audioRef.current = getPreloadedAudio(url);
-  }, [url]);
+    return () => {
+      stop();
+    };
+  }, [text, stop]);
 
   const play = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!url) return;
+    if (!text) return;
 
-    let audio = audioRef.current ?? getPreloadedAudio(url);
-    if (!audio) return;
+    if (state !== "idle") {
+      stop();
+      return;
+    }
 
+    const myToken = ++tokenRef.current;
+    setState("loading");
     try {
-      audio.currentTime = 0;
-      setPlaying(true);
-      audio.onended = () => setPlaying(false);
-      audio.onerror = () => setPlaying(false);
+      const audio = new Audio(getTtsUrl(text));
+      audio.preload = "auto";
+
+      if (tokenRef.current !== myToken) return;
+      audioRef.current = audio;
+      setActiveTtsAudio(audio, () => {
+        if (tokenRef.current === myToken) {
+          setState("idle");
+          audioRef.current = null;
+        }
+      });
+
+      audio.onplaying = () => {
+        if (tokenRef.current === myToken) setState("playing");
+      };
+      audio.onended = () => {
+        if (tokenRef.current !== myToken) return;
+        setState("idle");
+        if (getActiveTtsAudio() === audio) setActiveTtsAudio(null);
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        if (tokenRef.current !== myToken) return;
+        setState("idle");
+        if (getActiveTtsAudio() === audio) setActiveTtsAudio(null);
+        audioRef.current = null;
+      };
+
       await audio.play();
     } catch {
-      setPlaying(false);
+      if (tokenRef.current === myToken) {
+        setState("idle");
+        if (audioRef.current && getActiveTtsAudio() === audioRef.current) {
+          setActiveTtsAudio(null);
+        }
+        audioRef.current = null;
+      }
     }
   };
 
@@ -42,29 +94,28 @@ export function AudioButton({ url, size = "md", className = "", label }: AudioBu
   };
 
   const iconSize = { sm: 14, md: 18, lg: 22 };
+  const isActive = state !== "idle";
 
   return (
     <button
       onClick={play}
-      disabled={!url}
+      disabled={!text}
       aria-label={label ?? "Play pronunciation"}
       className={`
         inline-flex items-center justify-center rounded-full
         transition-all duration-200 select-none
         ${sizeMap[size]}
-        ${url
+        ${text
           ? `cursor-pointer
-             bg-violet-100 dark:bg-violet-900/40
-             text-violet-700 dark:text-violet-300
-             hover:bg-violet-200 dark:hover:bg-violet-800/60
-             hover:scale-110 active:scale-95
-             shadow-sm hover:shadow-md`
+             ${isActive
+               ? "bg-violet-600 text-white scale-110 shadow-md"
+               : "bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300 hover:bg-violet-200 dark:hover:bg-violet-800/60 hover:scale-110 active:scale-95 shadow-sm hover:shadow-md"}`
           : "cursor-not-allowed bg-gray-100 dark:bg-gray-800 text-gray-400 opacity-50"
         }
         ${className}
       `}
     >
-      {playing ? (
+      {state === "loading" ? (
         <Loader2 size={iconSize[size]} className="animate-spin" />
       ) : (
         <Volume2 size={iconSize[size]} />

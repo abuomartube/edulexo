@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Volume2, Loader2 } from "lucide-react";
+import { getPreloadedAudio } from "@/hooks/useDictionary";
 
 interface AudioButtonProps {
   url: string | null;
@@ -12,21 +13,23 @@ export function AudioButton({ url, size = "md", className = "", label }: AudioBu
   const [playing, setPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  useEffect(() => {
+    audioRef.current = getPreloadedAudio(url);
+  }, [url]);
+
   const play = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!url || playing) return;
+    if (!url) return;
+
+    let audio = audioRef.current ?? getPreloadedAudio(url);
+    if (!audio) return;
 
     try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio(url);
-      } else {
-        audioRef.current.src = url;
-      }
-
+      audio.currentTime = 0;
       setPlaying(true);
-      audioRef.current.onended = () => setPlaying(false);
-      audioRef.current.onerror = () => setPlaying(false);
-      await audioRef.current.play();
+      audio.onended = () => setPlaying(false);
+      audio.onerror = () => setPlaying(false);
+      await audio.play();
     } catch {
       setPlaying(false);
     }
@@ -43,7 +46,7 @@ export function AudioButton({ url, size = "md", className = "", label }: AudioBu
   return (
     <button
       onClick={play}
-      disabled={!url || playing}
+      disabled={!url}
       aria-label={label ?? "Play pronunciation"}
       className={`
         inline-flex items-center justify-center rounded-full

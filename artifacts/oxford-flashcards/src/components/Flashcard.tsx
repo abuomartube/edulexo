@@ -15,68 +15,95 @@ interface FlashcardProps {
   total: number;
 }
 
-function speakBritish(text: string) {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
+const ttsUrlCache = new Map<string, string>();
+let activeExampleAudio: HTMLAudioElement | null = null;
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "en-GB";
-  utterance.rate = 0.88;
-  utterance.pitch = 1;
-
-  const setVoice = () => {
-    const voices = window.speechSynthesis.getVoices();
-    const british =
-      voices.find((v) => v.lang === "en-GB" && v.name.toLowerCase().includes("female")) ??
-      voices.find((v) => v.lang === "en-GB") ??
-      voices.find((v) => v.lang.startsWith("en"));
-    if (british) utterance.voice = british;
-    window.speechSynthesis.speak(utterance);
-  };
-
-  if (window.speechSynthesis.getVoices().length > 0) {
-    setVoice();
-  } else {
-    window.speechSynthesis.onvoiceschanged = setVoice;
+function getExampleTtsUrl(text: string): string {
+  const key = text.trim();
+  let url = ttsUrlCache.get(key);
+  if (!url) {
+    const base = (import.meta.env.BASE_URL || "/").replace(/\/+$/, "");
+    url = `${base}/api/tts?voice=fable&text=${encodeURIComponent(key)}`;
+    ttsUrlCache.set(key, url);
   }
+  return url;
 }
 
 function ExampleSpeakButton({ text }: { text: string }) {
-  const [speaking, setSpeaking] = useState(false);
+  const [state, setState] = useState<"idle" | "loading" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const tokenRef = useRef(0);
 
-  const handleSpeak = (e: React.MouseEvent) => {
+  const stop = useCallback(() => {
+    tokenRef.current++;
+    const current = audioRef.current;
+    if (current) {
+      current.onplaying = null;
+      current.onended = null;
+      current.onerror = null;
+      current.pause();
+      current.src = "";
+      audioRef.current = null;
+    }
+    if (activeExampleAudio === current) activeExampleAudio = null;
+    setState("idle");
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [text, stop]);
+
+  const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (speaking) {
-      window.speechSynthesis.cancel();
-      setSpeaking(false);
+
+    if (state !== "idle") {
+      stop();
       return;
     }
-    setSpeaking(true);
-    if (!("speechSynthesis" in window)) { setSpeaking(false); return; }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-GB";
-    utterance.rate = 0.88;
-    utterance.pitch = 1;
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
 
-    const go = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const british =
-        voices.find((v) => v.lang === "en-GB" && v.name.toLowerCase().includes("female")) ??
-        voices.find((v) => v.lang === "en-GB") ??
-        voices.find((v) => v.lang.startsWith("en"));
-      if (british) utterance.voice = british;
-      window.speechSynthesis.speak(utterance);
-    };
+    if (activeExampleAudio) {
+      activeExampleAudio.pause();
+      activeExampleAudio.src = "";
+      activeExampleAudio = null;
+    }
 
-    if (window.speechSynthesis.getVoices().length > 0) {
-      go();
-    } else {
-      window.speechSynthesis.onvoiceschanged = go;
+    const myToken = ++tokenRef.current;
+    setState("loading");
+    try {
+      const audio = new Audio(getExampleTtsUrl(text));
+      audio.preload = "auto";
+
+      if (tokenRef.current !== myToken) {
+        return;
+      }
+      audioRef.current = audio;
+      activeExampleAudio = audio;
+
+      audio.onplaying = () => {
+        if (tokenRef.current === myToken) setState("playing");
+      };
+      audio.onended = () => {
+        if (tokenRef.current !== myToken) return;
+        setState("idle");
+        if (activeExampleAudio === audio) activeExampleAudio = null;
+        audioRef.current = null;
+      };
+      audio.onerror = () => {
+        if (tokenRef.current !== myToken) return;
+        setState("idle");
+        if (activeExampleAudio === audio) activeExampleAudio = null;
+        audioRef.current = null;
+      };
+
+      await audio.play();
+    } catch {
+      if (tokenRef.current === myToken) setState("idle");
     }
   };
+
+  const speaking = state !== "idle";
 
   return (
     <button
@@ -91,7 +118,7 @@ function ExampleSpeakButton({ text }: { text: string }) {
         }
       `}
     >
-      {speaking ? (
+      {state === "loading" ? (
         <Loader2 size={14} className="animate-spin" />
       ) : (
         <Volume2 size={14} />
@@ -136,14 +163,20 @@ export function Flashcard({ wordData, onNext, onPrev, cardIndex, total }: Flashc
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.speechSynthesis?.cancel();
+    if (activeExampleAudio) {
+      activeExampleAudio.pause();
+      activeExampleAudio = null;
+    }
     setFlipped(false);
     setTimeout(onNext, 50);
   };
 
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.speechSynthesis?.cancel();
+    if (activeExampleAudio) {
+      activeExampleAudio.pause();
+      activeExampleAudio = null;
+    }
     setFlipped(false);
     setTimeout(onPrev, 50);
   };

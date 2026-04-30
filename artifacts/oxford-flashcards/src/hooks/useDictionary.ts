@@ -40,12 +40,18 @@ export interface ProcessedEntry {
 const dataCache = new Map<string, ProcessedEntry>();
 const inflight = new Map<string, Promise<ProcessedEntry>>();
 
-function processEntry(entry: DictionaryEntry | null): ProcessedEntry {
+const EXAMPLE_OVERRIDES: Record<string, string> = {
+  across: "I walked across the street.",
+};
+
+function processEntry(entry: DictionaryEntry | null, word?: string): ProcessedEntry {
+  const override = word ? EXAMPLE_OVERRIDES[word.toLowerCase()] : undefined;
+
   if (!entry) {
     return {
       entry: null,
       phonetic: null,
-      primaryExample: null,
+      primaryExample: override ?? null,
       partOfSpeech: null,
     };
   }
@@ -55,7 +61,8 @@ function processEntry(entry: DictionaryEntry | null): ProcessedEntry {
     phonetics.find((p) => p.text)?.text ?? entry.phonetic ?? null;
 
   const allDefinitions = entry.meanings.flatMap((m) => m.definitions);
-  const primaryExample = allDefinitions.find((d) => d.example)?.example ?? null;
+  const primaryExample =
+    override ?? allDefinitions.find((d) => d.example)?.example ?? null;
   const partOfSpeech = entry.meanings[0]?.partOfSpeech ?? null;
 
   return { entry, phonetic, primaryExample, partOfSpeech };
@@ -73,12 +80,12 @@ async function fetchWord(word: string): Promise<ProcessedEntry> {
       );
       if (res.ok) {
         const data: DictionaryEntry[] = await res.json();
-        processed = processEntry(data[0] ?? null);
+        processed = processEntry(data[0] ?? null, word);
       } else {
-        processed = processEntry(null);
+        processed = processEntry(null, word);
       }
     } catch {
-      processed = processEntry(null);
+      processed = processEntry(null, word);
     }
     dataCache.set(word, processed);
     inflight.delete(word);

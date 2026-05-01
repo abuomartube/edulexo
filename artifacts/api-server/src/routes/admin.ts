@@ -13,6 +13,7 @@ import {
   ENROLLMENT_STATUS_VALUES,
 } from "@workspace/db";
 import { requireAdmin } from "../lib/auth";
+import { notifyEnrollmentApproved } from "../lib/email-triggers";
 
 const router: IRouter = Router();
 
@@ -108,6 +109,7 @@ router.post(
         .limit(1);
 
       let enrollment;
+      const wasAlreadyActive = existing?.status === "active";
       if (existing) {
         const [updated] = await db
           .update(enrollmentsTable)
@@ -136,6 +138,16 @@ router.post(
           })
           .returning();
         enrollment = created;
+      }
+
+      if (enrollment && !wasAlreadyActive) {
+        notifyEnrollmentApproved({
+          log: req.log,
+          userId: enrollment.userId,
+          course: "intro",
+          tier: enrollment.tier,
+          enrollmentId: enrollment.id,
+        }).catch(() => undefined);
       }
 
       res.status(201).json({ enrollment });
@@ -414,6 +426,21 @@ router.patch(
         .set(updates)
         .where(eq(table.id, enrollmentId))
         .returning();
+
+      // Trigger confirmation email when an enrollment newly becomes active.
+      if (
+        updated &&
+        parsed.data.status === "active" &&
+        existing.status !== "active"
+      ) {
+        notifyEnrollmentApproved({
+          log: req.log,
+          userId: updated.userId,
+          course,
+          tier: updated.tier,
+          enrollmentId: updated.id,
+        }).catch(() => undefined);
+      }
 
       res.json({ enrollment: { ...updated, course } });
     } catch (err) {

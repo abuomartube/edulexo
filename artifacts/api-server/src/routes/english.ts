@@ -11,6 +11,10 @@ import {
   type EnglishTier,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../lib/auth";
+import {
+  notifyStudentSelfEnrolled,
+  notifyEnrollmentApproved,
+} from "../lib/email-triggers";
 
 const router: IRouter = Router();
 
@@ -173,7 +177,16 @@ router.post("/english/redeem", requireAuth, async (req, res, next) => {
       return;
     }
 
-    res.status(201).json({ enrollment: result.enrollment });
+    const enrollment = result.enrollment!;
+    notifyStudentSelfEnrolled({
+      log: req.log,
+      userId: enrollment.userId,
+      course: "english",
+      tier: enrollment.tier,
+      enrollmentId: enrollment.id,
+    }).catch(() => undefined);
+
+    res.status(201).json({ enrollment });
   } catch (err) {
     next(err);
   }
@@ -222,6 +235,7 @@ router.post(
         .limit(1);
 
       let enrollment;
+      const wasAlreadyActive = existing?.status === "active";
       if (existing) {
         const [updated] = await db
           .update(englishEnrollmentsTable)
@@ -250,6 +264,18 @@ router.post(
           })
           .returning();
         enrollment = created;
+      }
+
+      // Send confirmation only when the enrollment newly became active
+      // (skip if it was already active and the admin just refreshed it).
+      if (enrollment && !wasAlreadyActive) {
+        notifyEnrollmentApproved({
+          log: req.log,
+          userId: enrollment.userId,
+          course: "english",
+          tier: enrollment.tier,
+          enrollmentId: enrollment.id,
+        }).catch(() => undefined);
       }
 
       res.status(201).json({ enrollment });

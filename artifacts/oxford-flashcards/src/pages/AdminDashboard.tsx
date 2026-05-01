@@ -59,6 +59,12 @@ import {
   fetchAdminStats,
   fetchEmailRecipientsCount,
   broadcastEmail,
+  fetchEmailLog,
+  fetchExpiringEnrollments,
+  sendExpiryReminders,
+  type EmailLogRow,
+  type EmailLogType,
+  type ExpiringEnrollmentRow,
   TIER_LABELS,
   ENGLISH_TIER_LABELS,
   type Tier,
@@ -634,6 +640,347 @@ function CommunicationTab() {
           </button>
         </div>
       </form>
+
+      <ExpiryRemindersCard />
+      <EmailLogCard />
+    </div>
+  );
+}
+
+function ExpiryRemindersCard() {
+  const t = useT();
+  const qc = useQueryClient();
+  const [days, setDays] = useState(7);
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    msg: string;
+  } | null>(null);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "email", "expiring", days],
+    queryFn: () => fetchExpiringEnrollments(days),
+  });
+
+  const sendMutation = useMutation({
+    mutationFn: () => sendExpiryReminders(days),
+    onSuccess: (r) => {
+      setFeedback({
+        type: "success",
+        msg: t("admin.expiry.sentMsg")
+          .replace("{sent}", String(r.sentCount))
+          .replace("{considered}", String(r.considered))
+          .replace("{skipped}", String(r.skippedCount))
+          .replace("{failed}", String(r.failedCount)),
+      });
+      qc.invalidateQueries({ queryKey: ["admin", "email", "expiring"] });
+      qc.invalidateQueries({ queryKey: ["admin", "emails"] });
+    },
+    onError: (err) =>
+      setFeedback({
+        type: "error",
+        msg: err instanceof Error ? err.message : "Failed",
+      }),
+  });
+
+  const enrollments: ExpiringEnrollmentRow[] = data?.enrollments ?? [];
+  const pending = enrollments.filter((e) => !e.alreadyReminded).length;
+
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-6 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          {t("admin.expiry.title")}
+        </h2>
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+          <span>{t("admin.expiry.windowLabel")}</span>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            className="px-2 py-1 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950"
+          >
+            <option value={3}>3</option>
+            <option value={7}>7</option>
+            <option value={14}>14</option>
+            <option value={30}>30</option>
+          </select>
+          <span>{t("admin.expiry.days")}</span>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          <Loader2 size={14} className="inline animate-spin mr-2" />
+          {t("common.loading")}
+        </div>
+      ) : enrollments.length === 0 ? (
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          {t("admin.expiry.empty")}
+        </div>
+      ) : (
+        <div className="overflow-x-auto -mx-5 sm:-mx-6">
+          <table className="min-w-full text-xs">
+            <thead>
+              <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-gray-800">
+                <th className="px-5 sm:px-6 py-2 font-medium">
+                  {t("admin.expiry.col.student")}
+                </th>
+                <th className="px-3 py-2 font-medium">
+                  {t("admin.expiry.col.course")}
+                </th>
+                <th className="px-3 py-2 font-medium">
+                  {t("admin.expiry.col.tier")}
+                </th>
+                <th className="px-3 py-2 font-medium">
+                  {t("admin.expiry.col.expiresAt")}
+                </th>
+                <th className="px-5 sm:px-6 py-2 font-medium">
+                  {t("admin.expiry.col.status")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {enrollments.map((e) => (
+                <tr
+                  key={e.enrollmentId}
+                  className="border-b border-slate-100 dark:border-gray-800/60"
+                >
+                  <td className="px-5 sm:px-6 py-2">
+                    <div className="font-medium text-slate-700 dark:text-slate-200">
+                      {e.userName}
+                    </div>
+                    <div className="text-slate-500 dark:text-slate-400">
+                      {e.userEmail}
+                    </div>
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300 capitalize">
+                    {e.course}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300 capitalize">
+                    {e.tier}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                    {new Date(e.expiresAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-5 sm:px-6 py-2">
+                    {e.alreadyReminded ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                        <Check size={12} />
+                        {t("admin.expiry.statusReminded")}
+                      </span>
+                    ) : (
+                      <span className="text-amber-700 dark:text-amber-300">
+                        {t("admin.expiry.statusPending")}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {feedback && (
+        <div
+          className={`text-sm rounded-lg px-3 py-2 ${
+            feedback.type === "success"
+              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800"
+              : "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800"
+          }`}
+        >
+          {feedback.msg}
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={sendMutation.isPending || pending === 0}
+          onClick={() => {
+            if (
+              window.confirm(
+                t("admin.expiry.confirm").replace("{n}", String(pending)),
+              )
+            ) {
+              setFeedback(null);
+              sendMutation.mutate();
+            }
+          }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 disabled:opacity-50 shadow-sm"
+        >
+          {sendMutation.isPending ? (
+            <Loader2 size={13} className="animate-spin" />
+          ) : (
+            <Send size={13} />
+          )}
+          {t("admin.expiry.sendBtn").replace("{n}", String(pending))}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+const EMAIL_TYPE_OPTIONS: { value: "" | EmailLogType; labelKey: TranslationKey }[] = [
+  { value: "", labelKey: "admin.emailLog.allTypes" },
+  { value: "welcome", labelKey: "admin.emailLog.type.welcome" },
+  {
+    value: "enrollment_confirmation",
+    labelKey: "admin.emailLog.type.enrollment_confirmation",
+  },
+  { value: "course_access", labelKey: "admin.emailLog.type.course_access" },
+  { value: "expiry_reminder", labelKey: "admin.emailLog.type.expiry_reminder" },
+  {
+    value: "admin_new_signup",
+    labelKey: "admin.emailLog.type.admin_new_signup",
+  },
+  {
+    value: "admin_new_enrollment",
+    labelKey: "admin.emailLog.type.admin_new_enrollment",
+  },
+  { value: "broadcast", labelKey: "admin.emailLog.type.broadcast" },
+  {
+    value: "email_verification",
+    labelKey: "admin.emailLog.type.email_verification",
+  },
+  {
+    value: "password_reset",
+    labelKey: "admin.emailLog.type.password_reset",
+  },
+];
+
+function EmailLogCard() {
+  const t = useT();
+  const [typeFilter, setTypeFilter] = useState<"" | EmailLogType>("");
+  const [statusFilter, setStatusFilter] = useState<"" | "sent" | "failed">("");
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ["admin", "emails", typeFilter, statusFilter],
+    queryFn: () =>
+      fetchEmailLog({
+        type: typeFilter || undefined,
+        status: statusFilter || undefined,
+        limit: 100,
+      }),
+  });
+  const rows: EmailLogRow[] = data ?? [];
+
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-6 space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          {t("admin.emailLog.title")}
+        </h2>
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <select
+            value={typeFilter}
+            onChange={(e) =>
+              setTypeFilter(e.target.value as "" | EmailLogType)
+            }
+            className="px-2 py-1 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950"
+          >
+            {EMAIL_TYPE_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {t(o.labelKey)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "" | "sent" | "failed")
+            }
+            className="px-2 py-1 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950"
+          >
+            <option value="">{t("admin.emailLog.allStatuses")}</option>
+            <option value="sent">{t("admin.emailLog.statusSent")}</option>
+            <option value="failed">{t("admin.emailLog.statusFailed")}</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="px-2 py-1 rounded border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 hover:bg-slate-50 dark:hover:bg-gray-800 disabled:opacity-50"
+          >
+            {isFetching ? (
+              <Loader2 size={11} className="inline animate-spin" />
+            ) : (
+              t("admin.emailLog.refresh")
+            )}
+          </button>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          <Loader2 size={14} className="inline animate-spin mr-2" />
+          {t("common.loading")}
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          {t("admin.emailLog.empty")}
+        </div>
+      ) : (
+        <div className="overflow-x-auto -mx-5 sm:-mx-6">
+          <table className="min-w-full text-xs">
+            <thead>
+              <tr className="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-gray-800">
+                <th className="px-5 sm:px-6 py-2 font-medium">
+                  {t("admin.emailLog.col.when")}
+                </th>
+                <th className="px-3 py-2 font-medium">
+                  {t("admin.emailLog.col.type")}
+                </th>
+                <th className="px-3 py-2 font-medium">
+                  {t("admin.emailLog.col.recipient")}
+                </th>
+                <th className="px-3 py-2 font-medium">
+                  {t("admin.emailLog.col.subject")}
+                </th>
+                <th className="px-5 sm:px-6 py-2 font-medium">
+                  {t("admin.emailLog.col.status")}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b border-slate-100 dark:border-gray-800/60 align-top"
+                >
+                  <td className="px-5 sm:px-6 py-2 text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                    {new Date(r.sentAt).toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className="inline-block px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-medium">
+                      {r.emailType}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-slate-700 dark:text-slate-200 truncate max-w-[200px]">
+                    {r.toEmail}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600 dark:text-slate-300 truncate max-w-[300px]">
+                    {r.subject}
+                  </td>
+                  <td className="px-5 sm:px-6 py-2">
+                    {r.status === "sent" ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
+                        <Check size={11} />
+                        {t("admin.emailLog.statusSent")}
+                      </span>
+                    ) : (
+                      <span
+                        className="text-rose-700 dark:text-rose-300"
+                        title={r.error ?? undefined}
+                      >
+                        {t("admin.emailLog.statusFailed")}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

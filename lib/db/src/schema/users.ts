@@ -20,6 +20,9 @@ export const usersTable = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   role: varchar("role", { length: 16 }).notNull().default("student"),
   emailVerified: boolean("email_verified").notNull().default(false),
+  preferredLanguage: varchar("preferred_language", { length: 8 })
+    .notNull()
+    .default("en"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

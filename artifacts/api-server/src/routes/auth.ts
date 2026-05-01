@@ -31,7 +31,11 @@ import {
 import {
   buildPasswordResetEmail,
   buildEmailVerificationEmail,
+  buildWelcomeEmail,
+  buildAdminNewSignupEmail,
   sendEmail,
+  getAdminEmails,
+  normalizeLocale,
 } from "../lib/email";
 import {
   authIpLimiter,
@@ -87,7 +91,9 @@ async function dispatchVerificationEmail(
       to: user.email,
       name: user.name,
       verifyUrl,
+      locale: normalizeLocale(user.preferredLanguage),
     }),
+    { emailType: "email_verification", userId: user.id },
   );
 
   if (process.env.NODE_ENV !== "production") {
@@ -154,6 +160,55 @@ router.post("/auth/signup", signupLimiter, async (req, res, next) => {
         "Failed to send verification email at signup",
       );
     }
+
+    // Welcome email + admin notification — fire-and-forget, never block signup.
+    const dashboardUrl = `${getAppOrigin()}/dashboard`;
+    const adminUrl = `${getAppOrigin()}/admin`;
+    void (async () => {
+      try {
+        await sendEmail(
+          buildWelcomeEmail({
+            to: created.email,
+            name: created.name,
+            email: created.email,
+            dashboardUrl,
+            locale: normalizeLocale(created.preferredLanguage),
+          }),
+          { emailType: "welcome", userId: created.id },
+        );
+      } catch (mailErr) {
+        req.log.warn(
+          { err: mailErr, userId: created.id },
+          "Failed to send welcome email",
+        );
+      }
+      try {
+        const admins = await getAdminEmails();
+        for (const admin of admins) {
+          await sendEmail(
+            buildAdminNewSignupEmail({
+              to: admin.email,
+              adminName: admin.name,
+              newUserName: created.name,
+              newUserEmail: created.email,
+              signupAt: new Date(),
+              adminUrl,
+              locale: admin.locale,
+            }),
+            {
+              emailType: "admin_new_signup",
+              userId: admin.id,
+              relatedId: created.id,
+            },
+          );
+        }
+      } catch (mailErr) {
+        req.log.warn(
+          { err: mailErr, userId: created.id },
+          "Failed to notify admins of new signup",
+        );
+      }
+    })();
 
     const body = AuthResponseSchema.parse({ user: toPublicUser(created) });
     res.status(201).json(body);
@@ -244,8 +299,12 @@ router.post("/auth/forgot-password", forgotPasswordLimiter, async (req, res, nex
         to: user.email,
         name: user.name,
         resetUrl,
+        locale: normalizeLocale(user.preferredLanguage),
       });
-      await sendEmail(message);
+      await sendEmail(message, {
+        emailType: "password_reset",
+        userId: user.id,
+      });
       // Never log raw tokens in production. In dev only, log the URL so
       // we can complete the reset flow without a real email pipeline.
       if (process.env.NODE_ENV !== "production") {

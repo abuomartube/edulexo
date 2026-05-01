@@ -9,6 +9,7 @@ import {
   type Tier,
 } from "@workspace/db";
 import { requireAuth } from "../lib/auth";
+import { notifyStudentSelfEnrolled } from "../lib/email-triggers";
 
 const router: IRouter = Router();
 
@@ -145,7 +146,17 @@ router.post("/enrollments/redeem", requireAuth, async (req, res, next) => {
       return;
     }
 
-    res.status(201).json({ enrollment: result.enrollment });
+    const enrollment = result.enrollment!;
+    // Fire-and-forget notification — never block the redeem response.
+    notifyStudentSelfEnrolled({
+      log: req.log,
+      userId: enrollment.userId,
+      course: "intro",
+      tier: enrollment.tier,
+      enrollmentId: enrollment.id,
+    }).catch(() => undefined);
+
+    res.status(201).json({ enrollment });
   } catch (err) {
     next(err);
   }

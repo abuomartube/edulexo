@@ -321,6 +321,80 @@ export async function broadcastEmail(body: {
   return jsonOrThrow(res);
 }
 
+export type EmailLogType =
+  | "email_verification"
+  | "password_reset"
+  | "welcome"
+  | "enrollment_confirmation"
+  | "course_access"
+  | "expiry_reminder"
+  | "admin_new_signup"
+  | "admin_new_enrollment"
+  | "broadcast";
+
+export interface EmailLogRow {
+  id: string;
+  userId: string | null;
+  toEmail: string;
+  subject: string;
+  emailType: EmailLogType;
+  status: "sent" | "failed";
+  error: string | null;
+  sentAt: string;
+}
+
+export async function fetchEmailLog(params?: {
+  type?: EmailLogType;
+  status?: "sent" | "failed";
+  limit?: number;
+}): Promise<EmailLogRow[]> {
+  const q = new URLSearchParams();
+  if (params?.type) q.set("type", params.type);
+  if (params?.status) q.set("status", params.status);
+  if (params?.limit) q.set("limit", String(params.limit));
+  const url = q.toString() ? `/api/admin/emails?${q}` : "/api/admin/emails";
+  const res = await fetch(url, { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ emails: EmailLogRow[] }>(res);
+  return data.emails;
+}
+
+export interface ExpiringEnrollmentRow {
+  enrollmentId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  course: "intro" | "english";
+  tier: string;
+  expiresAt: string;
+  alreadyReminded: boolean;
+}
+
+export async function fetchExpiringEnrollments(
+  days = 7,
+): Promise<{ days: number; enrollments: ExpiringEnrollmentRow[] }> {
+  const res = await fetch(`/api/admin/email/expiring?days=${days}`, {
+    ...init,
+    method: "GET",
+  });
+  return jsonOrThrow(res);
+}
+
+export async function sendExpiryReminders(
+  days = 7,
+): Promise<{
+  considered: number;
+  sentCount: number;
+  skippedCount: number;
+  failedCount: number;
+  stubMode: boolean;
+}> {
+  const res = await fetch(
+    `/api/admin/email/send-expiry-reminders?days=${days}`,
+    { ...init, method: "POST" },
+  );
+  return jsonOrThrow(res);
+}
+
 export async function fetchAdminFaqs(): Promise<FaqRow[]> {
   const res = await fetch("/api/admin/faqs", { ...init, method: "GET" });
   const data = await jsonOrThrow<{ faqs: FaqRow[] }>(res);

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { Menu, X, Moon, Sun, LogOut, LayoutDashboard, Shield, ChevronDown } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
@@ -97,7 +98,7 @@ function LangToggle({ compact = true, onToggle }: { compact?: boolean; onToggle?
 export default function Header() {
   const { theme, toggle: toggleTheme } = useTheme();
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileMounted, setMobileMounted] = useState(false);
@@ -140,6 +141,12 @@ export default function Header() {
       document.removeEventListener("keydown", onKey);
     };
   }, [mobileMounted]);
+
+  // Close the drawer if the language is switched while it's open
+  // (otherwise the panel would jump from one side of the screen to the other).
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [lang]);
 
   const closeMobile = () => setMobileOpen(false);
 
@@ -268,22 +275,34 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile drawer + backdrop (slides in from the left) */}
-      {mobileMounted && (
-        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t("header.toggleMenu")}>
+      {/* Mobile drawer + backdrop — portaled to <body> so they aren't constrained by the
+          header's containing block (the header uses backdrop-filter, which would otherwise
+          trap fixed-position descendants inside it). */}
+      {mobileMounted && createPortal(
+        <div className="lg:hidden">
           {/* Backdrop */}
           <div
             data-testid="mobile-backdrop"
             onClick={closeMobile}
-            className={`absolute inset-0 bg-black/65 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+            aria-hidden="true"
+            className={`fixed inset-0 z-40 bg-black/65 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
               mobileShown ? "opacity-100" : "opacity-0"
             }`}
           />
           {/* Sidebar */}
           <aside
             data-testid="mobile-drawer"
-            className={`absolute top-0 left-0 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-950 shadow-2xl shadow-black/40 ring-1 ring-black/5 dark:ring-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
-              mobileShown ? "translate-x-0" : "-translate-x-full"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t("header.toggleMenu")}
+            className={`fixed top-0 bottom-0 z-50 ${
+              lang === "ar" ? "right-0" : "left-0"
+            } w-80 max-w-[85vw] bg-white dark:bg-gray-950 shadow-2xl shadow-black/40 ring-1 ring-black/5 dark:ring-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
+              mobileShown
+                ? "translate-x-0"
+                : lang === "ar"
+                  ? "translate-x-full"
+                  : "-translate-x-full"
             }`}
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-gray-800">
@@ -343,7 +362,8 @@ export default function Header() {
               )}
             </nav>
           </aside>
-        </div>
+        </div>,
+        document.body,
       )}
     </header>
   );

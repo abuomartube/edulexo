@@ -821,6 +821,67 @@ export const translations = {
   "admin.courses.subtitleEn": { en: "Subtitle (EN)", ar: "العنوان الفرعي (إنجليزي)" },
   "admin.courses.subtitleAr": { en: "Subtitle (AR)", ar: "العنوان الفرعي (عربي)" },
   "admin.courses.order": { en: "Display order", ar: "الترتيب" },
+
+  // ───────────────────────── CERTIFICATES ─────────────────────────
+  "certs.section.title": { en: "My Certificates", ar: "شهاداتي" },
+  "certs.section.subtitle": {
+    en: "Download your bilingual completion certificates.",
+    ar: "نزّل شهادات إتمامك الثنائية اللغة.",
+  },
+  "certs.empty.title": { en: "No certificates yet", ar: "لا توجد شهادات بعد" },
+  "certs.empty.body": {
+    en: "Once you complete a course your instructor will issue your certificate here.",
+    ar: "عند إتمامك دورة سيُصدر لك المدرب الشهادة هنا.",
+  },
+  "certs.download": { en: "Download PDF", ar: "تنزيل PDF" },
+  "certs.col.course": { en: "Course", ar: "الدورة" },
+  "certs.col.tier": { en: "Tier", ar: "المستوى" },
+  "certs.col.id": { en: "Certificate ID", ar: "رقم الشهادة" },
+  "certs.col.completion": { en: "Completed", ar: "تاريخ الإتمام" },
+  "certs.col.issued": { en: "Issued", ar: "تاريخ الإصدار" },
+  "certs.col.student": { en: "Student", ar: "الطالب" },
+  "certs.col.status": { en: "Status", ar: "الحالة" },
+  "certs.col.actions": { en: "Actions", ar: "إجراءات" },
+  "certs.status.active": { en: "Active", ar: "سارية" },
+  "certs.status.revoked": { en: "Revoked", ar: "ملغاة" },
+  "admin.tab.certificates": { en: "Certificates", ar: "الشهادات" },
+  "admin.certs.search": {
+    en: "Search by name, email or certificate ID…",
+    ar: "ابحث بالاسم أو البريد أو رقم الشهادة…",
+  },
+  "admin.certs.issue": { en: "Issue certificate", ar: "إصدار شهادة" },
+  "admin.certs.revoke": { en: "Revoke", ar: "إلغاء" },
+  "admin.certs.revoke.confirm": {
+    en: "Revoke this certificate? Students will no longer be able to download it.",
+    ar: "هل تريد إلغاء هذه الشهادة؟ لن يتمكن الطالب من تنزيلها بعد ذلك.",
+  },
+  "admin.certs.revoke.reason": {
+    en: "Reason (optional)",
+    ar: "السبب (اختياري)",
+  },
+  "admin.certs.modal.title": {
+    en: "Issue a new certificate",
+    ar: "إصدار شهادة جديدة",
+  },
+  "admin.certs.modal.student": { en: "Student", ar: "الطالب" },
+  "admin.certs.modal.studentPh": {
+    en: "Search students by name or email…",
+    ar: "ابحث عن طالب بالاسم أو البريد…",
+  },
+  "admin.certs.modal.course": { en: "Course", ar: "الدورة" },
+  "admin.certs.modal.tier": { en: "Tier", ar: "المستوى" },
+  "admin.certs.modal.completion": { en: "Completion date", ar: "تاريخ الإتمام" },
+  "admin.certs.modal.submit": { en: "Issue certificate", ar: "إصدار" },
+  "admin.certs.modal.cancel": { en: "Cancel", ar: "إلغاء" },
+  "admin.certs.empty": {
+    en: "No certificates issued yet.",
+    ar: "لم يتم إصدار أي شهادات بعد.",
+  },
+  "admin.certs.course.intro": { en: "LEXO Intro", ar: "ليكسو للتأسيس" },
+  "admin.certs.course.english": {
+    en: "LEXO for English",
+    ar: "ليكسو للغة الإنجليزية",
+  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

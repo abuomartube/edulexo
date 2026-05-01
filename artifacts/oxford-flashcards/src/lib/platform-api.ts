@@ -528,3 +528,77 @@ export const ENGLISH_TIER_LABELS: Record<EnglishTier, { en: string; ar: string }
   intermediate: { en: "Intermediate", ar: "متوسط" },
   advanced: { en: "Advanced", ar: "متقدّم" },
 };
+
+// ─────────────────────────── Certificates ───────────────────────────
+
+export type CertificateCourse = "intro" | "english";
+
+export interface MyCertificate {
+  id: string;
+  course: CertificateCourse;
+  tier: string;
+  certificateId: string;
+  completionDate: string;
+  issuedAt: string;
+}
+
+export interface AdminCertificate extends MyCertificate {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  revokedAt: string | null;
+  revokeReason: string | null;
+}
+
+export async function fetchMyCertificates(): Promise<MyCertificate[]> {
+  const res = await fetch("/api/certificates/mine", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ certificates: MyCertificate[] }>(res);
+  return data.certificates;
+}
+
+export async function fetchAllCertificates(params?: {
+  search?: string;
+  course?: CertificateCourse;
+  status?: "active" | "revoked";
+}): Promise<AdminCertificate[]> {
+  const qs = new URLSearchParams();
+  if (params?.search) qs.set("search", params.search);
+  if (params?.course) qs.set("course", params.course);
+  if (params?.status) qs.set("status", params.status);
+  const url = `/api/admin/certificates${qs.toString() ? `?${qs.toString()}` : ""}`;
+  const res = await fetch(url, { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ certificates: AdminCertificate[] }>(res);
+  return data.certificates;
+}
+
+export async function issueCertificate(input: {
+  userId: string;
+  course: CertificateCourse;
+  tier: string;
+  enrollmentId?: string;
+  completionDate?: string;
+}): Promise<AdminCertificate> {
+  const res = await fetch("/api/admin/certificates/issue", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  const data = await jsonOrThrow<{ certificate: AdminCertificate }>(res);
+  return data.certificate;
+}
+
+export async function revokeCertificate(
+  id: string,
+  reason?: string,
+): Promise<void> {
+  const res = await fetch(`/api/admin/certificates/${id}/revoke`, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ reason: reason ?? undefined }),
+  });
+  await jsonOrThrow<{ certificate: AdminCertificate }>(res);
+}
+
+export function getCertificatePdfUrl(id: string): string {
+  return `/api/certificates/${id}/pdf`;
+}

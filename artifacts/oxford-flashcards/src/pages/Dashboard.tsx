@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import MyCourses from "@/components/MyCourses";
+import MyCertificates from "@/components/MyCertificates";
 import UnverifiedEmailBanner from "@/components/UnverifiedEmailBanner";
 import { useAuth } from "@/lib/auth-context";
 import { useT, useLanguage } from "@/lib/i18n";
@@ -64,8 +65,9 @@ export default function Dashboard() {
 
         {/* My Courses (real enrollments) + Profile */}
         <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
             <MyCourses />
+            <MyCertificates />
           </div>
 
           <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-6 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow">

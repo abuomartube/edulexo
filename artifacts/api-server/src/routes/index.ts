@@ -10,6 +10,7 @@ import ssoRouter from "./sso";
 import englishRouter from "./english";
 import faqsRouter from "./faqs";
 import coursesRouter from "./courses";
+import certificatesRouter from "./certificates";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(ssoRouter);
 router.use(englishRouter);
 router.use(faqsRouter);
 router.use(coursesRouter);
+router.use(certificatesRouter);
 
 export default router;

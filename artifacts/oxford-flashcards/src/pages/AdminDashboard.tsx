@@ -23,6 +23,8 @@ import {
   ChevronRight,
   Send,
   AlertCircle,
+  Award,
+  Download,
 } from "lucide-react";
 import {
   LineChart,
@@ -74,6 +76,12 @@ import {
   type AdminEnrollmentRow,
   type FaqRow,
   type CourseRow,
+  fetchAllCertificates,
+  issueCertificate,
+  revokeCertificate,
+  getCertificatePdfUrl,
+  type AdminCertificate,
+  type CertificateCourse,
 } from "@/lib/platform-api";
 
 type Tab =
@@ -83,7 +91,8 @@ type Tab =
   | "faqs"
   | "courses"
   | "communication"
-  | "codes";
+  | "codes"
+  | "certificates";
 
 const TAB_DEFS: {
   key: Tab;
@@ -97,6 +106,7 @@ const TAB_DEFS: {
   { key: "courses", icon: <BookOpen size={16} />, labelKey: "admin.tab.courses" },
   { key: "communication", icon: <Mail size={16} />, labelKey: "admin.tab.communication" },
   { key: "codes", icon: <KeyRound size={16} />, labelKey: "admin.tab.codes" },
+  { key: "certificates", icon: <Award size={16} />, labelKey: "admin.tab.certificates" },
 ];
 
 export default function AdminDashboard() {
@@ -176,6 +186,7 @@ export default function AdminDashboard() {
             {tab === "courses" && <CoursesTab />}
             {tab === "communication" && <CommunicationTab />}
             {tab === "codes" && <CodesTab />}
+            {tab === "certificates" && <CertificatesTab />}
           </section>
         </div>
       </main>
@@ -2645,6 +2656,417 @@ function ErrorPanel({ msg }: { msg: string }) {
   return (
     <div className="bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 rounded-2xl p-5 text-sm">
       {msg}
+    </div>
+  );
+}
+
+// ─────────────────────────── Certificates ───────────────────────────
+
+const CERT_COURSE_LABELS: Record<CertificateCourse, TranslationKey> = {
+  intro: "admin.certs.course.intro",
+  english: "admin.certs.course.english",
+};
+
+const CERT_COURSE_TIERS: Record<CertificateCourse, string[]> = {
+  intro: ["intro", "advance", "complete"],
+  english: ["beginner", "intermediate", "advanced"],
+};
+
+function formatCertDate(iso: string, lang: "en" | "ar"): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function CertificatesTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [showIssue, setShowIssue] = useState(false);
+
+  const certsQuery = useQuery({
+    queryKey: ["admin-certificates"],
+    queryFn: () => fetchAllCertificates(),
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: ({ id, reason }: { id: string; reason?: string }) =>
+      revokeCertificate(id, reason),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-certificates"] });
+    },
+    onError: (err) => window.alert((err as Error).message),
+  });
+
+  const filtered = useMemo(() => {
+    const list = certsQuery.data ?? [];
+    const q = search.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter(
+      (c) =>
+        c.userName.toLowerCase().includes(q) ||
+        c.userEmail.toLowerCase().includes(q) ||
+        c.certificateId.toLowerCase().includes(q),
+    );
+  }, [certsQuery.data, search]);
+
+  if (certsQuery.isLoading) return <LoadingPanel />;
+  if (certsQuery.isError) return <ErrorPanel msg={t("admin.error.loadFailed")} />;
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="relative flex-1 max-w-md">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(ev) => setSearch(ev.target.value)}
+            placeholder={t("admin.certs.search")}
+            className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-testid="cert-search"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowIssue(true)}
+          className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 text-sm font-semibold shadow"
+          data-testid="cert-issue-open"
+        >
+          <Plus size={15} />
+          {t("admin.certs.issue")}
+        </button>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 dark:bg-gray-800/60 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <tr>
+                <Th>{t("certs.col.student")}</Th>
+                <Th>{t("certs.col.course")}</Th>
+                <Th>{t("certs.col.tier")}</Th>
+                <Th>{t("certs.col.id")}</Th>
+                <Th>{t("certs.col.completion")}</Th>
+                <Th>{t("certs.col.status")}</Th>
+                <Th align="right">{t("certs.col.actions")}</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                    {t("admin.certs.empty")}
+                  </td>
+                </tr>
+              )}
+              {filtered.map((c) => (
+                <CertificateRow
+                  key={c.id}
+                  cert={c}
+                  lang={lang}
+                  t={t}
+                  onRevoke={() => {
+                    if (!window.confirm(t("admin.certs.revoke.confirm"))) return;
+                    const reason =
+                      window.prompt(t("admin.certs.revoke.reason")) ?? undefined;
+                    revokeMutation.mutate({
+                      id: c.id,
+                      reason: reason && reason.trim() ? reason.trim() : undefined,
+                    });
+                  }}
+                  revoking={revokeMutation.isPending}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showIssue && (
+        <IssueCertificateModal
+          onClose={() => setShowIssue(false)}
+          onIssued={() => {
+            qc.invalidateQueries({ queryKey: ["admin-certificates"] });
+            setShowIssue(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CertificateRow({
+  cert,
+  lang,
+  t,
+  onRevoke,
+  revoking,
+}: {
+  cert: AdminCertificate;
+  lang: "en" | "ar";
+  t: (k: TranslationKey) => string;
+  onRevoke: () => void;
+  revoking: boolean;
+}) {
+  const courseLabel = t(CERT_COURSE_LABELS[cert.course] ?? "admin.certs.course.intro");
+  const isRevoked = !!cert.revokedAt;
+  return (
+    <tr
+      className="border-t border-slate-100 dark:border-gray-800 hover:bg-slate-50/60 dark:hover:bg-gray-800/40"
+      data-testid={`cert-row-${cert.certificateId}`}
+    >
+      <Td>
+        <div className="font-medium">{cert.userName}</div>
+        <div className="text-xs text-slate-500" dir="ltr">
+          {cert.userEmail}
+        </div>
+      </Td>
+      <Td>{courseLabel}</Td>
+      <Td className="capitalize">{cert.tier}</Td>
+      <Td ltr className="font-mono text-xs">
+        {cert.certificateId}
+      </Td>
+      <Td className="text-slate-600 dark:text-slate-300 whitespace-nowrap">
+        {formatCertDate(cert.completionDate, lang)}
+      </Td>
+      <Td>
+        {isRevoked ? (
+          <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200">
+            {t("certs.status.revoked")}
+          </span>
+        ) : (
+          <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">
+            {t("certs.status.active")}
+          </span>
+        )}
+      </Td>
+      <Td align="right">
+        <div className="flex items-center justify-end gap-2">
+          {!isRevoked && (
+            <a
+              href={getCertificatePdfUrl(cert.id)}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-slate-200 px-2.5 py-1 text-xs font-semibold"
+              data-testid={`cert-download-${cert.certificateId}`}
+            >
+              <Download size={13} />
+              PDF
+            </a>
+          )}
+          {!isRevoked && (
+            <button
+              type="button"
+              onClick={onRevoke}
+              disabled={revoking}
+              className="inline-flex items-center gap-1 rounded-lg bg-rose-50 hover:bg-rose-100 dark:bg-rose-900/30 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-300 px-2.5 py-1 text-xs font-semibold disabled:opacity-50"
+              data-testid={`cert-revoke-${cert.certificateId}`}
+            >
+              <Trash2 size={13} />
+              {t("admin.certs.revoke")}
+            </button>
+          )}
+        </div>
+      </Td>
+    </tr>
+  );
+}
+
+function IssueCertificateModal({
+  onClose,
+  onIssued,
+}: {
+  onClose: () => void;
+  onIssued: () => void;
+}) {
+  const t = useT();
+  const [studentSearch, setStudentSearch] = useState("");
+  const [studentId, setStudentId] = useState<string>("");
+  const [course, setCourse] = useState<CertificateCourse>("intro");
+  const [tier, setTier] = useState<string>(CERT_COURSE_TIERS.intro[0]!);
+  const [completionDate, setCompletionDate] = useState<string>(() =>
+    new Date().toISOString().slice(0, 10),
+  );
+  const [error, setError] = useState<string | null>(null);
+
+  const studentsQuery = useQuery({
+    queryKey: ["admin-students"],
+    queryFn: fetchStudents,
+  });
+
+  const filteredStudents = useMemo(() => {
+    const list = studentsQuery.data ?? [];
+    const q = studentSearch.trim().toLowerCase();
+    if (!q) return list.slice(0, 10);
+    return list
+      .filter(
+        (s) =>
+          s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q),
+      )
+      .slice(0, 10);
+  }, [studentsQuery.data, studentSearch]);
+
+  const issueMutation = useMutation({
+    mutationFn: issueCertificate,
+    onSuccess: () => onIssued(),
+    onError: (err) => setError((err as Error).message),
+  });
+
+  function changeCourse(next: CertificateCourse) {
+    setCourse(next);
+    setTier(CERT_COURSE_TIERS[next][0]!);
+  }
+
+  function submit(ev: React.FormEvent) {
+    ev.preventDefault();
+    setError(null);
+    if (!studentId) {
+      setError(t("admin.certs.modal.student"));
+      return;
+    }
+    issueMutation.mutate({
+      userId: studentId,
+      course,
+      tier,
+      completionDate,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+      <div
+        className="w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-gray-800"
+        data-testid="cert-issue-modal"
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-gray-800">
+          <h3 className="text-base font-bold flex items-center gap-2">
+            <Award size={18} className="text-amber-500" />
+            {t("admin.certs.modal.title")}
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-gray-800"
+            aria-label="close"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <form onSubmit={submit} className="p-5 space-y-4">
+          <Field label={t("admin.certs.modal.student")}>
+            <input
+              type="text"
+              value={studentSearch}
+              onChange={(ev) => {
+                setStudentSearch(ev.target.value);
+                setStudentId("");
+              }}
+              placeholder={t("admin.certs.modal.studentPh")}
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              data-testid="cert-issue-student-search"
+            />
+            <div className="mt-1 max-h-44 overflow-y-auto rounded-xl border border-slate-200 dark:border-gray-800 bg-slate-50 dark:bg-gray-950">
+              {filteredStudents.length === 0 && (
+                <p className="px-3 py-3 text-xs text-slate-500">—</p>
+              )}
+              {filteredStudents.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    setStudentId(s.id);
+                    setStudentSearch(`${s.name} (${s.email})`);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 dark:hover:bg-indigo-900/30 ${
+                    studentId === s.id
+                      ? "bg-indigo-100 dark:bg-indigo-900/50"
+                      : ""
+                  }`}
+                  data-testid={`cert-issue-student-${s.email}`}
+                >
+                  <span className="font-medium">{s.name}</span>{" "}
+                  <span className="text-slate-500" dir="ltr">
+                    · {s.email}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t("admin.certs.modal.course")}>
+              <select
+                value={course}
+                onChange={(ev) => changeCourse(ev.target.value as CertificateCourse)}
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                data-testid="cert-issue-course"
+              >
+                <option value="intro">{t("admin.certs.course.intro")}</option>
+                <option value="english">{t("admin.certs.course.english")}</option>
+              </select>
+            </Field>
+            <Field label={t("admin.certs.modal.tier")}>
+              <select
+                value={tier}
+                onChange={(ev) => setTier(ev.target.value)}
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm capitalize focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                data-testid="cert-issue-tier"
+              >
+                {CERT_COURSE_TIERS[course].map((tn) => (
+                  <option key={tn} value={tn} className="capitalize">
+                    {tn}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <Field label={t("admin.certs.modal.completion")}>
+            <input
+              type="date"
+              value={completionDate}
+              onChange={(ev) => setCompletionDate(ev.target.value)}
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              data-testid="cert-issue-date"
+            />
+          </Field>
+
+          {error && (
+            <div className="rounded-lg bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300 px-3 py-2 text-xs flex items-start gap-2">
+              <AlertCircle size={14} className="mt-0.5 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-gray-800">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-slate-700 dark:text-slate-200"
+            >
+              {t("admin.certs.modal.cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={issueMutation.isPending || !studentId}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow disabled:opacity-50"
+              data-testid="cert-issue-submit"
+            >
+              {issueMutation.isPending && (
+                <Loader2 size={14} className="animate-spin" />
+              )}
+              {t("admin.certs.modal.submit")}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

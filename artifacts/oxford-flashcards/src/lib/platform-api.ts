@@ -147,6 +147,186 @@ export async function revokeAccessCode(codeId: string): Promise<void> {
   await jsonOrThrow<{ code: AccessCodeRow }>(res);
 }
 
+// ───── Phase 4 P2 — admin content management ─────
+
+export interface AdminEnrollmentRow {
+  id: string;
+  userId: string;
+  studentName: string | null;
+  studentEmail: string | null;
+  tier: Tier;
+  status: "active" | "expired" | "revoked";
+  source: "admin" | "code" | "stripe";
+  grantedAt: string;
+  expiresAt: string | null;
+  note: string | null;
+}
+
+export interface FaqRow {
+  id: string;
+  courseSlug: string | null;
+  questionEn: string;
+  questionAr: string;
+  answerEn: string;
+  answerAr: string;
+  displayOrder: number;
+  isPublished: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CourseRow {
+  slug: string;
+  titleEn: string;
+  titleAr: string;
+  subtitleEn: string | null;
+  subtitleAr: string | null;
+  isPublished: boolean;
+  displayOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function patchStudent(
+  id: string,
+  body: { name?: string; role?: "student" | "admin" },
+): Promise<Student> {
+  const res = await fetch(`/api/admin/students/${id}`, {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  const data = await jsonOrThrow<{ student: Student }>(res);
+  return data.student;
+}
+
+export async function deleteStudent(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/students/${id}`, {
+    ...init,
+    method: "DELETE",
+  });
+  await jsonOrThrow<{ message: string }>(res);
+}
+
+export async function fetchAllEnrollments(filters?: {
+  status?: "active" | "expired" | "revoked";
+  tier?: Tier;
+}): Promise<AdminEnrollmentRow[]> {
+  const params = new URLSearchParams();
+  if (filters?.status) params.set("status", filters.status);
+  if (filters?.tier) params.set("tier", filters.tier);
+  const qs = params.toString();
+  const res = await fetch(
+    `/api/admin/enrollments${qs ? `?${qs}` : ""}`,
+    { ...init, method: "GET" },
+  );
+  const data = await jsonOrThrow<{ enrollments: AdminEnrollmentRow[] }>(res);
+  return data.enrollments;
+}
+
+export async function patchEnrollment(
+  id: string,
+  body: {
+    status?: "active" | "expired" | "revoked";
+    expiresAt?: string | null;
+    note?: string | null;
+  },
+): Promise<AdminEnrollmentRow> {
+  const res = await fetch(`/api/admin/enrollments/${id}`, {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  const data = await jsonOrThrow<{ enrollment: AdminEnrollmentRow }>(res);
+  return data.enrollment;
+}
+
+export async function fetchAdminFaqs(): Promise<FaqRow[]> {
+  const res = await fetch("/api/admin/faqs", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ faqs: FaqRow[] }>(res);
+  return data.faqs;
+}
+
+export async function createFaq(body: {
+  courseSlug: string | null;
+  questionEn: string;
+  questionAr: string;
+  answerEn: string;
+  answerAr: string;
+  isPublished?: boolean;
+}): Promise<FaqRow> {
+  const res = await fetch("/api/admin/faqs", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  const data = await jsonOrThrow<{ faq: FaqRow }>(res);
+  return data.faq;
+}
+
+export async function patchFaq(
+  id: string,
+  body: Partial<{
+    courseSlug: string | null;
+    questionEn: string;
+    questionAr: string;
+    answerEn: string;
+    answerAr: string;
+    isPublished: boolean;
+  }>,
+): Promise<FaqRow> {
+  const res = await fetch(`/api/admin/faqs/${id}`, {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  const data = await jsonOrThrow<{ faq: FaqRow }>(res);
+  return data.faq;
+}
+
+export async function deleteFaq(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/faqs/${id}`, {
+    ...init,
+    method: "DELETE",
+  });
+  await jsonOrThrow<{ message: string }>(res);
+}
+
+export async function reorderFaqs(ids: string[]): Promise<void> {
+  const res = await fetch("/api/admin/faqs/reorder", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ ids }),
+  });
+  await jsonOrThrow<{ message: string }>(res);
+}
+
+export async function fetchAdminCourses(): Promise<CourseRow[]> {
+  const res = await fetch("/api/admin/courses", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ courses: CourseRow[] }>(res);
+  return data.courses;
+}
+
+export async function patchCourse(
+  slug: string,
+  body: Partial<{
+    titleEn: string;
+    titleAr: string;
+    subtitleEn: string | null;
+    subtitleAr: string | null;
+    isPublished: boolean;
+    displayOrder: number;
+  }>,
+): Promise<CourseRow> {
+  const res = await fetch(`/api/admin/courses/${slug}`, {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  const data = await jsonOrThrow<{ course: CourseRow }>(res);
+  return data.course;
+}
+
 export const TIER_LABELS: Record<Tier, { en: string; ar: string }> = {
   intro: { en: "Intro (A2 → B1)", ar: "تمهيدي (A2 → B1)" },
   advance: { en: "Advance (B1 → C1)", ar: "متقدم (B1 → C1)" },

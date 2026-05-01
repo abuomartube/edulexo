@@ -6,6 +6,8 @@ import enrollmentsRouter from "./enrollments";
 import adminRouter from "./admin";
 import ssoRouter from "./sso";
 import englishRouter from "./english";
+import faqsRouter from "./faqs";
+import coursesRouter from "./courses";
 
 const router: IRouter = Router();
 
@@ -16,5 +18,7 @@ router.use(enrollmentsRouter);
 router.use(adminRouter);
 router.use(ssoRouter);
 router.use(englishRouter);
+router.use(faqsRouter);
+router.use(coursesRouter);
 
 export default router;

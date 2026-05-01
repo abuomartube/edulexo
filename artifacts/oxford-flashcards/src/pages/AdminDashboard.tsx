@@ -10,9 +10,18 @@ import {
   Copy,
   Check,
   Search,
+  Pencil,
+  GraduationCap,
+  HelpCircle,
+  BookOpen,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { useT, useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import {
   fetchStudents,
   grantTier,
@@ -20,13 +29,27 @@ import {
   fetchAccessCodes,
   createAccessCodes,
   revokeAccessCode,
+  patchStudent,
+  deleteStudent,
+  fetchAllEnrollments,
+  patchEnrollment,
+  fetchAdminFaqs,
+  createFaq,
+  patchFaq,
+  deleteFaq,
+  reorderFaqs,
+  fetchAdminCourses,
+  patchCourse,
   TIER_LABELS,
   type Tier,
   type Student,
   type AccessCodeRow,
+  type AdminEnrollmentRow,
+  type FaqRow,
+  type CourseRow,
 } from "@/lib/platform-api";
 
-type Tab = "students" | "codes";
+type Tab = "students" | "enrollments" | "faqs" | "courses" | "codes";
 
 export default function AdminDashboard() {
   const t = useT();
@@ -45,9 +68,18 @@ export default function AdminDashboard() {
           </p>
         </header>
 
-        <nav className="flex gap-2 border-b border-slate-200 dark:border-gray-800 mb-6">
+        <nav className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-gray-800 mb-6">
           <TabButton active={tab === "students"} onClick={() => setTab("students")} icon={<Users size={15} />}>
             {t("admin.tab.students")}
+          </TabButton>
+          <TabButton active={tab === "enrollments"} onClick={() => setTab("enrollments")} icon={<GraduationCap size={15} />}>
+            {t("admin.tab.enrollments")}
+          </TabButton>
+          <TabButton active={tab === "faqs"} onClick={() => setTab("faqs")} icon={<HelpCircle size={15} />}>
+            {t("admin.tab.faqs")}
+          </TabButton>
+          <TabButton active={tab === "courses"} onClick={() => setTab("courses")} icon={<BookOpen size={15} />}>
+            {t("admin.tab.courses")}
           </TabButton>
           <TabButton active={tab === "codes"} onClick={() => setTab("codes")} icon={<KeyRound size={15} />}>
             {t("admin.tab.codes")}
@@ -55,6 +87,9 @@ export default function AdminDashboard() {
         </nav>
 
         {tab === "students" && <StudentsTab />}
+        {tab === "enrollments" && <EnrollmentsTab />}
+        {tab === "faqs" && <FaqsTab />}
+        {tab === "courses" && <CoursesTab />}
         {tab === "codes" && <CodesTab />}
       </main>
     </div>
@@ -93,9 +128,11 @@ function TabButton({
 function StudentsTab() {
   const t = useT();
   const { lang } = useLanguage();
+  const { user: currentUser } = useAuth();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [grantingFor, setGrantingFor] = useState<Student | null>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   const studentsQuery = useQuery({
     queryKey: ["admin-students"],
@@ -105,6 +142,15 @@ function StudentsTab() {
   const revokeMutation = useMutation({
     mutationFn: revokeEnrollment,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-students"] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteStudent,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-students"] });
+      qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
+    },
+    onError: (err) => window.alert((err as Error).message),
   });
 
   const filtered = useMemo(() => {
@@ -198,13 +244,44 @@ function StudentsTab() {
                     )}
                   </Td>
                   <Td align="right">
-                    <button
-                      type="button"
-                      onClick={() => setGrantingFor(s)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300"
-                    >
-                      <Plus size={13} /> {t("admin.students.grant")}
-                    </button>
+                    <div className="inline-flex items-center gap-2 justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setGrantingFor(s)}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300"
+                      >
+                        <Plus size={13} /> {t("admin.students.grant")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingStudent(s)}
+                        className="text-slate-400 hover:text-indigo-600 transition"
+                        title={t("admin.students.edit")}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      {currentUser?.id !== s.id && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                t("admin.students.confirmDelete").replace(
+                                  "{name}",
+                                  s.name,
+                                ),
+                              )
+                            ) {
+                              deleteMutation.mutate(s.id);
+                            }
+                          }}
+                          className="text-slate-400 hover:text-rose-600 transition"
+                          title={t("admin.students.delete")}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   </Td>
                 </tr>
               ))}
@@ -230,6 +307,127 @@ function StudentsTab() {
           }}
         />
       )}
+
+      {editingStudent && (
+        <EditStudentModal
+          student={editingStudent}
+          isSelf={currentUser?.id === editingStudent.id}
+          onClose={() => setEditingStudent(null)}
+          onSaved={() => {
+            setEditingStudent(null);
+            qc.invalidateQueries({ queryKey: ["admin-students"] });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EditStudentModal({
+  student,
+  isSelf,
+  onClose,
+  onSaved,
+}: {
+  student: Student;
+  isSelf: boolean;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useT();
+  const [name, setName] = useState(student.name);
+  const [role, setRole] = useState<"student" | "admin">(
+    student.role === "admin" ? "admin" : "student",
+  );
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      patchStudent(student.id, {
+        ...(name !== student.name ? { name } : {}),
+        ...(role !== student.role ? { role } : {}),
+      }),
+    onSuccess: onSaved,
+  });
+
+  const noChanges =
+    name === student.name && role === student.role;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 ring-1 ring-slate-200 dark:ring-gray-800">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold">{t("admin.students.editTitle")}</h3>
+            <p className="text-sm text-slate-500 mt-0.5" dir="ltr">
+              {student.email}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            if (!noChanges) saveMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <Field label={t("admin.students.editName")}>
+            <input
+              type="text"
+              value={name}
+              onChange={(ev) => setName(ev.target.value)}
+              maxLength={120}
+              required
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </Field>
+          <Field label={t("admin.students.editRole")}>
+            <select
+              value={role}
+              onChange={(ev) =>
+                setRole(ev.target.value === "admin" ? "admin" : "student")
+              }
+              disabled={isSelf}
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60"
+            >
+              <option value="student">student</option>
+              <option value="admin">admin</option>
+            </select>
+            {isSelf && (
+              <p className="mt-1.5 text-xs text-slate-500">
+                {t("admin.students.editSelfNote")}
+              </p>
+            )}
+          </Field>
+          {saveMutation.isError && (
+            <p className="text-rose-600 text-sm">
+              {(saveMutation.error as Error).message}
+            </p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300"
+            >
+              {t("admin.students.cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={saveMutation.isPending || noChanges}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow disabled:opacity-50"
+            >
+              {saveMutation.isPending && (
+                <Loader2 size={14} className="animate-spin" />
+              )}
+              {t("admin.students.editSubmit")}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -568,6 +766,826 @@ function CodeRow({
         )}
       </Td>
     </tr>
+  );
+}
+
+// ───────────────────────── ENROLLMENTS TAB ─────────────────────────
+
+const STATUS_LABELS = {
+  active: { en: "Active", ar: "نشط", color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200" },
+  expired: { en: "Expired", ar: "منتهي", color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200" },
+  revoked: { en: "Revoked", ar: "ملغى", color: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200" },
+} as const;
+
+function EnrollmentsTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const qc = useQueryClient();
+  const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired" | "revoked">("");
+  const [tierFilter, setTierFilter] = useState<"" | Tier>("");
+  const [editing, setEditing] = useState<AdminEnrollmentRow | null>(null);
+
+  const enrollmentsQuery = useQuery({
+    queryKey: ["admin-enrollments", statusFilter, tierFilter],
+    queryFn: () =>
+      fetchAllEnrollments({
+        status: statusFilter || undefined,
+        tier: tierFilter || undefined,
+      }),
+  });
+
+  if (enrollmentsQuery.isError) return <ErrorPanel msg={t("admin.error.loadFailed")} />;
+
+  const rows = enrollmentsQuery.data ?? [];
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <select
+          value={statusFilter}
+          onChange={(ev) => setStatusFilter(ev.target.value as typeof statusFilter)}
+          className="rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+          <option value="">{t("admin.enrollments.filter.allStatus")}</option>
+          <option value="active">{STATUS_LABELS.active[lang === "ar" ? "ar" : "en"]}</option>
+          <option value="expired">{STATUS_LABELS.expired[lang === "ar" ? "ar" : "en"]}</option>
+          <option value="revoked">{STATUS_LABELS.revoked[lang === "ar" ? "ar" : "en"]}</option>
+        </select>
+        <select
+          value={tierFilter}
+          onChange={(ev) => setTierFilter(ev.target.value as typeof tierFilter)}
+          className="rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+          <option value="">{t("admin.enrollments.filter.allTiers")}</option>
+          {(Object.keys(TIER_LABELS) as Tier[]).map((tk) => (
+            <option key={tk} value={tk}>{TIER_LABELS[tk].en}</option>
+          ))}
+        </select>
+        <span className="text-xs text-slate-500 ms-auto">
+          {rows.length} {t("admin.enrollments.count")}
+        </span>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden">
+        {enrollmentsQuery.isLoading ? (
+          <LoadingPanel inline />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-gray-800/60 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <tr>
+                  <Th>{t("admin.enrollments.col.student")}</Th>
+                  <Th>{t("admin.enrollments.col.tier")}</Th>
+                  <Th>{t("admin.enrollments.col.status")}</Th>
+                  <Th>{t("admin.enrollments.col.source")}</Th>
+                  <Th>{t("admin.enrollments.col.granted")}</Th>
+                  <Th>{t("admin.enrollments.col.expires")}</Th>
+                  <Th align="right"></Th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((e) => (
+                  <tr key={e.id} className="border-t border-slate-100 dark:border-gray-800 hover:bg-slate-50/60 dark:hover:bg-gray-800/40">
+                    <Td>
+                      <div className="font-medium">{e.studentName ?? "—"}</div>
+                      <div className="text-xs text-slate-500" dir="ltr">{e.studentEmail ?? ""}</div>
+                    </Td>
+                    <Td>
+                      <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
+                        {e.tier}
+                      </span>
+                    </Td>
+                    <Td>
+                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${STATUS_LABELS[e.status].color}`}>
+                        {STATUS_LABELS[e.status][lang === "ar" ? "ar" : "en"]}
+                      </span>
+                    </Td>
+                    <Td className="text-xs text-slate-600 dark:text-slate-300">{e.source}</Td>
+                    <Td className="text-xs text-slate-500 dark:text-slate-400">
+                      {new Date(e.grantedAt).toLocaleDateString(
+                        lang === "ar" ? "ar-EG" : "en-US",
+                        { day: "numeric", month: "short", year: "numeric" },
+                      )}
+                    </Td>
+                    <Td className="text-xs text-slate-500 dark:text-slate-400">
+                      {e.expiresAt
+                        ? new Date(e.expiresAt).toLocaleDateString(
+                            lang === "ar" ? "ar-EG" : "en-US",
+                            { day: "numeric", month: "short", year: "numeric" },
+                          )
+                        : "—"}
+                    </Td>
+                    <Td align="right">
+                      <button
+                        type="button"
+                        onClick={() => setEditing(e)}
+                        className="text-slate-400 hover:text-indigo-600 transition"
+                        title={t("admin.enrollments.edit")}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    </Td>
+                  </tr>
+                ))}
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="text-center py-10 text-slate-500 text-sm">—</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {editing && (
+        <EnrollmentEditModal
+          enrollment={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
+            qc.invalidateQueries({ queryKey: ["admin-students"] });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EnrollmentEditModal({
+  enrollment,
+  onClose,
+  onSaved,
+}: {
+  enrollment: AdminEnrollmentRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useT();
+  const [status, setStatus] = useState<"active" | "expired" | "revoked">(enrollment.status);
+  const [expiresAt, setExpiresAt] = useState(
+    enrollment.expiresAt ? enrollment.expiresAt.slice(0, 10) : "",
+  );
+  const [note, setNote] = useState(enrollment.note ?? "");
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      patchEnrollment(enrollment.id, {
+        status,
+        expiresAt: expiresAt ? new Date(expiresAt + "T23:59:59Z").toISOString() : null,
+        note: note.trim() || null,
+      }),
+    onSuccess: onSaved,
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 ring-1 ring-slate-200 dark:ring-gray-800">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold">{t("admin.enrollments.editTitle")}</h3>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {enrollment.studentName} <span dir="ltr">· {enrollment.tier}</span>
+            </p>
+          </div>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            saveMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <Field label={t("admin.enrollments.col.status")}>
+            <select
+              value={status}
+              onChange={(ev) => setStatus(ev.target.value as typeof status)}
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            >
+              <option value="active">active</option>
+              <option value="expired">expired</option>
+              <option value="revoked">revoked</option>
+            </select>
+          </Field>
+          <Field label={t("admin.enrollments.col.expires")}>
+            <input
+              type="date"
+              value={expiresAt}
+              onChange={(ev) => setExpiresAt(ev.target.value)}
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              dir="ltr"
+            />
+            <p className="mt-1 text-xs text-slate-500">{t("admin.enrollments.expiresHint")}</p>
+          </Field>
+          <Field label={t("admin.students.grantNote")}>
+            <input
+              type="text"
+              value={note}
+              onChange={(ev) => setNote(ev.target.value)}
+              className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            />
+          </Field>
+          {saveMutation.isError && (
+            <p className="text-rose-600 text-sm">{(saveMutation.error as Error).message}</p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300"
+            >
+              {t("admin.students.cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={saveMutation.isPending}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow disabled:opacity-50"
+            >
+              {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+              {t("admin.students.editSubmit")}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────── FAQ TAB ─────────────────────────
+
+const COURSE_SLUGS = ["intro", "english", "ielts"] as const;
+
+function FaqsTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const qc = useQueryClient();
+  const [filter, setFilter] = useState<string>("all");
+  const [editing, setEditing] = useState<FaqRow | "new" | null>(null);
+
+  const faqsQuery = useQuery({
+    queryKey: ["admin-faqs"],
+    queryFn: fetchAdminFaqs,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteFaq,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-faqs"] }),
+  });
+
+  const reorderMutation = useMutation({
+    mutationFn: reorderFaqs,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-faqs"] }),
+  });
+
+  const togglePublishMutation = useMutation({
+    mutationFn: ({ id, isPublished }: { id: string; isPublished: boolean }) =>
+      patchFaq(id, { isPublished }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-faqs"] }),
+  });
+
+  if (faqsQuery.isError) return <ErrorPanel msg={t("admin.error.loadFailed")} />;
+
+  const all = faqsQuery.data ?? [];
+  const visible = all.filter((f) => {
+    if (filter === "all") return true;
+    if (filter === "global") return f.courseSlug === null;
+    return f.courseSlug === filter;
+  });
+
+  function moveUp(faq: FaqRow) {
+    const sameBucket = all
+      .filter((f) => f.courseSlug === faq.courseSlug)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+    const idx = sameBucket.findIndex((f) => f.id === faq.id);
+    if (idx <= 0) return;
+    const reordered = [...sameBucket];
+    [reordered[idx - 1], reordered[idx]] = [reordered[idx], reordered[idx - 1]];
+    reorderMutation.mutate(reordered.map((f) => f.id));
+  }
+
+  function moveDown(faq: FaqRow) {
+    const sameBucket = all
+      .filter((f) => f.courseSlug === faq.courseSlug)
+      .sort((a, b) => a.displayOrder - b.displayOrder);
+    const idx = sameBucket.findIndex((f) => f.id === faq.id);
+    if (idx === -1 || idx >= sameBucket.length - 1) return;
+    const reordered = [...sameBucket];
+    [reordered[idx], reordered[idx + 1]] = [reordered[idx + 1], reordered[idx]];
+    reorderMutation.mutate(reordered.map((f) => f.id));
+  }
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <select
+          value={filter}
+          onChange={(ev) => setFilter(ev.target.value)}
+          className="rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+          <option value="all">{t("admin.faqs.filter.all")}</option>
+          <option value="global">{t("admin.faqs.filter.global")}</option>
+          {COURSE_SLUGS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => setEditing("new")}
+          className="ms-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow"
+        >
+          <Plus size={14} /> {t("admin.faqs.add")}
+        </button>
+      </div>
+
+      <div className="bg-white dark:bg-gray-900 rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden">
+        {faqsQuery.isLoading ? (
+          <LoadingPanel inline />
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 dark:bg-gray-800/60 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <tr>
+                  <Th>{t("admin.faqs.col.scope")}</Th>
+                  <Th>{t("admin.faqs.col.question")}</Th>
+                  <Th>{t("admin.faqs.col.published")}</Th>
+                  <Th align="right">{t("admin.faqs.col.actions")}</Th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((f) => (
+                  <tr key={f.id} className="border-t border-slate-100 dark:border-gray-800 hover:bg-slate-50/60 dark:hover:bg-gray-800/40 align-top">
+                    <Td>
+                      <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-slate-200">
+                        {f.courseSlug ?? t("admin.faqs.global")}
+                      </span>
+                    </Td>
+                    <Td>
+                      <div className="font-medium max-w-md">
+                        {lang === "ar" ? f.questionAr : f.questionEn}
+                      </div>
+                      <div className="text-xs text-slate-500 max-w-md truncate" dir={lang === "ar" ? "rtl" : "ltr"}>
+                        {lang === "ar" ? f.questionEn : f.questionAr}
+                      </div>
+                    </Td>
+                    <Td>
+                      <button
+                        type="button"
+                        onClick={() => togglePublishMutation.mutate({ id: f.id, isPublished: !f.isPublished })}
+                        className="inline-flex items-center gap-1 text-xs"
+                        title={f.isPublished ? t("admin.faqs.unpublish") : t("admin.faqs.publish")}
+                      >
+                        {f.isPublished ? (
+                          <Eye size={14} className="text-emerald-600" />
+                        ) : (
+                          <EyeOff size={14} className="text-slate-400" />
+                        )}
+                        <span className={f.isPublished ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500"}>
+                          {f.isPublished ? t("admin.faqs.published") : t("admin.faqs.draft")}
+                        </span>
+                      </button>
+                    </Td>
+                    <Td align="right">
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => moveUp(f)}
+                          className="text-slate-400 hover:text-indigo-600"
+                          title={t("admin.faqs.moveUp")}
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveDown(f)}
+                          className="text-slate-400 hover:text-indigo-600"
+                          title={t("admin.faqs.moveDown")}
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditing(f)}
+                          className="text-slate-400 hover:text-indigo-600 ms-1"
+                          title={t("admin.faqs.edit")}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(t("admin.faqs.confirmDelete"))) {
+                              deleteMutation.mutate(f.id);
+                            }
+                          }}
+                          className="text-slate-400 hover:text-rose-600"
+                          title={t("admin.faqs.delete")}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </Td>
+                  </tr>
+                ))}
+                {visible.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="text-center py-10 text-slate-500 text-sm">—</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {editing && (
+        <FaqEditModal
+          faq={editing === "new" ? null : editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            qc.invalidateQueries({ queryKey: ["admin-faqs"] });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function FaqEditModal({
+  faq,
+  onClose,
+  onSaved,
+}: {
+  faq: FaqRow | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useT();
+  const [courseSlug, setCourseSlug] = useState<string>(faq?.courseSlug ?? "");
+  const [questionEn, setQuestionEn] = useState(faq?.questionEn ?? "");
+  const [questionAr, setQuestionAr] = useState(faq?.questionAr ?? "");
+  const [answerEn, setAnswerEn] = useState(faq?.answerEn ?? "");
+  const [answerAr, setAnswerAr] = useState(faq?.answerAr ?? "");
+  const [isPublished, setIsPublished] = useState(faq?.isPublished ?? true);
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const payload = {
+        courseSlug: courseSlug || null,
+        questionEn,
+        questionAr,
+        answerEn,
+        answerAr,
+        isPublished,
+      };
+      return faq ? patchFaq(faq.id, payload) : createFaq(payload);
+    },
+    onSuccess: onSaved,
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6 ring-1 ring-slate-200 dark:ring-gray-800 my-8">
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="text-lg font-bold">
+            {faq ? t("admin.faqs.editTitle") : t("admin.faqs.addTitle")}
+          </h3>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            saveMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label={t("admin.faqs.col.scope")}>
+              <select
+                value={courseSlug}
+                onChange={(ev) => setCourseSlug(ev.target.value)}
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              >
+                <option value="">{t("admin.faqs.global")}</option>
+                {COURSE_SLUGS.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label={t("admin.faqs.publishedLabel")}>
+              <label className="inline-flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPublished}
+                  onChange={(ev) => setIsPublished(ev.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm">
+                  {isPublished ? t("admin.faqs.published") : t("admin.faqs.draft")}
+                </span>
+              </label>
+            </Field>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label={t("admin.faqs.questionEn")}>
+              <input
+                type="text"
+                value={questionEn}
+                onChange={(ev) => setQuestionEn(ev.target.value)}
+                required
+                dir="ltr"
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.faqs.questionAr")}>
+              <input
+                type="text"
+                value={questionAr}
+                onChange={(ev) => setQuestionAr(ev.target.value)}
+                required
+                dir="rtl"
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label={t("admin.faqs.answerEn")}>
+              <textarea
+                value={answerEn}
+                onChange={(ev) => setAnswerEn(ev.target.value)}
+                required
+                dir="ltr"
+                rows={5}
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.faqs.answerAr")}>
+              <textarea
+                value={answerAr}
+                onChange={(ev) => setAnswerAr(ev.target.value)}
+                required
+                dir="rtl"
+                rows={5}
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+          </div>
+          {saveMutation.isError && (
+            <p className="text-rose-600 text-sm">{(saveMutation.error as Error).message}</p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300"
+            >
+              {t("admin.students.cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={saveMutation.isPending}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow disabled:opacity-50"
+            >
+              {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+              {t("admin.students.editSubmit")}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────── COURSES TAB ─────────────────────────
+
+function CoursesTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState<CourseRow | null>(null);
+
+  const coursesQuery = useQuery({
+    queryKey: ["admin-courses"],
+    queryFn: fetchAdminCourses,
+  });
+
+  const togglePublishMutation = useMutation({
+    mutationFn: ({ slug, isPublished }: { slug: string; isPublished: boolean }) =>
+      patchCourse(slug, { isPublished }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-courses"] }),
+  });
+
+  if (coursesQuery.isError) return <ErrorPanel msg={t("admin.error.loadFailed")} />;
+  if (coursesQuery.isLoading) return <LoadingPanel />;
+
+  const courses = coursesQuery.data ?? [];
+
+  return (
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {courses.map((c) => (
+          <div
+            key={c.slug}
+            className="bg-white dark:bg-gray-900 rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 p-5"
+          >
+            <div className="flex items-start justify-between mb-2">
+              <span className="inline-flex px-2 py-0.5 text-xs font-mono font-semibold rounded-full bg-slate-100 text-slate-700 dark:bg-gray-800 dark:text-slate-200">
+                {c.slug}
+              </span>
+              <button
+                type="button"
+                onClick={() => togglePublishMutation.mutate({ slug: c.slug, isPublished: !c.isPublished })}
+                className="inline-flex items-center gap-1 text-xs"
+                title={c.isPublished ? t("admin.faqs.unpublish") : t("admin.faqs.publish")}
+              >
+                {c.isPublished ? (
+                  <Eye size={14} className="text-emerald-600" />
+                ) : (
+                  <EyeOff size={14} className="text-slate-400" />
+                )}
+                <span className={c.isPublished ? "text-emerald-700 dark:text-emerald-300" : "text-slate-500"}>
+                  {c.isPublished ? t("admin.faqs.published") : t("admin.faqs.draft")}
+                </span>
+              </button>
+            </div>
+            <h3 className="text-base font-bold mt-2" dir={lang === "ar" ? "rtl" : "ltr"}>
+              {lang === "ar" ? c.titleAr : c.titleEn}
+            </h3>
+            {(lang === "ar" ? c.subtitleAr : c.subtitleEn) && (
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-1" dir={lang === "ar" ? "rtl" : "ltr"}>
+                {lang === "ar" ? c.subtitleAr : c.subtitleEn}
+              </p>
+            )}
+            <div className="flex items-center gap-2 mt-4 text-xs text-slate-500">
+              <span>{t("admin.courses.order")}: {c.displayOrder}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditing(c)}
+              className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300"
+            >
+              <Pencil size={13} /> {t("admin.courses.edit")}
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {editing && (
+        <CourseEditModal
+          course={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            qc.invalidateQueries({ queryKey: ["admin-courses"] });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function CourseEditModal({
+  course,
+  onClose,
+  onSaved,
+}: {
+  course: CourseRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const t = useT();
+  const [titleEn, setTitleEn] = useState(course.titleEn);
+  const [titleAr, setTitleAr] = useState(course.titleAr);
+  const [subtitleEn, setSubtitleEn] = useState(course.subtitleEn ?? "");
+  const [subtitleAr, setSubtitleAr] = useState(course.subtitleAr ?? "");
+  const [isPublished, setIsPublished] = useState(course.isPublished);
+  const [displayOrder, setDisplayOrder] = useState(course.displayOrder);
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      patchCourse(course.slug, {
+        titleEn,
+        titleAr,
+        subtitleEn: subtitleEn.trim() || null,
+        subtitleAr: subtitleAr.trim() || null,
+        isPublished,
+        displayOrder,
+      }),
+    onSuccess: onSaved,
+  });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6 ring-1 ring-slate-200 dark:ring-gray-800 my-8">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-bold">{t("admin.courses.editTitle")}</h3>
+            <p className="text-sm text-slate-500 mt-0.5 font-mono">{course.slug}</p>
+          </div>
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600">
+            <X size={18} />
+          </button>
+        </div>
+
+        <form
+          onSubmit={(ev) => {
+            ev.preventDefault();
+            saveMutation.mutate();
+          }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Field label={t("admin.courses.titleEn")}>
+              <input
+                type="text"
+                value={titleEn}
+                onChange={(ev) => setTitleEn(ev.target.value)}
+                required
+                dir="ltr"
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.courses.titleAr")}>
+              <input
+                type="text"
+                value={titleAr}
+                onChange={(ev) => setTitleAr(ev.target.value)}
+                required
+                dir="rtl"
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.courses.subtitleEn")}>
+              <input
+                type="text"
+                value={subtitleEn}
+                onChange={(ev) => setSubtitleEn(ev.target.value)}
+                dir="ltr"
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.courses.subtitleAr")}>
+              <input
+                type="text"
+                value={subtitleAr}
+                onChange={(ev) => setSubtitleAr(ev.target.value)}
+                dir="rtl"
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.courses.order")}>
+              <input
+                type="number"
+                value={displayOrder}
+                onChange={(ev) => setDisplayOrder(parseInt(ev.target.value, 10) || 0)}
+                className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+              />
+            </Field>
+            <Field label={t("admin.faqs.publishedLabel")}>
+              <label className="inline-flex items-center gap-2 mt-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isPublished}
+                  onChange={(ev) => setIsPublished(ev.target.checked)}
+                  className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="text-sm">
+                  {isPublished ? t("admin.faqs.published") : t("admin.faqs.draft")}
+                </span>
+              </label>
+            </Field>
+          </div>
+          {saveMutation.isError && (
+            <p className="text-rose-600 text-sm">{(saveMutation.error as Error).message}</p>
+          )}
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-semibold text-slate-600 hover:text-slate-800 dark:text-slate-300"
+            >
+              {t("admin.students.cancel")}
+            </button>
+            <button
+              type="submit"
+              disabled={saveMutation.isPending}
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow disabled:opacity-50"
+            >
+              {saveMutation.isPending && <Loader2 size={14} className="animate-spin" />}
+              {t("admin.students.editSubmit")}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
 

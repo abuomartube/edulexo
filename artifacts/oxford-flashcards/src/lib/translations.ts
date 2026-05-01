@@ -4,7 +4,7 @@ type Entry = { en: string; ar: string };
 
 export const translations = {
   // ───────────────────────── COMMON ─────────────────────────
-  "common.poweredByAi": { en: "Powered by AI", ar: "مدعوم بالذكاء الاصطناعي" },
+  "common.poweredByAi": { en: "Powered by EduLexo AI", ar: "Powered by EduLexo AI" },
   "common.exploreCourses": { en: "Explore Courses", ar: "استكشف الدورات" },
   "common.seeFeatures": { en: "See Features", ar: "اطّلع على المزايا" },
   "common.viewDetails": { en: "View Details", ar: "عرض التفاصيل" },
@@ -14,7 +14,7 @@ export const translations = {
   "common.privacy": { en: "Privacy", ar: "الخصوصية" },
   "common.terms": { en: "Terms", ar: "الشروط" },
   "common.contact": { en: "Contact", ar: "تواصل معنا" },
-  "common.copyright": { en: "Abu Omar EduLexo · Powered by AI", ar: "Abu Omar EduLexo · مدعوم بالذكاء الاصطناعي" },
+  "common.copyright": { en: "Abu Omar EduLexo · Powered by EduLexo AI", ar: "Abu Omar EduLexo · Powered by EduLexo AI" },
   "common.tagline": { en: "Learn · Practice · Achieve", ar: "Learn · Practice · Achieve" },
   "common.brandPrefix": { en: "Abu Omar ", ar: "Abu Omar " },
   "common.brandSuffix": { en: "EduLexo", ar: "EduLexo" },
@@ -39,11 +39,11 @@ export const translations = {
 
   // ───────────────────── PLATFORM LANDING (HOMEPAGE) ─────────────────────
   "platform.hero.alt": {
-    en: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by AI",
-    ar: "Abu Omar EduLexo — Learn · Practice · Achieve · مدعوم بالذكاء الاصطناعي",
+    en: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by EduLexo AI",
+    ar: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by EduLexo AI",
   },
-  "platform.hero.headline1": { en: "Two powerful courses.", ar: "دورتان قويّتان." },
-  "platform.hero.headline2": { en: "One smart platform.", ar: "منصّة ذكيّة واحدة." },
+  "platform.hero.headline1": { en: "Two powerful courses.", ar: "مساران قويان…" },
+  "platform.hero.headline2": { en: "One smart platform.", ar: "منصة ذكية واحدة." },
   "platform.hero.subtitle": {
     en: "Whether you're starting your journey from your first English words or aiming for an IELTS band 8 — Abu Omar EduLexo gives you AI-powered practice, native audio, bilingual support, and a real teacher beside you.",
     ar: "سواء كنت تبدأ من أولى كلماتك في الإنجليزية أو تسعى لدرجة 8 في الأيلتس — منصّة Abu Omar EduLexo توفّر لك تدريباً بالذكاء الاصطناعي، وصوتاً أصلياً، ودعماً ثنائي اللغة، ومعلّماً حقيقياً بجانبك.",
@@ -249,7 +249,7 @@ export const translations = {
   "ielts.value.bilingual": { en: "Bilingual EN ↔ AR", ar: "ثنائي اللغة EN ↔ AR" },
   "ielts.brandAlt": {
     en: "LEXO for IELTS — AI-powered IELTS preparation",
-    ar: "LEXO for IELTS — تحضير للأيلتس مدعوم بالذكاء الاصطناعي",
+    ar: "LEXO for IELTS — تحضير للأيلتس Powered by EduLexo AI",
   },
   "ielts.preview.vocab": { en: "Vocab", ar: "مفردات" },
   "ielts.preview.tests": { en: "Tests", ar: "اختبارات" },

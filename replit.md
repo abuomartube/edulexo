@@ -2,15 +2,7 @@
 
 ## Overview
 
-The Abu Omar EduLexo project is a bilingual (English + Arabic) learning platform offering two main products: LEXO for English and LEXO for IELTS. The platform aims to provide a comprehensive and AI-powered learning experience.
-
-**Key Capabilities:**
-- **LEXO for English:** Features Oxford 3000 flashcards, CEFR-level packages, and word families.
-- **LEXO for IELTS:** Offers a structured course with modules covering vocabulary, speaking, writing, listening, reading, and mock tests.
-- **Bilingual Support:** Full Arabic and English localization with dynamic language switching.
-- **User Authentication:** Secure signup, login, and password management.
-
-The business vision is to become a leading AI-powered educational platform, expanding course offerings and market reach.
+The Abu Omar EduLexo project is a bilingual (English + Arabic) AI-powered learning platform offering LEXO for English and LEXO for IELTS. It aims to provide a comprehensive educational experience with features like Oxford 3000 flashcards, CEFR-level packages, structured IELTS courses, and full localization. The project's vision is to become a leading AI-powered educational platform, expanding course offerings and market reach.
 
 ## User Preferences
 
@@ -22,84 +14,46 @@ The business vision is to become a leading AI-powered educational platform, expa
 
 ## System Architecture
 
-The project is built as a pnpm workspace monorepo using TypeScript, Node.js 24, and pnpm as the package manager.
+The project is a pnpm workspace monorepo utilizing TypeScript, Node.js 24, and pnpm.
 
 **UI/UX Decisions:**
 - **Branding:** Master logo `src/assets/edulexo-logo.png` with a brand gradient of `from-indigo-700 via-purple-600 to-blue-600`.
 - **Color Scheme:** Deep navy/indigo (`#1E2155`), vibrant violet (`#6B2FE6`), and royal blue (`#4F7FFF`).
-- **Typography:** Cairo font for Arabic text, applied via `index.css` under `[lang="ar"], [dir="rtl"]`.
-- **Layout:** Platform landing page features a hero section, product cards, a 6-feature benefits grid, and a final CTA. Product detail pages have specific layouts for English and IELTS courses.
-- **Bilingual UI:** Uses a single-language render that flips on toggle, with `localStorage` persistence. An EN/AR pill toggle is present in the header.
+- **Typography:** Cairo font for Arabic text, dynamically applied.
+- **Layout:** Standardized layouts for landing pages, product cards, feature grids, and specific designs for English and IELTS course detail pages.
+- **Bilingual UI:** Dynamic language switching with `localStorage` persistence, managed by an EN/AR pill toggle in the header.
 
 **Technical Implementations:**
 - **API Framework:** Express 5.
-- **Database:** PostgreSQL with Drizzle ORM.
-- **Validation:** Zod (`zod/v4`) and `drizzle-zod`.
-- **API Codegen:** Orval, generating client and Zod schemas from OpenAPI specs.
+- **Database:** PostgreSQL with Drizzle ORM for schema management and queries.
+- **Validation:** Zod (`zod/v4`) integrated with `drizzle-zod`.
+- **API Codegen:** Orval generates client and Zod schemas from OpenAPI specifications.
 - **Build System:** esbuild for CJS bundles.
-- **Routing:** `wouter` for client-side routing.
-- **Internationalization:** Custom i18n system (`src/lib/i18n.tsx`, `src/lib/translations.ts`) with compile-time type checking.
-- **Authentication:**
-    - Backend: `bcryptjs` (rounds=12) for password hashing, SHA-256 for password reset token hashing. `express-session` with `connect-pg-simple` for session management. Rate limiting implemented using `express-rate-limit`.
-    - Frontend: `QueryClientProvider` + `AuthProvider` for state management. `useAuth()` hook provides authentication status and methods. `ProtectedRoute` component for access control.
-- **Flashcard System:**
-    - Words parsed from official Oxford 3000 CEFR PDFs.
-    - Two browse modes: "Levels" (filter by CEFR A1-B2) and "Word Families" (75 themed categories).
-    - Audio Architecture: Instant playback via server-side TTS. Server generates mp3s using OpenAI `fable` voice, with in-memory LRU and on-disk persistent caching. Client-side prefetching and batch warming for seamless audio.
-- **IELTS Tiering:** The IELTS application supports "Complete" (A2→C1) and "Advance" (B1→C1) tiers, controlled by a `?tier=` URL parameter and persisted in `localStorage`. Filtering is UX-only; API enforcement is a future consideration.
-
-**Feature Specifications:**
-- **Abu Omar EduLexo Platform:** `/` (landing), `/english` (LEXO for English details), `/ielts` (LEXO for IELTS details), `/demo` (public flashcards), `/app` (full flashcard app, to be gated).
-- **IELTS Application:** Hosted at `/app-ielts/`, with its API at `/api-ielts/` (port 8082). Uses a separate OpenAPI spec (`lib/ielts-api-spec/openapi.yaml`).
-- **LEXO Intro Application:** Hosted at `/app-intro/` with its API at `/api-intro/`. Used by students enrolled in the `intro` tier.
-- **LEXO for English Application:** Hosted at `/app-english/` (artifact `artifacts/english`, port 23567). Shares the **platform** API server (`/api`, no separate API artifact) and uses the **same** session cookie as the rest of LEXO. Three internal tiers — `beginner`, `intermediate`, `advanced` — defined in `ENGLISH_TIER_VALUES` (separate enum from IELTS tiers). Schema lives in `lib/db/src/schema/english.ts`: `english_enrollments` (per-user tier rows) and `english_access_codes` (admin-issued single-use codes). Routes in `artifacts/api-server/src/routes/english.ts`: student endpoints `GET /api/english/me` and `POST /api/english/redeem`; admin endpoints `POST/GET/DELETE /api/admin/english/codes`, `POST /api/admin/english/students/:id/grant`, and `DELETE /api/admin/english/enrollments/:id`. Unique-violation (SQLSTATE 23505) on duplicate code redemption is detected by walking `err.cause` and surfaced as HTTP 409.
-
-**Phase 3 — Cross-product SSO:**
-- Platform `POST /api/sso/:tier/launch` issues an HMAC-signed, single-use, JTI-tracked launch URL. `TIER_ROUTES` maps `intro → /app-intro` (redeem `/api-intro/sso/redeem`) and both `advance` and `complete → /app-ielts` (redeem `/api-ielts/sso/redeem`).
-- Each downstream redeem route verifies HMAC, enforces single-use via JTI, finds-or-creates the local `access_requests` row with year-long expiry, mints the downstream app's session token (`HMAC(email + ":approved")`), and returns a tiny HTML bootstrap that writes `{email, token}` into the app's expected localStorage keys (`lexo_intro_email`/`4ielts_email`) before redirecting into the app.
-- The English app does NOT use SSO — it is a first-party section of the platform that reads the shared session cookie directly via `/api/auth/me` and `/api/english/me`.
-
-**Platform Dashboard — dual-course "My Courses":**
-- `artifacts/oxford-flashcards/src/components/MyCourses.tsx` renders two stacked sections (`section-courses-ielts`, `section-courses-english`) on the platform dashboard. IELTS section calls `fetchMyEnrollments` + `launchTier` (SSO-mediated launch via `/api/sso/:tier/launch`). English section calls `fetchMyEnglishEnrollments` and launches via plain `<a href="/app-english/">` (cookie-shared). A shared `RedeemForm` is mounted in each section, posting to `/api/codes/redeem` (IELTS) or `/api/english/redeem` (English).
-- `/english` landing page (`artifacts/oxford-flashcards/src/pages/LandingPage.tsx`) advertises three packages — Beginner (CEFR A1→A2), Intermediate (A2→B1), Advanced (B1→C1) — and every package CTA navigates to `/app-english/` (which is gated by the shared session cookie). The "Try Flashcards" secondary CTA still goes to `/demo` for unauth visitors who want to sample the public flashcard demo.
-
-**Phase 3 security & correctness hardening:**
-- `artifacts/api-server/src/routes/english.ts` redeem flow originally consumed the code-use atomically before attempting enrollment insert; if a unique-violation (23505) fired (user already enrolled in tier), the response was 409 but the code was burned. Fixed by introducing an `AlreadyEnrolledError` sentinel thrown inside the transaction so the enclosing `tx.update(...)` claim is rolled back, then caught outside via `.catch()` and mapped to HTTP 409. Verified with a smoke test: a fresh code stays `status:active, usedCount:0` after a 409 already-enrolled response.
-- `artifacts/ielts-api/src/index.ts` now hard-fails at startup if `SESSION_SECRET` is missing or shorter than 16 chars. Several legacy IELTS-API route files use `process.env["SESSION_SECRET"] ?? "fallback-secret"`; the boot-time guard guarantees the process never runs without the real secret regardless of per-route fallbacks, preventing session-token forgery.
-
-**Phase 4 Priority 1 — Email verification flow (Apr 2026):**
-- New `email_verification_tokens` table (`lib/db/src/schema/users.ts`): `token` (sha256 hex of the raw token), `user_id` FK, `email` snapshot at issue time, `expires_at` (+24h), `used_at`, `created_at`. Created in DB via direct `CREATE TABLE` because `drizzle-kit push` cannot be used safely from `@workspace/db` — its schema barrel only knows the platform tables and would offer to drop or rename the IELTS/intro tables it sees as orphans.
-- OpenAPI additions: `POST /auth/send-verification` (auth-required, fires `MessageResponse`) and `POST /auth/verify-email` (body `{ token }`). Codegen produces `sendVerificationEmail`, `verifyEmail`, and `VerifyEmailBody` zod schema in `@workspace/api-zod` + `@workspace/api-client-react`.
-- Server (`artifacts/api-server/src/routes/auth.ts`): `dispatchVerificationEmail(user, log)` runs the invalidate-prior + insert-new pair inside a single `db.transaction`, guarded by `pg_advisory_xact_lock(hashtext('email_verify_' || user.id))` so concurrent resend clicks for the same user serialise. Tokens are 32 random bytes, sha256-hashed at rest. The DB also enforces a partial unique index `email_verification_tokens(user_id) WHERE used_at IS NULL` so even if the lock is bypassed, at most one active token can ever exist per user. The external `sendEmail` call happens AFTER the transaction commits so we never hold a DB tx across a network call. Auto-fires from signup as a try/catch best-effort (signup never fails on mail dispatch). Verify route enforces single-use, expiry, and email-still-matches-user-record (so changing the email after issuing a link invalidates the link).
-- Rate limiting (`artifacts/api-server/src/lib/rate-limit.ts`): new `sendVerificationLimiter` keyed on IP + session userId; new `verifyEmailLimiter` (20 attempts / 15 min in prod) on the confirmation endpoint to throttle token-guessing.
-- UI: `/verify-email` page (`artifacts/oxford-flashcards/src/pages/VerifyEmail.tsx`) reads the `?token=` query param, calls `verifyEmail`, and shows loading / success / error. Reusable `UnverifiedEmailBanner` component is mounted at the top of the dashboard for any user with `emailVerified=false`, exposing a one-click resend button. New `auth.verify.*` and `auth.unverified.*` keys in EN+AR.
-- Email transport remains the dev stub (`artifacts/api-server/src/lib/email.ts`) — when a real provider (SendGrid, etc.) is wired, only `sendEmail` needs to change. End-to-end smoke verified: signup → verify → me flips to `emailVerified:true`; replay → 400; resend after verified → "already verified"; resend before verify → invalidates prior token and mints a new one.
-
-**Phase 4 Priority 2 — Admin content management (May 2026):**
-- New schema: `platform_faqs` (uuid PK, optional `course_slug` for scoping, bilingual `question_en/ar`+`answer_en/ar` text, `display_order` int, `is_published` bool, timestamps) and `platform_courses` (varchar(32) `slug` PK, bilingual `title_en/ar` and `subtitle_en/ar`, `is_published`, `display_order`, timestamps). Created via raw SQL and mirrored in `lib/db/src/schema/faqs.ts` + `courses.ts` (re-exported from `schema/index.ts`) — `drizzle-kit push` is unsafe from `@workspace/db` for the same reason as Phase 4 P1. `platform_courses` is seeded with the three known products: `intro`, `english`, `ielts`.
-- Hand-rolled API contract decision: existing admin routes are not declared in `openapi.yaml` and the AdminDashboard already uses ad-hoc fetches in `artifacts/oxford-flashcards/src/lib/platform-api.ts`. To stay consistent, the new endpoints stay hand-rolled; if/when typed React Query hooks become valuable, they can be promoted to the spec.
-- Server (`artifacts/api-server/src/routes/admin.ts`): added `PATCH /admin/students/:id` (name + role, with admin-cannot-self-demote guard), `DELETE /admin/students/:id` (cascades enrollments via FK; cannot self-delete), `GET /admin/enrollments` (joins `users` for display, supports `?status=` and `?tier=` filters), `PATCH /admin/enrollments/:id` (status / expiresAt / note; flipping back to `active` runs a precondition query against the partial unique index — same `(user_id, tier)` already-active row → HTTP 409). New files: `artifacts/api-server/src/routes/faqs.ts` (public `GET /faqs` filtered to `is_published=true`; admin CRUD; `POST /admin/faqs/reorder` accepts an ordered uuid array and rewrites `display_order` inside a single transaction; auto-numbers new rows via `MAX(display_order) WITHIN bucket + 1`) and `artifacts/api-server/src/routes/courses.ts` (public `GET /courses`; admin GET-all + `PATCH /admin/courses/:slug`). Mounted in `routes/index.ts`. Bug found and fixed mid-flow: an early `assertCourseExists` helper threw uncaught and bubbled to the global error handler — refactored to a boolean `isValidCourseSlug` so callers can reply 400 directly.
-- Client (`artifacts/oxford-flashcards/src/lib/platform-api.ts`): added `patchStudent`, `deleteStudent`, `fetchAllEnrollments`, `patchEnrollment`, full FAQ CRUD (`fetchAdminFaqs`, `createFaq`, `patchFaq`, `deleteFaq`, `reorderFaqs`), `fetchAdminCourses`, `patchCourse`, plus interfaces `AdminEnrollmentRow`, `FaqRow`, `CourseRow`.
-- UI (`artifacts/oxford-flashcards/src/pages/AdminDashboard.tsx`): expanded from 2 tabs to 5 — `Students | Enrollments | FAQ | Courses | Codes`. Students tab gained Edit (modal: name + role; role selector disabled when row is the current admin, sourced from `useAuth()`) and Delete (hidden on self, with name-templated confirm). New `EnrollmentsTab` lists every enrollment with student join, status/tier filters, and a `EnrollmentEditModal` for status/expiresAt/note. New `FaqsTab` with course-scope filter, add modal, bilingual EN/AR question + answer fields, publish toggle, up/down reorder arrows that compute the new ordering client-side then call `reorderFaqs(ids[])`, and per-row delete with confirm. New `CoursesTab` is a card grid with quick publish toggle and a `CourseEditModal` for bilingual title/subtitle, displayOrder, and published flag. All new strings (~50 keys) added under `admin.*` in EN+AR.
-- Smoke verified end-to-end against the running platform API: admin login → list courses/faqs/enrollments → create FAQ as draft → patch to published → public `/api/faqs` reflects it → delete FAQ → patch course subtitle. Earlier server-side smoke (run during T203) had also confirmed the 409 active-conflict guard, the self-edit/self-delete blockers, and the cascade-on-delete cleanup.
-- Architect review surfaced two issues that were fixed in the same session: (1) `GET /admin/courses/:slug` was missing for parity with the other admin GET-by-id endpoints (added). (2) The original FAQ reorder route accepted any subset of IDs and would silently produce gaps or duplicate `display_order` values under concurrent reorders. Hardened to (a) reject duplicate IDs in the payload, (b) `SELECT ... FOR UPDATE` the targeted rows, (c) require all IDs to share the same bucket (`course_slug`), (d) acquire a per-bucket `pg_advisory_xact_lock(hashtext('faq_reorder_' || bucketKey))` so concurrent reorders serialise, and (e) enforce **completeness** — the submitted ID set must equal the bucket's full FAQ set. Re-smoke covered all 5 negative paths (partial bucket → 400, cross-bucket → 400, duplicate ids → 400, nonexistent uuid → 400, valid full reorder → 200 with correct `display_order` rewrite). Note: admin-route rate limiting was flagged as an abuse-resilience gap, but no existing admin endpoint in this codebase has rate limits — adding it now would be a cross-cutting change beyond this session's scope and is left for a future hardening pass.
+- **Routing:** `wouter` for client-side navigation.
+- **Internationalization:** Custom i18n system with compile-time type checking.
+- **Authentication:** `bcryptjs` (rounds=12) for password hashing, SHA-256 for password reset tokens. `express-session` with `connect-pg-simple` for session management. Rate limiting via `express-rate-limit`. Frontend uses `QueryClientProvider` and `AuthProvider` with a `useAuth()` hook and `ProtectedRoute` for access control.
+- **Flashcard System:** Words parsed from Oxford 3000 CEFR PDFs. Supports "Levels" (CEFR A1-B2) and "Word Families" (75 categories). Audio is generated using OpenAI TTS, cached server-side, and prefetched client-side.
+- **IELTS Tiering:** Supports "Complete" (A2→C1) and "Advance" (B1→C1) tiers, controlled by URL parameters and `localStorage`.
+- **Cross-product SSO:** Implemented for seamless navigation between the platform, IELTS, and Intro applications using HMAC-signed, single-use launch URLs. The English app shares the platform's session cookie directly.
+- **Email Verification:** Features a `email_verification_tokens` table, API endpoints for sending and verifying, rate limiting, and a UI component (`UnverifiedEmailBanner`) for user interaction.
+- **Admin Content Management:** CRUD operations for FAQs and courses (intro, English, IELTS) with bilingual fields, display ordering, and publishing status. Admin dashboard is expanded with tabs for Students, Enrollments, FAQ, Courses, and Codes.
 
 ## External Dependencies
 
-- **pnpm workspaces**: Monorepo management.
+- **pnpm**: Monorepo management.
 - **Node.js**: Runtime environment (version 24).
 - **TypeScript**: Language (version 5.9).
 - **Express 5**: API framework.
 - **PostgreSQL**: Database.
 - **Drizzle ORM**: Object-relational mapper.
-- **Zod (`zod/v4`)**: Schema validation library.
+- **Zod (`zod/v4`)**: Schema validation.
 - **drizzle-zod**: Zod integration for Drizzle ORM.
 - **Orval**: OpenAPI spec code generator.
 - **esbuild**: JavaScript bundler.
 - **wouter**: React-based routing library.
-- **bcryptjs**: Password hashing library.
-- **express-session**: Session management middleware for Express.
-- **connect-pg-simple**: PostgreSQL session store for `express-session`.
-- **express-rate-limit**: Rate limiting middleware for Express.
-- **OpenAI TTS API**: For generating text-to-speech audio.
-- **Google Fonts (Cairo)**: For Arabic typography.
+- **bcryptjs**: Password hashing.
+- **express-session**: Session management.
+- **connect-pg-simple**: PostgreSQL session store.
+- **express-rate-limit**: Rate limiting.
+- **OpenAI TTS API**: Text-to-speech audio generation.
+- **Google Fonts (Cairo)**: Arabic typography.

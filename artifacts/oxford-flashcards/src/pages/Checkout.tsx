@@ -229,19 +229,23 @@ function CheckoutForm({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <ProviderTile
             id="tabby"
-            label="Tabby"
+            ariaLabel={t("checkout.payWithTabby")}
             description={t("checkout.tabbyDesc")}
-            color="from-emerald-400 to-lime-300 text-emerald-950"
+            ringColor="ring-[#3BFFC1]"
+            bgColor="bg-[#3BFFC1]/10"
             checked={provider === "tabby"}
             onSelect={() => setProvider("tabby")}
+            logo={<TabbyLogo />}
           />
           <ProviderTile
             id="tamara"
-            label="Tamara"
+            ariaLabel={t("checkout.payWithTamara")}
             description={t("checkout.tamaraDesc")}
-            color="from-fuchsia-500 to-pink-500 text-white"
+            ringColor="ring-[#3D1560]"
+            bgColor="bg-[#3D1560]/5"
             checked={provider === "tamara"}
             onSelect={() => setProvider("tamara")}
+            logo={<TamaraLogo />}
           />
         </div>
       </section>
@@ -281,37 +285,114 @@ function CheckoutForm({
 
 function ProviderTile({
   id,
-  label,
+  ariaLabel,
   description,
-  color,
+  ringColor,
+  bgColor,
   checked,
   onSelect,
+  logo,
 }: {
   id: string;
-  label: string;
+  ariaLabel: string;
   description: string;
-  color: string;
+  ringColor: string;
+  bgColor: string;
   checked: boolean;
   onSelect: () => void;
+  logo: React.ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={checked}
-      className={`text-left rounded-xl p-4 ring-2 transition ${
+      aria-label={ariaLabel}
+      className={`group flex flex-col items-start gap-3 text-start rounded-xl p-5 min-h-[120px] ring-2 bg-white dark:bg-gray-900/60 transition ${
         checked
-          ? "ring-indigo-500 bg-indigo-50/80 dark:bg-indigo-900/30"
-          : "ring-slate-200 dark:ring-gray-800 bg-white dark:bg-gray-900/50 hover:ring-slate-300"
+          ? `${ringColor} ${bgColor} shadow-md`
+          : "ring-slate-200 dark:ring-gray-800 hover:ring-slate-300 dark:hover:ring-gray-700"
       }`}
       data-provider={id}
     >
-      <div
-        className={`inline-flex items-center justify-center px-3 py-1 rounded-md text-xs font-extrabold bg-gradient-to-r ${color}`}
-      >
-        {label}
-      </div>
-      <p className="mt-2 text-sm font-medium">{description}</p>
+      <div className="h-9 flex items-center">{logo}</div>
+      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+        {description}
+      </p>
     </button>
+  );
+}
+
+/**
+ * Tabby brand chip — official primary colour `#3BFFC1` (mint) on a clean
+ * rounded chip with the lowercase "tabby" wordmark in their charcoal
+ * `#292929`. Matches Tabby's "Pay in 4" merchant button guidelines:
+ * https://docs.tabby.ai/pay-in-4-custom-integration/promo-messaging
+ */
+function TabbyLogo() {
+  return (
+    <svg
+      role="img"
+      aria-label="Tabby"
+      width="92"
+      height="34"
+      viewBox="0 0 92 34"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect width="92" height="34" rx="8" fill="#3BFFC1" />
+      <text
+        x="46"
+        y="23"
+        textAnchor="middle"
+        fontFamily='Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        fontWeight={800}
+        fontSize="17"
+        fill="#292929"
+        letterSpacing="-0.4"
+      >
+        tabby
+      </text>
+    </svg>
+  );
+}
+
+/**
+ * Tamara brand chip — official primary colour `#3D1560` (deep purple) on a
+ * white card, with the lowercase "tamara." wordmark in matching purple.
+ * Matches Tamara's merchant brand guidelines for payment-method buttons.
+ */
+function TamaraLogo() {
+  return (
+    <svg
+      role="img"
+      aria-label="Tamara"
+      width="100"
+      height="34"
+      viewBox="0 0 100 34"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="0.5"
+        y="0.5"
+        width="99"
+        height="33"
+        rx="8"
+        fill="#FFFFFF"
+        stroke="#3D1560"
+      />
+      <text
+        x="50"
+        y="23"
+        textAnchor="middle"
+        fontFamily='Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
+        fontWeight={800}
+        fontSize="17"
+        fill="#3D1560"
+        letterSpacing="-0.4"
+      >
+        tamara
+        <tspan fontSize="22" dy="1">.</tspan>
+      </text>
+    </svg>
   );
 }

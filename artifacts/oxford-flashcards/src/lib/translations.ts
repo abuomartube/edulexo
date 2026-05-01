@@ -898,6 +898,8 @@ export const translations = {
   "checkout.choosePayment": { en: "Choose a payment method", ar: "اختر وسيلة الدفع" },
   "checkout.tabbyDesc": { en: "4 interest-free payments", ar: "٤ أقساط بدون فوائد" },
   "checkout.tamaraDesc": { en: "Pay later, or split in 3", ar: "ادفع لاحقاً أو قسّمها على ٣" },
+  "checkout.payWithTabby": { en: "Pay with Tabby", ar: "ادفع باستخدام تابي" },
+  "checkout.payWithTamara": { en: "Pay with Tamara", ar: "ادفع باستخدام تمارا" },
   "checkout.terms": {
     en: "I agree to the Terms of Service and Privacy Policy.",
     ar: "أوافق على شروط الاستخدام وسياسة الخصوصية.",

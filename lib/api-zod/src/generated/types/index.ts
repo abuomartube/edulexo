@@ -20,3 +20,4 @@ export * from "./resetPasswordRequest";
 export * from "./signupRequest";
 export * from "./unauthorizedResponse";
 export * from "./validationErrorResponse";
+export * from "./verifyEmailRequest";

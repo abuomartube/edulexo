@@ -1,9 +1,10 @@
 import { Router, type IRouter } from "express";
-import { and, eq, gt, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
   passwordResetTokensTable,
+  emailVerificationTokensTable,
   type User,
 } from "@workspace/db";
 import {
@@ -11,6 +12,7 @@ import {
   LoginBody,
   ForgotPasswordBody,
   ResetPasswordBody,
+  VerifyEmailBody,
   LoginResponse as AuthResponseSchema,
   GetCurrentUserResponse as MeResponseSchema,
   ForgotPasswordResponse as MessageResponseSchema,
@@ -26,12 +28,76 @@ import {
   getUserByEmail,
   requireAuth,
 } from "../lib/auth";
-import { buildPasswordResetEmail, sendEmail } from "../lib/email";
+import {
+  buildPasswordResetEmail,
+  buildEmailVerificationEmail,
+  sendEmail,
+} from "../lib/email";
 import {
   authIpLimiter,
   signupLimiter,
   forgotPasswordLimiter,
+  sendVerificationLimiter,
+  verifyEmailLimiter,
 } from "../lib/rate-limit";
+import type { Logger } from "pino";
+
+async function dispatchVerificationEmail(
+  user: User,
+  log: Logger,
+): Promise<{ verifyUrl: string } | null> {
+  if (user.emailVerified) return null;
+
+  const rawToken = generateToken(32);
+  const tokenHash = hashToken(rawToken);
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  // Invalidate prior unused tokens for this user and insert the new one
+  // atomically. A per-user advisory lock serialises concurrent calls
+  // (e.g. user spam-clicks "resend"), so we never observe two unused tokens
+  // simultaneously and never violate the partial-unique index on
+  // (user_id) WHERE used_at IS NULL.
+  await db.transaction(async (tx) => {
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(hashtext(${`email_verify_${user.id}`}))`,
+    );
+
+    await tx
+      .update(emailVerificationTokensTable)
+      .set({ usedAt: new Date() })
+      .where(
+        and(
+          eq(emailVerificationTokensTable.userId, user.id),
+          isNull(emailVerificationTokensTable.usedAt),
+        ),
+      );
+
+    await tx.insert(emailVerificationTokensTable).values({
+      token: tokenHash,
+      userId: user.id,
+      email: user.email,
+      expiresAt,
+    });
+  });
+
+  const verifyUrl = `${getAppOrigin()}/verify-email?token=${encodeURIComponent(rawToken)}`;
+
+  await sendEmail(
+    buildEmailVerificationEmail({
+      to: user.email,
+      name: user.name,
+      verifyUrl,
+    }),
+  );
+
+  if (process.env.NODE_ENV !== "production") {
+    log.info({ userId: user.id, verifyUrl }, "[dev-only] Email verification link");
+  } else {
+    log.info({ userId: user.id }, "Email verification link generated");
+  }
+
+  return { verifyUrl };
+}
 
 const router: IRouter = Router();
 
@@ -78,6 +144,16 @@ router.post("/auth/signup", signupLimiter, async (req, res, next) => {
     }
 
     await loginSession(req, created);
+
+    // Fire-and-forget verification email; never block signup if delivery fails.
+    try {
+      await dispatchVerificationEmail(created, req.log);
+    } catch (mailErr) {
+      req.log.warn(
+        { err: mailErr, userId: created.id },
+        "Failed to send verification email at signup",
+      );
+    }
 
     const body = AuthResponseSchema.parse({ user: toPublicUser(created) });
     res.status(201).json(body);
@@ -230,6 +306,106 @@ router.post("/auth/reset-password", authIpLimiter, async (req, res, next) => {
 
     const body = MessageResponseSchema.parse({
       message: "Password updated. You can now log in with your new password.",
+    });
+    res.json(body);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post(
+  "/auth/send-verification",
+  sendVerificationLimiter,
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      const user = await getUserById(req.session.userId!);
+      if (!user) {
+        res.status(401).json({ error: "Not authenticated" });
+        return;
+      }
+
+      if (user.emailVerified) {
+        const body = MessageResponseSchema.parse({
+          message: "Your email is already verified.",
+        });
+        res.json(body);
+        return;
+      }
+
+      await dispatchVerificationEmail(user, req.log);
+
+      const body = MessageResponseSchema.parse({
+        message: "Verification email sent. Please check your inbox.",
+      });
+      res.json(body);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.post("/auth/verify-email", verifyEmailLimiter, async (req, res, next) => {
+  try {
+    const parsed = VerifyEmailBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.issues[0]?.message ?? "Invalid input" });
+      return;
+    }
+    const { token } = parsed.data;
+    const tokenHash = hashToken(token);
+
+    const [record] = await db
+      .select()
+      .from(emailVerificationTokensTable)
+      .where(
+        and(
+          eq(emailVerificationTokensTable.token, tokenHash),
+          isNull(emailVerificationTokensTable.usedAt),
+          gt(emailVerificationTokensTable.expiresAt, new Date()),
+        ),
+      )
+      .limit(1);
+
+    if (!record) {
+      res.status(400).json({
+        error: "This verification link is invalid or has expired.",
+      });
+      return;
+    }
+
+    const user = await getUserById(record.userId);
+    if (!user) {
+      res.status(400).json({
+        error: "This verification link is invalid or has expired.",
+      });
+      return;
+    }
+
+    // Only confirm if the email on the token still matches the user's current
+    // email — otherwise the address was changed after the link was issued.
+    if (user.email !== record.email) {
+      await db
+        .update(emailVerificationTokensTable)
+        .set({ usedAt: new Date() })
+        .where(eq(emailVerificationTokensTable.token, tokenHash));
+      res.status(400).json({
+        error: "This verification link is no longer valid for your account.",
+      });
+      return;
+    }
+
+    await db
+      .update(usersTable)
+      .set({ emailVerified: true, updatedAt: new Date() })
+      .where(eq(usersTable.id, record.userId));
+    await db
+      .update(emailVerificationTokensTable)
+      .set({ usedAt: new Date() })
+      .where(eq(emailVerificationTokensTable.token, tokenHash));
+
+    const body = MessageResponseSchema.parse({
+      message: "Email verified. Thank you!",
     });
     res.json(body);
   } catch (err) {

@@ -7,10 +7,13 @@ import {
   logout,
   forgotPassword,
   resetPassword,
+  sendVerificationEmail,
+  verifyEmail,
   type SignupRequest,
   type LoginRequest,
   type ForgotPasswordRequest,
   type ResetPasswordRequest,
+  type VerifyEmailRequest,
   type PublicUser,
   type MeResponse,
 } from "@workspace/api-client-react";
@@ -27,6 +30,8 @@ type AuthContextValue = {
   logout: () => Promise<void>;
   forgotPassword: (data: ForgotPasswordRequest) => Promise<{ message: string }>;
   resetPassword: (data: ResetPasswordRequest) => Promise<{ message: string }>;
+  sendVerificationEmail: () => Promise<{ message: string }>;
+  verifyEmail: (data: VerifyEmailRequest) => Promise<{ message: string }>;
   refresh: () => Promise<void>;
 };
 
@@ -70,6 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetMutation = useMutation({
     mutationFn: (data: ResetPasswordRequest) => resetPassword(data),
   });
+  const sendVerificationMutation = useMutation({
+    mutationFn: () => sendVerificationEmail(),
+  });
+  const verifyEmailMutation = useMutation({
+    mutationFn: (data: VerifyEmailRequest) => verifyEmail(data),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ME_KEY });
+    },
+  });
 
   const user = (meQuery.data?.user ?? null) as PublicUser | null;
 
@@ -92,11 +106,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       forgotPassword: (data) => forgotMutation.mutateAsync(data),
       resetPassword: (data) => resetMutation.mutateAsync(data),
+      sendVerificationEmail: () => sendVerificationMutation.mutateAsync(),
+      verifyEmail: (data) => verifyEmailMutation.mutateAsync(data),
       refresh: async () => {
         await qc.invalidateQueries({ queryKey: ME_KEY });
       },
     }),
-    [user, meQuery.isLoading, signupMutation, loginMutation, logoutMutation, forgotMutation, resetMutation, qc],
+    [
+      user,
+      meQuery.isLoading,
+      signupMutation,
+      loginMutation,
+      logoutMutation,
+      forgotMutation,
+      resetMutation,
+      sendVerificationMutation,
+      verifyEmailMutation,
+      qc,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

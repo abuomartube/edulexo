@@ -18,6 +18,32 @@ export const signupLimiter = rateLimit({
   message: { error: "Too many sign-up attempts from this network. Please try again later." },
 });
 
+export const verifyEmailLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: isProd ? 20 : 1000,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: {
+    error: "Too many verification attempts. Please wait a few minutes and try again.",
+  },
+});
+
+export const sendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: isProd ? 5 : 1000,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const ip = ipKeyGenerator(req.ip ?? "");
+    const userId =
+      typeof (req as { session?: { userId?: string } }).session?.userId === "string"
+        ? (req as { session: { userId: string } }).session.userId
+        : "";
+    return userId ? `${ip}|${userId}` : ip;
+  },
+  message: { error: "Too many verification email requests. Please try again later." },
+});
+
 export const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: isProd ? 5 : 1000,

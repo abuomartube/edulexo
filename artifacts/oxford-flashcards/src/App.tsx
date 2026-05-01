@@ -8,6 +8,7 @@ import Signup from "@/pages/Signup";
 import Login from "@/pages/Login";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
+import VerifyEmail from "@/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ComingSoon from "@/pages/ComingSoon";
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/login" component={Login} />
         <Route path="/forgot-password" component={ForgotPassword} />
         <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/verify-email" component={VerifyEmail} />
 
         <Route path="/dashboard">
           <ProtectedRoute>

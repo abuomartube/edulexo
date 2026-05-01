@@ -135,6 +135,42 @@ paths:
         "400":
           $ref: "#/components/responses/ValidationError"
 
+  /auth/send-verification:
+    post:
+      operationId: sendVerificationEmail
+      tags: [auth]
+      summary: Send (or re-send) the email verification link to the current user
+      responses:
+        "200":
+          description: Verification email queued (or no-op if already verified)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      tags: [auth]
+      summary: Confirm an email-verification token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+
 components:
   responses:
     ValidationError:
@@ -276,3 +312,11 @@ components:
       required:
         - token
         - password
+    VerifyEmailRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 8
+      required:
+        - token

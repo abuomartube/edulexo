@@ -22,6 +22,29 @@ export async function sendEmail(message: EmailMessage): Promise<void> {
   );
 }
 
+export function buildEmailVerificationEmail(params: {
+  to: string;
+  name: string;
+  verifyUrl: string;
+}): EmailMessage {
+  const { to, name, verifyUrl } = params;
+  return {
+    to,
+    subject: "Verify your Abu Omar EduLexo email",
+    text: `Hi ${name},
+
+Welcome to Abu Omar EduLexo! Please confirm your email address so we can keep your account secure and send you important course updates.
+
+Click the link below to verify your email. This link expires in 24 hours.
+
+${verifyUrl}
+
+If you didn't create this account, you can safely ignore this email.
+
+— The Abu Omar EduLexo team`,
+  };
+}
+
 export function buildPasswordResetEmail(params: {
   to: string;
   name: string;

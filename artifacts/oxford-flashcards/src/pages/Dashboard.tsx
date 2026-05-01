@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import MyCourses from "@/components/MyCourses";
+import UnverifiedEmailBanner from "@/components/UnverifiedEmailBanner";
 import { useAuth } from "@/lib/auth-context";
 import { useT, useLanguage } from "@/lib/i18n";
 
@@ -33,6 +34,8 @@ export default function Dashboard() {
             {t("dashboard.subtitle")}
           </p>
         </section>
+
+        <UnverifiedEmailBanner />
 
         {/* Quick actions */}
         <section className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">

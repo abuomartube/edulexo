@@ -102,3 +102,23 @@ export const ResetPasswordBody = zod.object({
 export const ResetPasswordResponse = zod.object({
   message: zod.string(),
 });
+
+/**
+ * @summary Send (or re-send) the email verification link to the current user
+ */
+export const SendVerificationEmailResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Confirm an email-verification token
+ */
+export const verifyEmailBodyTokenMin = 8;
+
+export const VerifyEmailBody = zod.object({
+  token: zod.string().min(verifyEmailBodyTokenMin),
+});
+
+export const VerifyEmailResponse = zod.object({
+  message: zod.string(),
+});

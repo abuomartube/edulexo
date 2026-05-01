@@ -79,6 +79,11 @@ export interface ResetPasswordRequest {
   password: string;
 }
 
+export interface VerifyEmailRequest {
+  /** @minLength 8 */
+  token: string;
+}
+
 /**
  * Validation failed
  */

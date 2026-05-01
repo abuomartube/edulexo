@@ -432,6 +432,36 @@ export const translations = {
   },
   "auth.reset.goLogin": { en: "Go to log in", ar: "الذهاب لتسجيل الدخول" },
 
+  "auth.verify.title": { en: "Verifying your email…", ar: "جاري التحقق من بريدك الإلكتروني…" },
+  "auth.verify.successTitle": { en: "Email verified", ar: "تم التحقق من البريد الإلكتروني" },
+  "auth.verify.successBody": {
+    en: "Thanks! Your email is now verified.",
+    ar: "شكراً لك! تم التحقق من بريدك الإلكتروني.",
+  },
+  "auth.verify.errMissingToken": {
+    en: "Missing verification token. Please use the link from your email.",
+    ar: "رمز التحقق مفقود. يرجى استخدام الرابط من بريدك الإلكتروني.",
+  },
+  "auth.verify.errFailed": {
+    en: "Verification failed. The link may be invalid or expired.",
+    ar: "فشل التحقق. قد يكون الرابط غير صالح أو منتهي الصلاحية.",
+  },
+  "auth.verify.goDashboard": { en: "Go to dashboard", ar: "الذهاب للوحة التحكم" },
+  "auth.verify.goLogin": { en: "Log in to continue", ar: "سجّل الدخول للمتابعة" },
+  "auth.verify.tryAgain": { en: "Request a new link", ar: "طلب رابط جديد" },
+
+  "auth.unverified.title": { en: "Please verify your email", ar: "يرجى التحقق من بريدك الإلكتروني" },
+  "auth.unverified.body": {
+    en: "We sent a verification link to your email. Click it to confirm your address.",
+    ar: "أرسلنا رابط تحقق إلى بريدك الإلكتروني. اضغط عليه لتأكيد عنوانك.",
+  },
+  "auth.unverified.resend": { en: "Resend verification email", ar: "إعادة إرسال رابط التحقق" },
+  "auth.unverified.sending": { en: "Sending…", ar: "جارٍ الإرسال…" },
+  "auth.unverified.sent": {
+    en: "Sent! Please check your inbox (and spam folder).",
+    ar: "تم الإرسال! يرجى التحقق من البريد الوارد (ومجلد الرسائل غير المرغوب فيها).",
+  },
+
   // ─────────────────── DASHBOARD ───────────────────
   "dashboard.eyebrow": { en: "My Dashboard", ar: "لوحة التحكم" },
   "dashboard.welcome": { en: "Welcome back,", ar: "مرحباً بعودتك،" },

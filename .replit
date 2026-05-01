@@ -71,6 +71,11 @@ externalPort = 4200
 
 [userenv.shared]
 SSO_SHARED_SECRET = "2yQwCIR5ZyajD-nbLDL0Y9UHuAWG2bTwRqoanPjw8lo0bBtT11FfRn4AYRez4Ldw"
+TABBY_MODE = "sandbox"
+TAMARA_MODE = "sandbox"
+TABBY_MERCHANT_CODE = "TCI"
+TAMARA_LIVE_API_URL = "https://api.tamara.co"
+TAMARA_SANDBOX_API_URL = "https://api-sandbox.tamara.co"
 
 [nix]
 channel = "stable-25_05"

@@ -46,7 +46,7 @@ export const translations = {
   "platform.hero.headline2": { en: "One smart platform.", ar: "منصة ذكية واحدة." },
   "platform.hero.subtitle": {
     en: "Whether you're starting your journey from your first English words or aiming for an IELTS band 8 — Abu Omar EduLexo gives you AI-powered practice, native audio, bilingual support, and a real teacher beside you.",
-    ar: "سواء كنت تبدأ من أولى كلماتك في الإنجليزية أو تسعى لدرجة 8 في الأيلتس — منصّة Abu Omar EduLexo توفّر لك تدريباً بالذكاء الاصطناعي، وصوتاً أصلياً، ودعماً ثنائي اللغة، ومعلّماً حقيقياً بجانبك.",
+    ar: "سواء كنت تبدأ من أولى خطواتك في تعلّم الإنجليزية، أو تسعى لتحقيق درجة 8 في اختبار IELTS — تمنحك منصة Abu Omar EduLexo تجربة متكاملة تجمع بين الذكاء الاصطناعي، والنطق الأصلي، والدعم الثنائي اللغة، مع إشراف مباشر من مدرّب حقيقي يرافقك في كل خطوة.",
   },
   "platform.products.eyebrow": { en: "Our Courses", ar: "دوراتنا" },
   "platform.products.title": { en: "Choose the right path for you", ar: "اختر المسار المناسب لك" },

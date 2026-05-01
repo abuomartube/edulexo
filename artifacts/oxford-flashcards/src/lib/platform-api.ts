@@ -602,3 +602,108 @@ export async function revokeCertificate(
 export function getCertificatePdfUrl(id: string): string {
   return `/api/certificates/${id}/pdf`;
 }
+
+// ───── Checkout (Tabby + Tamara) ─────
+
+export type CheckoutCourse = "intro" | "english";
+export type CheckoutProvider = "tabby" | "tamara";
+export type PaymentMode = "sandbox" | "live";
+export type PaymentStatus =
+  | "created"
+  | "pending"
+  | "authorized"
+  | "captured"
+  | "failed"
+  | "cancelled"
+  | "expired";
+
+export interface CheckoutPreview {
+  course: CheckoutCourse;
+  tier: string;
+  courseLabelEn: string;
+  courseLabelAr: string;
+  tierLabelEn: string;
+  tierLabelAr: string;
+  amountMinor: number;
+  currency: string;
+  alreadyEnrolled: boolean;
+}
+
+export interface CheckoutStartResponse {
+  paymentId: string;
+  provider: CheckoutProvider;
+  mode: PaymentMode;
+  redirectUrl: string;
+}
+
+export async function fetchCheckoutPreview(
+  course: CheckoutCourse,
+  tier: string,
+): Promise<CheckoutPreview> {
+  const params = new URLSearchParams({ course, tier });
+  const res = await fetch(`/api/checkout/preview?${params.toString()}`, {
+    ...init,
+    method: "GET",
+  });
+  return jsonOrThrow<CheckoutPreview>(res);
+}
+
+export async function startCheckout(
+  provider: CheckoutProvider,
+  course: CheckoutCourse,
+  tier: string,
+  language: "en" | "ar",
+): Promise<CheckoutStartResponse> {
+  const res = await fetch(`/api/checkout/${provider}`, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ course, tier, language }),
+  });
+  return jsonOrThrow<CheckoutStartResponse>(res);
+}
+
+export interface AdminPayment {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  course: CheckoutCourse;
+  tier: string;
+  amountMinor: number;
+  currency: string;
+  provider: CheckoutProvider;
+  mode: PaymentMode;
+  status: PaymentStatus;
+  providerSessionId: string | null;
+  providerPaymentId: string | null;
+  failureReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+  capturedAt: string | null;
+}
+
+export interface AdminPaymentsFilters {
+  search?: string;
+  course?: CheckoutCourse;
+  provider?: CheckoutProvider;
+  status?: PaymentStatus;
+  limit?: number;
+}
+
+export async function fetchAdminPayments(
+  filters: AdminPaymentsFilters = {},
+): Promise<AdminPayment[]> {
+  const params = new URLSearchParams();
+  if (filters.search) params.set("search", filters.search);
+  if (filters.course) params.set("course", filters.course);
+  if (filters.provider) params.set("provider", filters.provider);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.limit) params.set("limit", String(filters.limit));
+  const qs = params.toString();
+  const res = await fetch(
+    `/api/admin/payments${qs ? `?${qs}` : ""}`,
+    { ...init, method: "GET" },
+  );
+  const data = await jsonOrThrow<{ payments: AdminPayment[] }>(res);
+  return data.payments;
+}

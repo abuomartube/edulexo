@@ -42,8 +42,10 @@ export async function notifyStudentSelfEnrolled(params: {
   course: "intro" | "english";
   tier: string;
   enrollmentId: string;
+  source?: "code" | "tabby" | "tamara";
 }): Promise<void> {
   const { log, userId, course, tier, enrollmentId } = params;
+  const source = params.source ?? "code";
   const dashboardUrl = `${getAppOrigin()}/dashboard`;
   const adminUrl = `${getAppOrigin()}/admin`;
 
@@ -76,7 +78,7 @@ export async function notifyStudentSelfEnrolled(params: {
           studentEmail: user.email,
           course,
           tier,
-          source: "code",
+          source,
           adminUrl,
           locale: admin.locale,
         }),

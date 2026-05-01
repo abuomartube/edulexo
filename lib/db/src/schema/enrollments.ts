@@ -18,7 +18,13 @@ export type Tier = (typeof TIER_VALUES)[number];
 export const ENROLLMENT_STATUS_VALUES = ["active", "expired", "revoked"] as const;
 export type EnrollmentStatus = (typeof ENROLLMENT_STATUS_VALUES)[number];
 
-export const ENROLLMENT_SOURCE_VALUES = ["admin", "code", "stripe"] as const;
+export const ENROLLMENT_SOURCE_VALUES = [
+  "admin",
+  "code",
+  "stripe",
+  "tabby",
+  "tamara",
+] as const;
 export type EnrollmentSource = (typeof ENROLLMENT_SOURCE_VALUES)[number];
 
 export const ACCESS_CODE_STATUS_VALUES = ["active", "used", "revoked"] as const;
@@ -42,6 +48,8 @@ export const enrollmentsTable = pgTable(
       .defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     note: text("note"),
+    paymentId: uuid("payment_id"),
+    paymentStatus: varchar("payment_status", { length: 16 }),
   },
   (t) => [
     // Prevent duplicate active enrollments for the same user+tier.

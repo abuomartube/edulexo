@@ -882,6 +882,61 @@ export const translations = {
     en: "LEXO for English",
     ar: "ليكسو للغة الإنجليزية",
   },
+  // ───────────────────────── CHECKOUT ─────────────────────────
+  "checkout.title": { en: "Complete your enrollment", ar: "أكمل تسجيلك" },
+  "checkout.loading": { en: "Loading checkout…", ar: "جاري تحميل صفحة الدفع…" },
+  "checkout.notFound": { en: "Checkout not available for this tier.", ar: "صفحة الدفع غير متوفرة لهذا المستوى." },
+  "checkout.alreadyEnrolled": {
+    en: "You're already enrolled in this tier — no need to pay again.",
+    ar: "أنت مسجَّل بالفعل في هذا المستوى — لا حاجة للدفع مرة أخرى.",
+  },
+  "checkout.goToDashboard": { en: "Go to my dashboard", ar: "الذهاب إلى لوحة التحكم" },
+  "checkout.summary": { en: "Order summary", ar: "ملخّص الطلب" },
+  "checkout.course": { en: "Course", ar: "الدورة" },
+  "checkout.tier": { en: "Tier", ar: "المستوى" },
+  "checkout.total": { en: "Total", ar: "الإجمالي" },
+  "checkout.choosePayment": { en: "Choose a payment method", ar: "اختر وسيلة الدفع" },
+  "checkout.tabbyDesc": { en: "4 interest-free payments", ar: "٤ أقساط بدون فوائد" },
+  "checkout.tamaraDesc": { en: "Pay later, or split in 3", ar: "ادفع لاحقاً أو قسّمها على ٣" },
+  "checkout.terms": {
+    en: "I agree to the Terms of Service and Privacy Policy.",
+    ar: "أوافق على شروط الاستخدام وسياسة الخصوصية.",
+  },
+  "checkout.continue": { en: "Continue to payment", ar: "المتابعة إلى الدفع" },
+  "checkout.processing": { en: "Redirecting…", ar: "جاري التحويل…" },
+  "checkout.error": { en: "We couldn't start the checkout. Please try again.", ar: "تعذّر بدء عملية الدفع. حاول مرة أخرى." },
+  "checkout.providerNotConfigured": {
+    en: "This payment provider isn't available yet. Please pick another option or contact support.",
+    ar: "وسيلة الدفع هذه غير متاحة حالياً. اختر وسيلة أخرى أو تواصل مع الدعم.",
+  },
+  "checkout.banner.success": { en: "Payment received — your enrollment is now active.", ar: "تم استلام الدفع — تم تفعيل تسجيلك." },
+  "checkout.banner.failed": { en: "Payment failed. You haven't been charged.", ar: "فشلت عملية الدفع. لم يتم خصم أي مبلغ." },
+  "checkout.banner.cancelled": { en: "Payment cancelled.", ar: "تم إلغاء عملية الدفع." },
+  "checkout.banner.pending": { en: "Payment is processing — we'll activate access as soon as it's confirmed.", ar: "جاري معالجة الدفع — سنفعّل الاشتراك بمجرد التأكيد." },
+  "checkout.secure": { en: "Secure checkout · 256-bit TLS", ar: "دفع آمن · تشفير TLS بطول 256-bit" },
+
+  // ───────────────────────── ADMIN PAYMENTS ─────────────────────────
+  "admin.tab.payments": { en: "Payments", ar: "المدفوعات" },
+  "admin.payments.title": { en: "Payments", ar: "المدفوعات" },
+  "admin.payments.subtitle": {
+    en: "All Tabby and Tamara orders across both courses.",
+    ar: "جميع طلبات Tabby و Tamara لكلا الدورتين.",
+  },
+  "admin.payments.search": { en: "Search by name, email, or payment ID", ar: "ابحث بالاسم أو البريد أو رقم الدفع" },
+  "admin.payments.filter.all": { en: "All", ar: "الكل" },
+  "admin.payments.filter.course": { en: "Course", ar: "الدورة" },
+  "admin.payments.filter.provider": { en: "Provider", ar: "وسيلة الدفع" },
+  "admin.payments.filter.status": { en: "Status", ar: "الحالة" },
+  "admin.payments.col.student": { en: "Student", ar: "الطالب" },
+  "admin.payments.col.product": { en: "Course / Tier", ar: "الدورة / المستوى" },
+  "admin.payments.col.provider": { en: "Provider", ar: "وسيلة الدفع" },
+  "admin.payments.col.amount": { en: "Amount", ar: "المبلغ" },
+  "admin.payments.col.status": { en: "Status", ar: "الحالة" },
+  "admin.payments.col.created": { en: "Created", ar: "أُنشئ" },
+  "admin.payments.empty": { en: "No payments yet.", ar: "لا توجد مدفوعات بعد." },
+  "admin.payments.refresh": { en: "Refresh", ar: "تحديث" },
+  "admin.payments.modeBadge": { en: "Mode", ar: "الوضع" },
+
 } as const;
 
 export type TranslationKey = keyof typeof translations;

@@ -1,16 +1,39 @@
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock } from "lucide-react";
+import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
 import Header from "@/components/Header";
 import MyCourses from "@/components/MyCourses";
 import MyCertificates from "@/components/MyCertificates";
 import UnverifiedEmailBanner from "@/components/UnverifiedEmailBanner";
 import { useAuth } from "@/lib/auth-context";
 import { useT, useLanguage } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/translations";
+
+const PAYMENT_BANNER_KEYS: Record<string, { key: TranslationKey; tone: "success" | "warning" | "error" }> = {
+  success: { key: "checkout.banner.success", tone: "success" },
+  failed: { key: "checkout.banner.failed", tone: "error" },
+  cancelled: { key: "checkout.banner.cancelled", tone: "warning" },
+  pending: { key: "checkout.banner.pending", tone: "warning" },
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
   const t = useT();
   const { lang } = useLanguage();
+  const [paymentBanner, setPaymentBanner] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const status = url.searchParams.get("payment");
+    if (status && PAYMENT_BANNER_KEYS[status]) {
+      setPaymentBanner(status);
+      url.searchParams.delete("payment");
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState(null, "", next);
+    }
+  }, []);
+
   if (!user) return null;
 
   const created = new Date(user.createdAt);
@@ -37,6 +60,15 @@ export default function Dashboard() {
         </section>
 
         <UnverifiedEmailBanner />
+
+        {paymentBanner && (
+          <PaymentBanner
+            status={paymentBanner}
+            text={t(PAYMENT_BANNER_KEYS[paymentBanner].key)}
+            tone={PAYMENT_BANNER_KEYS[paymentBanner].tone}
+            onDismiss={() => setPaymentBanner(null)}
+          />
+        )}
 
         {/* Quick actions */}
         <section className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -87,6 +119,44 @@ export default function Dashboard() {
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+function PaymentBanner({
+  status,
+  text,
+  tone,
+  onDismiss,
+}: {
+  status: string;
+  text: string;
+  tone: "success" | "warning" | "error";
+  onDismiss: () => void;
+}) {
+  const palette =
+    tone === "success"
+      ? "border-emerald-300 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-700/50 text-emerald-900 dark:text-emerald-100"
+      : tone === "warning"
+        ? "border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700/50 text-amber-900 dark:text-amber-100"
+        : "border-rose-300 bg-rose-50 dark:bg-rose-950/30 dark:border-rose-700/50 text-rose-900 dark:text-rose-100";
+  const Icon = tone === "success" ? CheckCircle2 : AlertCircle;
+  return (
+    <div
+      role="status"
+      data-payment-status={status}
+      className={`mt-6 rounded-2xl border p-4 flex items-start gap-3 ${palette}`}
+    >
+      <Icon size={20} className="shrink-0 mt-0.5" />
+      <p className="text-sm font-medium flex-1">{text}</p>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Dismiss"
+        className="shrink-0 rounded-md p-1 hover:bg-black/5 dark:hover:bg-white/10"
+      >
+        <X size={16} />
+      </button>
     </div>
   );
 }

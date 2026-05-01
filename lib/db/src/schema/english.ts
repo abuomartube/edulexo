@@ -37,6 +37,8 @@ export const englishEnrollmentsTable = pgTable(
       .defaultNow(),
     expiresAt: timestamp("expires_at", { withTimezone: true }),
     note: text("note"),
+    paymentId: uuid("payment_id"),
+    paymentStatus: varchar("payment_status", { length: 16 }),
   },
   (t) => [
     uniqueIndex("english_enrollments_active_user_tier_uniq")

@@ -10,6 +10,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
+import Checkout from "@/pages/Checkout";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
@@ -42,6 +43,12 @@ export default function App() {
         <Route path="/dashboard">
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/checkout/:course/:tier">
+          <ProtectedRoute>
+            <Checkout />
           </ProtectedRoute>
         </Route>
 

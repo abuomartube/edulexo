@@ -25,6 +25,8 @@ import {
   AlertCircle,
   Award,
   Download,
+  CreditCard,
+  RefreshCw,
 } from "lucide-react";
 import {
   LineChart,
@@ -82,6 +84,11 @@ import {
   getCertificatePdfUrl,
   type AdminCertificate,
   type CertificateCourse,
+  fetchAdminPayments,
+  type AdminPayment,
+  type CheckoutCourse,
+  type CheckoutProvider,
+  type PaymentStatus,
 } from "@/lib/platform-api";
 
 type Tab =
@@ -92,7 +99,8 @@ type Tab =
   | "courses"
   | "communication"
   | "codes"
-  | "certificates";
+  | "certificates"
+  | "payments";
 
 const TAB_DEFS: {
   key: Tab;
@@ -107,6 +115,7 @@ const TAB_DEFS: {
   { key: "communication", icon: <Mail size={16} />, labelKey: "admin.tab.communication" },
   { key: "codes", icon: <KeyRound size={16} />, labelKey: "admin.tab.codes" },
   { key: "certificates", icon: <Award size={16} />, labelKey: "admin.tab.certificates" },
+  { key: "payments", icon: <CreditCard size={16} />, labelKey: "admin.tab.payments" },
 ];
 
 export default function AdminDashboard() {
@@ -187,6 +196,7 @@ export default function AdminDashboard() {
             {tab === "communication" && <CommunicationTab />}
             {tab === "codes" && <CodesTab />}
             {tab === "certificates" && <CertificatesTab />}
+            {tab === "payments" && <PaymentsTab />}
           </section>
         </div>
       </main>
@@ -3067,6 +3077,282 @@ function IssueCertificateModal({
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+// ───────────────────────── PAYMENTS ─────────────────────────
+
+const PAYMENT_COURSE_OPTS: ReadonlyArray<CheckoutCourse> = ["intro", "english"];
+const PAYMENT_PROVIDER_OPTS: ReadonlyArray<CheckoutProvider> = ["tabby", "tamara"];
+const PAYMENT_STATUS_OPTS: ReadonlyArray<PaymentStatus> = [
+  "created",
+  "pending",
+  "authorized",
+  "captured",
+  "failed",
+  "cancelled",
+  "expired",
+];
+
+function paymentStatusTone(s: PaymentStatus): string {
+  switch (s) {
+    case "captured":
+    case "authorized":
+      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200";
+    case "pending":
+    case "created":
+      return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200";
+    case "failed":
+      return "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200";
+    case "cancelled":
+    case "expired":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200";
+  }
+}
+
+function PaymentsTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const [search, setSearch] = useState("");
+  const [course, setCourse] = useState<CheckoutCourse | "">("");
+  const [provider, setProvider] = useState<CheckoutProvider | "">("");
+  const [status, setStatus] = useState<PaymentStatus | "">("");
+
+  const filters = useMemo(
+    () => ({
+      search: search.trim() || undefined,
+      course: course || undefined,
+      provider: provider || undefined,
+      status: status || undefined,
+    }),
+    [search, course, provider, status],
+  );
+
+  const { data, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ["admin-payments", filters],
+    queryFn: () => fetchAdminPayments(filters),
+    staleTime: 30_000,
+  });
+
+  const payments: AdminPayment[] = data ?? [];
+
+  return (
+    <div className="space-y-5" data-testid="admin-payments">
+      <div>
+        <h2 className="text-xl font-bold">{t("admin.payments.title")}</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          {t("admin.payments.subtitle")}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-stretch">
+        <div className="md:col-span-2 relative">
+          <Search size={14} className="absolute top-1/2 -translate-y-1/2 ltr:left-3 rtl:right-3 text-slate-400" />
+          <input
+            type="search"
+            placeholder={t("admin.payments.search")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full ltr:pl-9 rtl:pr-9 pr-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            data-testid="payments-search"
+          />
+        </div>
+        <FilterSelect
+          value={course}
+          onChange={(v) => setCourse(v as CheckoutCourse | "")}
+          allLabel={t("admin.payments.filter.all")}
+          options={PAYMENT_COURSE_OPTS.map((c) => ({
+            value: c,
+            label: c === "intro" ? "LEXO Intro" : "LEXO English",
+          }))}
+          testId="payments-course-filter"
+        />
+        <FilterSelect
+          value={provider}
+          onChange={(v) => setProvider(v as CheckoutProvider | "")}
+          allLabel={t("admin.payments.filter.all")}
+          options={PAYMENT_PROVIDER_OPTS.map((p) => ({
+            value: p,
+            label: p === "tabby" ? "Tabby" : "Tamara",
+          }))}
+          testId="payments-provider-filter"
+        />
+        <div className="flex gap-2">
+          <FilterSelect
+            value={status}
+            onChange={(v) => setStatus(v as PaymentStatus | "")}
+            allLabel={t("admin.payments.filter.all")}
+            options={PAYMENT_STATUS_OPTS.map((s) => ({ value: s, label: s }))}
+            testId="payments-status-filter"
+          />
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="inline-flex items-center gap-1.5 px-3 py-2.5 text-sm font-semibold rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-slate-50 dark:hover:bg-gray-800"
+            data-testid="payments-refresh"
+            aria-label={t("admin.payments.refresh")}
+          >
+            <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} />
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 dark:bg-gray-800/60 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <tr>
+                <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.student")}</th>
+                <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.product")}</th>
+                <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.provider")}</th>
+                <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.amount")}</th>
+                <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.status")}</th>
+                <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.created")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
+              {isLoading && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                    <Loader2 size={16} className="animate-spin inline mr-2" />
+                    …
+                  </td>
+                </tr>
+              )}
+              {!isLoading && payments.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                    {t("admin.payments.empty")}
+                  </td>
+                </tr>
+              )}
+              {payments.map((p) => (
+                <PaymentRow key={p.id} payment={p} lang={lang} t={t} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterSelect({
+  value,
+  onChange,
+  allLabel,
+  options,
+  testId,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  allLabel: string;
+  options: { value: string; label: string }[];
+  testId?: string;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2.5 text-sm rounded-xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+      data-testid={testId}
+    >
+      <option value="">{allLabel}</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function PaymentRow({
+  payment,
+  lang,
+  t,
+}: {
+  payment: AdminPayment;
+  lang: "en" | "ar";
+  t: (k: TranslationKey) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const major = (payment.amountMinor / 100).toFixed(0);
+  const created = new Date(payment.createdAt).toLocaleString(
+    lang === "ar" ? "ar-EG" : "en-US",
+    { dateStyle: "medium", timeStyle: "short" },
+  );
+  return (
+    <>
+      <tr
+        className="hover:bg-slate-50 dark:hover:bg-gray-800/40 cursor-pointer"
+        onClick={() => setOpen((o) => !o)}
+        data-testid={`payment-row-${payment.id}`}
+      >
+        <td className="px-4 py-3">
+          <div className="font-semibold">{payment.userName}</div>
+          <div className="text-xs text-slate-500" dir="ltr">{payment.userEmail}</div>
+        </td>
+        <td className="px-4 py-3">
+          <div className="font-medium">
+            {payment.course === "intro" ? "LEXO Intro" : "LEXO English"}
+          </div>
+          <div className="text-xs text-slate-500 capitalize">{payment.tier}</div>
+        </td>
+        <td className="px-4 py-3">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="font-medium capitalize">{payment.provider}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-gray-700 text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+              {payment.mode}
+            </span>
+          </span>
+        </td>
+        <td className="px-4 py-3 font-bold" dir="ltr">
+          {major} {payment.currency}
+        </td>
+        <td className="px-4 py-3">
+          <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase ${paymentStatusTone(payment.status)}`}>
+            {payment.status}
+          </span>
+        </td>
+        <td className="px-4 py-3 text-slate-500 text-xs">{created}</td>
+      </tr>
+      {open && (
+        <tr className="bg-slate-50/70 dark:bg-gray-800/30">
+          <td colSpan={6} className="px-4 py-4 text-xs">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+              <DetailKV label="Payment ID" value={payment.id} mono />
+              <DetailKV label="Provider session ID" value={payment.providerSessionId ?? "—"} mono />
+              <DetailKV label="Provider payment ID" value={payment.providerPaymentId ?? "—"} mono />
+              <DetailKV label="Captured at" value={payment.capturedAt ? new Date(payment.capturedAt).toLocaleString(lang === "ar" ? "ar-EG" : "en-US") : "—"} />
+              {payment.failureReason && (
+                <div className="sm:col-span-2">
+                  <DetailKV label="Failure reason" value={payment.failureReason} />
+                </div>
+              )}
+            </dl>
+            {/* unused t: keep param so existing callers stay typed */}
+            <span className="sr-only">{t("admin.payments.modeBadge")}</span>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function DetailKV({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div>
+      <dt className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
+        {label}
+      </dt>
+      <dd
+        className={`text-sm break-all ${mono ? "font-mono" : ""}`}
+        dir="ltr"
+      >
+        {value}
+      </dd>
     </div>
   );
 }

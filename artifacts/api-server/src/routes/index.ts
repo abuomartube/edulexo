@@ -11,6 +11,7 @@ import englishRouter from "./english";
 import faqsRouter from "./faqs";
 import coursesRouter from "./courses";
 import certificatesRouter from "./certificates";
+import checkoutRouter from "./checkout";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use(englishRouter);
 router.use(faqsRouter);
 router.use(coursesRouter);
 router.use(certificatesRouter);
+router.use(checkoutRouter);
 
 export default router;

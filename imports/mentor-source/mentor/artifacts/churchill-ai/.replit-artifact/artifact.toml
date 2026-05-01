@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Churchill AI"
+version = "1.0.0"
+id = "artifacts/churchill-ai"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22551
+
+[services.development]
+run = "pnpm --filter @workspace/churchill-ai run dev"
+
+[services.production]
+build = [ "sh", "-c", "pnpm install --frozen-lockfile --prod=false && pnpm --filter @workspace/churchill-ai run build" ]
+publicDir = "artifacts/churchill-ai/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22551"
+BASE_PATH = "/"

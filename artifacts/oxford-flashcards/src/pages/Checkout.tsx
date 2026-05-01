@@ -11,6 +11,8 @@ import {
   type CheckoutProvider,
   type CheckoutCourse,
 } from "@/lib/platform-api";
+import tabbyLogoUrl from "@assets/Photoroom_20260501_230042_1777665690785.PNG";
+import tamaraLogoUrl from "@assets/IMG_6229_1777665695004.PNG";
 
 const VALID_TIERS: Record<CheckoutCourse, readonly string[]> = {
   intro: ["intro", "advance", "complete"],
@@ -324,75 +326,35 @@ function ProviderTile({
 }
 
 /**
- * Tabby brand chip — official primary colour `#3BFFC1` (mint) on a clean
- * rounded chip with the lowercase "tabby" wordmark in their charcoal
- * `#292929`. Matches Tabby's "Pay in 4" merchant button guidelines:
- * https://docs.tabby.ai/pay-in-4-custom-integration/promo-messaging
+ * Official Tabby payment-method chip. Renders the brand asset supplied by
+ * Tabby's merchant kit (mint `#3BFFC1` chip with the "tabby" wordmark in
+ * their custom typography). Aspect ratio is preserved so the wordmark
+ * never distorts.
  */
 function TabbyLogo() {
   return (
-    <svg
-      role="img"
-      aria-label="Tabby"
-      width="92"
-      height="34"
-      viewBox="0 0 92 34"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect width="92" height="34" rx="8" fill="#3BFFC1" />
-      <text
-        x="46"
-        y="23"
-        textAnchor="middle"
-        fontFamily='Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-        fontWeight={800}
-        fontSize="17"
-        fill="#292929"
-        letterSpacing="-0.4"
-      >
-        tabby
-      </text>
-    </svg>
+    <img
+      src={tabbyLogoUrl}
+      alt="Tabby"
+      className="h-9 w-auto object-contain select-none"
+      draggable={false}
+    />
   );
 }
 
 /**
- * Tamara brand chip — official primary colour `#3D1560` (deep purple) on a
- * white card, with the lowercase "tamara." wordmark in matching purple.
- * Matches Tamara's merchant brand guidelines for payment-method buttons.
+ * Official Tamara payment-method chip. Renders the brand asset supplied by
+ * Tamara's merchant kit (signature warm gradient with the "tamara"
+ * wordmark in their custom typography). Aspect ratio is preserved so the
+ * wordmark never distorts.
  */
 function TamaraLogo() {
   return (
-    <svg
-      role="img"
-      aria-label="Tamara"
-      width="100"
-      height="34"
-      viewBox="0 0 100 34"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect
-        x="0.5"
-        y="0.5"
-        width="99"
-        height="33"
-        rx="8"
-        fill="#FFFFFF"
-        stroke="#3D1560"
-      />
-      <text
-        x="50"
-        y="23"
-        textAnchor="middle"
-        fontFamily='Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif'
-        fontWeight={800}
-        fontSize="17"
-        fill="#3D1560"
-        letterSpacing="-0.4"
-      >
-        tamara
-        <tspan fontSize="22" dy="1">.</tspan>
-      </text>
-    </svg>
+    <img
+      src={tamaraLogoUrl}
+      alt="Tamara"
+      className="h-9 w-auto object-contain select-none"
+      draggable={false}
+    />
   );
 }

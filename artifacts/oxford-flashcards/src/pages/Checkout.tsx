@@ -232,7 +232,8 @@ function CheckoutForm({
           <ProviderTile
             id="tabby"
             ariaLabel={t("checkout.payWithTabby")}
-            description={t("checkout.tabbyDesc")}
+            line1={t("checkout.tabbyLine1")}
+            line2={t("checkout.tabbyLine2")}
             ringColor="ring-[#3BFFC1]"
             bgColor="bg-[#3BFFC1]/10"
             checked={provider === "tabby"}
@@ -242,7 +243,8 @@ function CheckoutForm({
           <ProviderTile
             id="tamara"
             ariaLabel={t("checkout.payWithTamara")}
-            description={t("checkout.tamaraDesc")}
+            line1={t("checkout.tamaraLine1")}
+            line2={t("checkout.tamaraLine2")}
             ringColor="ring-[#3D1560]"
             bgColor="bg-[#3D1560]/5"
             checked={provider === "tamara"}
@@ -288,7 +290,8 @@ function CheckoutForm({
 function ProviderTile({
   id,
   ariaLabel,
-  description,
+  line1,
+  line2,
   ringColor,
   bgColor,
   checked,
@@ -297,7 +300,8 @@ function ProviderTile({
 }: {
   id: string;
   ariaLabel: string;
-  description: string;
+  line1: string;
+  line2: string;
   ringColor: string;
   bgColor: string;
   checked: boolean;
@@ -310,7 +314,7 @@ function ProviderTile({
       onClick={onSelect}
       aria-pressed={checked}
       aria-label={ariaLabel}
-      className={`group flex flex-col items-start gap-3 text-start rounded-xl p-5 min-h-[120px] ring-2 bg-white dark:bg-gray-900/60 transition ${
+      className={`group flex flex-col items-start gap-3 text-start rounded-xl p-5 min-h-[140px] ring-2 bg-white dark:bg-gray-900/60 transition ${
         checked
           ? `${ringColor} ${bgColor} shadow-md`
           : "ring-slate-200 dark:ring-gray-800 hover:ring-slate-300 dark:hover:ring-gray-700"
@@ -318,9 +322,14 @@ function ProviderTile({
       data-provider={id}
     >
       <div className="h-9 flex items-center">{logo}</div>
-      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
-        {description}
-      </p>
+      <div className="space-y-0.5">
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 leading-snug">
+          {line1}
+        </p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 leading-snug">
+          {line2}
+        </p>
+      </div>
     </button>
   );
 }

@@ -896,8 +896,13 @@ export const translations = {
   "checkout.tier": { en: "Tier", ar: "المستوى" },
   "checkout.total": { en: "Total", ar: "الإجمالي" },
   "checkout.choosePayment": { en: "Choose a payment method", ar: "اختر وسيلة الدفع" },
-  "checkout.tabbyDesc": { en: "4 interest-free payments", ar: "٤ أقساط بدون فوائد" },
-  "checkout.tamaraDesc": { en: "Pay later, or split in 3", ar: "ادفع لاحقاً أو قسّمها على ٣" },
+  "checkout.tabbyLine1": { en: "Pay later with Tabby", ar: "ادفع لاحقًا مع تابّي" },
+  "checkout.tabbyLine2": { en: "Use any card", ar: "استخدم أي بطاقة" },
+  "checkout.tamaraLine1": { en: "Split it into 4", ar: "قسمها على 4" },
+  "checkout.tamaraLine2": {
+    en: "payments — no late fees, Sharia-compliant",
+    ar: "دفعات - بدون رسوم تأخير، متوافقة مع الشريعة الإسلامية",
+  },
   "checkout.payWithTabby": { en: "Pay with Tabby", ar: "ادفع باستخدام تابي" },
   "checkout.payWithTamara": { en: "Pay with Tamara", ar: "ادفع باستخدام تمارا" },
   "checkout.terms": {

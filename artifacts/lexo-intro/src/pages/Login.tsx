@@ -151,7 +151,7 @@ export default function Login({ onAuth, onAdminClick }: Props) {
                 style={{ background: `radial-gradient(circle, ${TEAL} 0%, ${GREEN} 100%)` }}
               />
               <img
-                src="/logo.png"
+                src={`${import.meta.env.BASE_URL}logo.png`}
                 alt="LEXO Intro"
                 className="relative w-full drop-shadow-2xl object-contain"
               />
@@ -281,7 +281,7 @@ export default function Login({ onAuth, onAdminClick }: Props) {
               className="absolute inset-0 blur-3xl opacity-40"
               style={{ background: `radial-gradient(circle, ${TEAL} 0%, ${GREEN} 100%)` }}
             />
-            <img src="/logo.png" alt="LEXO Intro" className="relative w-full drop-shadow-2xl object-contain" />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="relative w-full drop-shadow-2xl object-contain" />
           </div>
         </div>
 
@@ -343,7 +343,7 @@ export default function Login({ onAuth, onAdminClick }: Props) {
                 style={{ background: `radial-gradient(circle, ${TEAL} 0%, transparent 70%)` }}
               />
               <img
-                src="/churchill.png"
+                src={`${import.meta.env.BASE_URL}churchill.png`}
                 alt="Churchill"
                 className="relative w-40 h-52 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: "2px solid rgba(107,47,230,0.3)" }}
@@ -383,7 +383,7 @@ export default function Login({ onAuth, onAdminClick }: Props) {
                 style={{ background: `radial-gradient(circle, ${YELLOW} 0%, transparent 70%)` }}
               />
               <img
-                src="/orwell.png"
+                src={`${import.meta.env.BASE_URL}orwell.png`}
                 alt="Orwell AI"
                 className="relative w-40 h-52 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: `2px solid rgba(245,197,24,0.3)` }}
@@ -423,7 +423,7 @@ export default function Login({ onAuth, onAdminClick }: Props) {
                 style={{ background: `radial-gradient(circle, ${SOFT_GREEN} 0%, transparent 70%)` }}
               />
               <img
-                src="/attenborough.png"
+                src={`${import.meta.env.BASE_URL}attenborough.png`}
                 alt="Attenborough AI"
                 className="relative w-40 h-52 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: `2px solid rgba(110,231,183,0.4)` }}
@@ -469,7 +469,7 @@ export default function Login({ onAuth, onAdminClick }: Props) {
                 style={{ background: `radial-gradient(circle, ${VIOLET} 0%, transparent 70%)` }}
               />
               <img
-                src="/hemingway.png"
+                src={`${import.meta.env.BASE_URL}hemingway.png`}
                 alt="Hemingway AI"
                 className="relative w-40 h-52 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: `2px solid rgba(167,139,250,0.4)` }}

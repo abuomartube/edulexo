@@ -79,7 +79,7 @@ export default function ListeningSectionPicker({ onBack, onLogout, expiresAt, on
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <img src="/logo.png" alt="LEXO Intro" className="w-10 h-10 object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="w-10 h-10 object-contain" />
           <div>
             <div className="font-black text-white text-base tracking-tight leading-none">Attenborough AI</div>
             <div className="text-xs font-semibold" style={{ color: GREEN }}>Listening practice</div>

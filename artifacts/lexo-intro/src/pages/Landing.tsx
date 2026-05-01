@@ -30,7 +30,7 @@ export default function Landing({ onStart, onLogout, expiresAt }: Props) {
         style={{ borderBottom: "1px solid rgba(107,47,230,0.15)" }}
       >
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="LEXO Intro" className="w-10 h-10 object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="w-10 h-10 object-contain" />
           <div>
             <div className="font-black text-white text-base tracking-tight leading-none">Churchill</div>
             <div className="text-xs font-semibold" style={{ color: TEAL }}>by Abu Omar EduLexo</div>
@@ -60,7 +60,7 @@ export default function Landing({ onStart, onLogout, expiresAt }: Props) {
               style={{ background: `radial-gradient(circle, ${TEAL} 0%, ${GREEN} 100%)` }}
             />
             <img
-              src="/logo.png"
+              src={`${import.meta.env.BASE_URL}logo.png`}
               alt="LEXO Intro Logo"
               className="relative w-44 h-44 object-contain drop-shadow-2xl"
             />

@@ -1153,7 +1153,7 @@ export default function Writing({ onBack, expiresAt }: Props) {
             </button>
             <div className="h-6 w-px bg-gray-200" />
             <div className="flex items-center gap-2.5">
-              <img src="/logo.png" alt="LEXO Intro" className="h-9 w-auto" />
+              <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="h-9 w-auto" />
             </div>
           </div>
           <div className="flex items-center gap-3">

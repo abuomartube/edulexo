@@ -111,7 +111,7 @@ export default function ToolChoice({ onChurchill, onOrwell, onAttenborough, onHe
         style={{ borderBottom: "1px solid rgba(107,47,230,0.15)" }}
       >
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="LEXO Intro" className="w-10 h-10 object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="w-10 h-10 object-contain" />
           <div>
             <div className="font-black text-white text-base tracking-tight leading-none">LEXO Intro</div>
             <div className="text-xs font-semibold" style={{ color: TEAL }}>AI Tools</div>
@@ -205,7 +205,7 @@ export default function ToolChoice({ onChurchill, onOrwell, onAttenborough, onHe
                 style={{ background: `radial-gradient(circle, ${TEAL} 0%, transparent 70%)` }}
               />
               <img
-                src="/churchill.png"
+                src={`${import.meta.env.BASE_URL}churchill.png`}
                 alt="Churchill"
                 className="relative w-48 h-60 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: "2px solid rgba(107,47,230,0.3)" }}
@@ -262,7 +262,7 @@ export default function ToolChoice({ onChurchill, onOrwell, onAttenborough, onHe
                 style={{ background: `radial-gradient(circle, ${YELLOW} 0%, transparent 70%)` }}
               />
               <img
-                src="/orwell.png"
+                src={`${import.meta.env.BASE_URL}orwell.png`}
                 alt="Orwell AI"
                 className="relative w-48 h-60 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: `2px solid rgba(245,197,24,0.3)` }}
@@ -319,7 +319,7 @@ export default function ToolChoice({ onChurchill, onOrwell, onAttenborough, onHe
                 style={{ background: `radial-gradient(circle, ${SOFT_GREEN} 0%, transparent 70%)` }}
               />
               <img
-                src="/attenborough.png"
+                src={`${import.meta.env.BASE_URL}attenborough.png`}
                 alt="Attenborough AI"
                 className="relative w-48 h-60 object-cover object-center rounded-2xl drop-shadow-2xl"
                 style={{ border: `2px solid rgba(110,231,183,0.4)` }}
@@ -382,7 +382,7 @@ export default function ToolChoice({ onChurchill, onOrwell, onAttenborough, onHe
                 style={{ background: `radial-gradient(circle, ${VIOLET} 0%, transparent 70%)` }}
               />
               <img
-                src="/hemingway.png"
+                src={`${import.meta.env.BASE_URL}hemingway.png`}
                 alt="Hemingway AI"
                 className="relative w-48 h-60 object-cover object-top rounded-2xl drop-shadow-2xl"
                 style={{ border: `2px solid rgba(167,139,250,0.4)` }}

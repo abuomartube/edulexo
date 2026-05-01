@@ -1555,7 +1555,7 @@ function SpeakingInner({ onBack, expiresAt }: Props) {
       <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background:`linear-gradient(160deg, #071422 0%, ${NAVY} 40%, #0C2040 100%)` }}>
         <div className="w-full max-w-md space-y-6 text-center">
           <div>
-            <img src="/logo.png" alt="LEXO Intro" className="w-20 h-20 object-contain mx-auto mb-3 drop-shadow-xl" />
+            <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="w-20 h-20 object-contain mx-auto mb-3 drop-shadow-xl" />
             <h2 className="text-2xl font-black text-white mb-1">Choose Your Mode</h2>
             <p className="text-white/50 text-sm">How would you like to practise speaking?</p>
           </div>
@@ -1608,7 +1608,7 @@ function SpeakingInner({ onBack, expiresAt }: Props) {
           <button onClick={onBack} className="flex items-center gap-1.5 text-white/40 hover:text-white/70 transition-colors text-sm" title="Back to Home">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <img src="/logo.png" alt="LEXO Intro" className="w-8 h-8 object-contain" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="LEXO Intro" className="w-8 h-8 object-contain" />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-white text-sm">Churchill</span>

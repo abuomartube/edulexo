@@ -24,6 +24,9 @@ import {
 } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
 import lexoIeltsLogo from "@/assets/lexo-ielts.png";
+import tierIntroLogo from "@assets/F404C41A-045C-42E8-B2EF-B75CBD59294E_1777643375926.PNG";
+import tierAdvanceLogo from "@assets/29C649F8-7100-4DBE-95BE-491CAAA5B4E8_1777643368790.PNG";
+import tierCompleteLogo from "@assets/890CB599-C509-44F9-A6D7-493614DAC2F9_1777643368791.PNG";
 import Header from "@/components/Header";
 import { useT, useLanguage } from "@/lib/i18n";
 import type { TranslationKey } from "@/lib/translations";
@@ -65,6 +68,8 @@ const valueProps: ValueProp[] = [
 type Tier = {
   id: "intro" | "mid" | "complete";
   icon: React.ComponentType<{ size?: number; className?: string }>;
+  logoSrc: string;
+  logoBg: string;
   href: string;
   external: boolean;
   comingSoon: boolean;
@@ -83,6 +88,8 @@ const tiers: Tier[] = [
   {
     id: "intro",
     icon: Rocket,
+    logoSrc: tierIntroLogo,
+    logoBg: "bg-gradient-to-br from-[#0a1230] via-[#0d1a45] to-[#0a1230]",
     href: "/app-ielts-intro/",
     external: true,
     comingSoon: false,
@@ -105,6 +112,8 @@ const tiers: Tier[] = [
   {
     id: "mid",
     icon: GraduationCap,
+    logoSrc: tierAdvanceLogo,
+    logoBg: "bg-gradient-to-br from-[#1a0a30] via-[#2a0d4d] to-[#1a0a30]",
     href: "/app-ielts/?tier=advance",
     external: true,
     comingSoon: false,
@@ -127,6 +136,8 @@ const tiers: Tier[] = [
   {
     id: "complete",
     icon: Crown,
+    logoSrc: tierCompleteLogo,
+    logoBg: "bg-gradient-to-br from-[#0a1230] via-[#0d1f2a] to-[#0a1230]",
     href: "/app-ielts/?tier=complete",
     external: true,
     comingSoon: false,
@@ -303,9 +314,19 @@ export default function IeltsCourse() {
                 )}
 
                 <div
-                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tier.iconGradient} flex items-center justify-center text-white shadow-md mb-4`}
+                  className={`relative aspect-square w-full overflow-hidden rounded-2xl ${tier.logoBg} shadow-md mb-4 flex items-center justify-center p-3`}
                 >
-                  <TierIcon size={26} />
+                  <img
+                    src={tier.logoSrc}
+                    alt={t(tier.nameKey)}
+                    className="relative w-full h-full object-contain select-none drop-shadow-[0_0_24px_rgba(255,255,255,0.18)]"
+                    draggable={false}
+                  />
+                  <div
+                    className={`absolute top-3 end-3 w-9 h-9 rounded-xl bg-gradient-to-br ${tier.iconGradient} flex items-center justify-center text-white shadow-lg ring-2 ring-white/20`}
+                  >
+                    <TierIcon size={18} />
+                  </div>
                 </div>
 
                 <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">

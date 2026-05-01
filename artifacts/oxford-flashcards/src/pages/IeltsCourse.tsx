@@ -23,8 +23,8 @@ import {
   Layers,
   PlayCircle,
 } from "lucide-react";
-import { useTheme } from "@/hooks/useTheme";
 import edulexoLogo from "@/assets/edulexo-logo.png";
+import Header from "@/components/Header";
 
 const arabicFont = "'Cairo', 'Amiri', 'Noto Sans Arabic', sans-serif";
 
@@ -144,62 +144,10 @@ const valueProps = [
 ];
 
 export default function IeltsCourse() {
-  const { theme, toggle } = useTheme();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/40 dark:from-gray-950 dark:via-emerald-950/30 dark:to-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300">
-      {/* HEADER */}
-      <header className="sticky top-0 z-40 backdrop-blur-md bg-white/70 dark:bg-gray-950/70 border-b border-slate-100/80 dark:border-gray-800/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <img
-              src={edulexoLogo}
-              alt="Abu Omar EduLexo"
-              className="w-11 h-11 object-contain drop-shadow-md group-hover:scale-105 transition-transform"
-            />
-            <div className="leading-tight">
-              <h1 className="text-base sm:text-lg font-extrabold tracking-tight">
-                <span className="text-slate-900 dark:text-white">Abu Omar </span>
-                <span className="bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 dark:from-indigo-400 dark:via-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
-                  EduLexo
-                </span>
-              </h1>
-              <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.18em] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">
-                LEXO for IELTS
-              </p>
-            </div>
-          </Link>
-
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
-            >
-              <ArrowLeft size={14} />
-              Platform
-            </Link>
-            <Link
-              href="/login"
-              className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition"
-            >
-              Log In
-            </Link>
-            <a
-              href="#enroll"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-95 transition"
-            >
-              Enroll Now
-            </a>
-            <button
-              onClick={toggle}
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 transition-all hover:scale-110 active:scale-95 shadow-sm"
-            >
-              {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       {/* HERO */}
       <section className="relative overflow-hidden">

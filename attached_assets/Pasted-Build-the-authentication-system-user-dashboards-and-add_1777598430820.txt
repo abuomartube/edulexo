@@ -1,0 +1,213 @@
+Build the authentication system, user dashboards, and additional features for EduLexo:
+
+## 1. RESPONSIVE NAVIGATION HEADER (ALL PAGES)
+- Logo "Abu Omar EduLexo" on the left
+- Profile circular image in the top-right (your photo - styled beautifully with shadow/border)
+- Desktop navigation links:
+  * Courses
+  * Features
+  * Free Lessons
+  * Level Assessment
+  * Become an Affiliate
+  * Log In
+  * Sign Up
+- Mobile: Hamburger menu icon (☰) that expands to show all navigation options
+- Hamburger menu should include:
+  * Home
+  * Courses
+  * Features
+  * Free Lessons
+  * Level Assessment
+  * Become an Affiliate
+  * Log In
+  * Sign Up
+  * Admin Dashboard (hidden, only visible to admins)
+- Profile image should be clickable (dropdown for logout, profile, settings)
+
+## 2. FREE LESSONS PAGE (/free-lessons)
+- Display free IELTS and English lessons
+- Grid layout showing:
+  * Lesson title
+  * Brief description
+  * Duration
+  * Difficulty level
+  * "Start Lesson" button
+- Filter by course type (IELTS / English)
+- No login required to view
+
+## 3. LEVEL ASSESSMENT PAGE (/assessment)
+- Interactive quiz to determine English/IELTS level
+- Questions: 15-20 multiple choice questions
+- After completion, show:
+  * Student's level (A1, A2, B1, B2, C1, C2)
+  * Recommendations for which course to take
+  * "Enroll Now" button for recommended course
+- Store assessment result in database (if logged in)
+- Optional login before taking assessment
+
+## 4. AFFILIATE/MARKETING PAGE (/affiliate)
+- "Become a Marketer" or "Affiliate Program" page
+- Explain commission structure
+- Display commission rates:
+  * % per sale
+  * Bonus structure
+  * Payment terms
+- Form to apply for affiliate program:
+  * Name, email, phone, social media handles
+  * Why do you want to join?
+- After submission: send confirmation email + admin gets notified
+- Show affiliate resources (coming soon):
+  * Marketing materials (images, videos)
+  * Sample copy
+  * Tracking links (build later)
+
+## 5. SIGN UP PAGE (/signup)
+- Registration form with fields:
+  * Full Name
+  * Email
+  * Phone Number
+  * Password (with strength indicator)
+  * Confirm Password
+- "Sign Up" button
+- Link to "Already have an account? Log In"
+- Form validation (email format, password strength, etc.)
+- After successful signup:
+  * Store user in database (PostgreSQL)
+  * Send verification email via SendGrid
+  * Redirect to login page with success message
+
+## 6. LOG IN PAGE (/login)
+- Email and password fields
+- "Log In" button
+- "Forgot Password?" link
+- Link to "Don't have an account? Sign Up"
+- Form validation
+- After successful login:
+  * Create session/JWT token
+  * Redirect to student dashboard
+
+## 7. PASSWORD RESET
+- Forgot password page (/forgot-password)
+- User enters email
+- SendGrid sends reset link
+- Reset password page (with new password form)
+- Redirect to login after successful reset
+
+## 8. FAQ SECTION (DYNAMIC - on landing page)
+- Add FAQ section before footer on landing page
+- Empty accordion/expandable component:
+  * Each FAQ has: Question (title) and Answer (description)
+  * Click to expand/collapse
+  * Smooth animations
+  * No hardcoded questions - managed by admin in admin dashboard
+- Display all FAQs from database
+
+## 9. STUDENT DASHBOARD (/dashboard)
+- Protected route (only logged-in students can access)
+- Display:
+  * Welcome message with student's name
+  * "My Enrolled Courses" section showing:
+    - LEXO for IELTS (if enrolled)
+    - LEXO for English (if enrolled)
+    - Progress bar for each course (if available)
+    - "Access Course" button for each enrolled course
+  * Quick stats:
+    - Total courses enrolled
+    - Total spent (optional)
+  * Profile section:
+    - View/edit name, email, phone
+    - Change password
+    - Logout button
+  * Assessment results (if student took assessment)
+  * Affiliate status (if applied to affiliate program)
+
+## 10. ADMIN DASHBOARD (/admin)
+- Secure admin login (separate from student login)
+- Admin panel with:
+  * Dashboard overview:
+    - Total students
+    - Total revenue
+    - Total enrollments
+    - Recent signups (last 10)
+  * Manage Students:
+    - List all students (email, name, phone, enrollment date)
+    - Search/filter students
+    - View student details
+    - Edit student info
+    - Delete student (with confirmation)
+  * Manage Enrollments:
+    - View all enrollments
+    - See which students enrolled in which course
+    - Accept/Reject pending enrollments
+    - Refund functionality
+  * Manage FAQ:
+    - Add new FAQ items (question + answer)
+    - Edit existing FAQ
+    - Delete FAQ
+    - Reorder FAQ items
+    - Preview how FAQ looks on landing page
+  * Send Emails:
+    - Compose email to all students
+    - Send email to specific course enrollees
+    - Send email to specific student
+    - Email templates for different scenarios
+  * Manage Free Lessons:
+    - Add/edit/delete free lessons
+    - Upload lesson content
+  * Affiliate Applications:
+    - View pending affiliate applications
+    - Approve/Reject applications
+    - Send approval/rejection emails
+  * View Analytics:
+    - Revenue reports (daily, monthly, yearly)
+    - Enrollment trends
+    - Popular courses
+    - Student retention
+    - Assessment data (popular levels, etc.)
+
+## 11. DATABASE SCHEMA (PostgreSQL)
+Tables needed:
+- users (id, name, email, phone, password_hash, created_at, role: 'student' or 'admin')
+- enrollments (id, user_id, course_id, enrolled_date, status: 'pending' or 'active', payment_id)
+- courses (id, name, price, description, course_type: 'ielts' or 'english')
+- faqs (id, question, answer, order, created_at, updated_at)
+- emails_sent (id, to_email, subject, content, sent_date)
+- assessments (id, user_id, level, score, created_at)
+- free_lessons (id, title, description, content, difficulty, course_type, created_at)
+- affiliate_applications (id, name, email, phone, social_handles, why_join, status: 'pending' or 'approved' or 'rejected', applied_date)
+
+## 12. EMAIL INTEGRATION (SendGrid)
+Send automated emails for:
+- Email verification (after signup)
+- Welcome email (after successful first login)
+- Course enrollment confirmation
+- Password reset
+- Admin notifications (new enrollment, payment received, affiliate application)
+- Affiliate approval/rejection
+- FAQ updates (optional)
+
+## 13. SECURITY
+- Hash passwords (bcrypt)
+- JWT tokens for authentication
+- Protect admin routes (only admin role can access)
+- Protect student routes (only logged-in students can access)
+- CSRF protection
+- Rate limiting on login attempts
+- Email verification for signups
+
+## 14. STYLING & UX
+- Keep design consistent with existing landing page
+- Mobile-responsive (hamburger menu on mobile)
+- Clear error messages
+- Success notifications
+- Loading states
+- Professional color scheme (emerald/teal for IELTS, violet/purple for English)
+
+## 15. RESPONSIVE DESIGN
+- All pages must be mobile-friendly
+- Hamburger menu works smoothly on mobile
+- Forms are easy to fill on mobile
+- Images are optimized for mobile
+- Test on different screen sizes
+
+Ready to build this complete system?

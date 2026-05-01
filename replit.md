@@ -50,10 +50,35 @@ Routes (wouter):
 
 Roadmap (per user-specified iterations):
 - **Iteration 1 — DONE**: New EduLexo platform landing + IELTS detail page + brand applied across the site.
-- **Iteration 2**: Auth (signup/login/password reset, protected routes, email verification via SendGrid) + Postgres schema for users + enrollments. **No access codes** — open registration.
-- **Iteration 3**: Payments (Tabby, Tamara, Stripe, Bank Transfer) + confirmation emails + manual admin approval gate (payment ≠ access; admin must approve enrollment).
-- **Iteration 4**: Student dashboard (enrolled courses, materials, account settings).
-- **Iteration 5**: Admin dashboard (approve/reject enrollments, bulk + targeted emails, sales analytics, product/price management).
+- **Iteration 2 — DONE**: Auth (signup/login/forgot+reset password, protected routes, profile dropdown) + Postgres schema for users + sessions + a stub student dashboard. **No access codes** — open registration. Email is a logging stub for now (SendGrid wired in Iteration 5).
+- **Iteration 3**: Free lessons gallery + Level Assessment + Affiliate program + FAQ.
+- **Iteration 4**: Admin dashboard (approve/reject enrollments, bulk + targeted emails, sales analytics, product/price management).
+- **Iteration 5**: Payments (Tabby, Tamara, Stripe, Bank Transfer) + SendGrid wiring (verification, reset, confirmation, marketing).
+
+### Iteration 2 — Auth implementation notes
+
+Backend (`artifacts/api-server`):
+- `lib/db/src/schema/users.ts` — `users` table (`id`, `name`, `email` unique citext-style lower-case, `phone`, `password_hash`, `role` student|admin, `email_verified`, timestamps) and `password_reset_tokens` (`token` stores **SHA-256 hash** of the raw token, `user_id`, `expires_at`, `used_at`, `created_at`).
+- `lib/db/src/schema/sessions.ts` — `user_sessions` table mirroring `connect-pg-simple` shape so the bundled server can use it without runtime SQL bootstrap.
+- `lib/api-spec/openapi.yaml` — auth endpoints under `/auth/*`. Generated TS types live in `lib/api-types`, generated React Query hooks in `lib/api-client`, and Zod schemas in `lib/api-zod` (note orval names: `SignupBody/LoginBody/LoginResponse/GetCurrentUserResponse/ForgotPasswordResponse`).
+- `artifacts/api-server/src/routes/auth.ts` — POST `/api/auth/{signup,login,logout,forgot-password,reset-password}` + GET `/api/auth/me`. Sessions are regenerated on signup/login (mitigates fixation). Logout destroys the session and clears the cookie.
+- `artifacts/api-server/src/lib/session.ts` — `express-session` + `connect-pg-simple`, cookie name `edulexo.sid`, 30-day rolling expiry, `httpOnly`, `sameSite=lax`, `secure` in prod, `proxy=true` so Express trusts the X-Forwarded-Proto header from the path-based proxy. `createTableIfMissing:false` because the bundled output cannot read the package's `table.sql`.
+- `artifacts/api-server/src/lib/auth.ts` — `bcryptjs` (rounds=12) helpers, `generateToken` (32-byte hex), `hashToken` (SHA-256) for at-rest reset tokens, `getAppOrigin()` builds reset URLs from `APP_PUBLIC_URL` → `REPLIT_DOMAINS` (never from request `Host`/`Origin` headers — host-poisoning safe), `requireAuth` + `requireAdmin` middleware.
+- `artifacts/api-server/src/lib/rate-limit.ts` — `express-rate-limit` policies: `signupLimiter` (10/hour/IP in prod), `authIpLimiter` (20/15min/IP for login + reset), `forgotPasswordLimiter` (5/hour per IP+email key). Dev limits are loose (1000) so e2e tests don't hit them.
+- `artifacts/api-server/src/lib/email.ts` — stub sender that logs only `to` + `subject` (never the email body or token). In dev only, the auth route logs the reset URL so we can complete the flow without real email; in prod no token ever reaches logs.
+- DB schema is pushed via `pnpm --filter @workspace/db run push`.
+
+Frontend (`artifacts/oxford-flashcards`):
+- `src/main.tsx` — wraps the app in `QueryClientProvider` + `AuthProvider`.
+- `src/lib/auth-context.tsx` — `useAuth()` returns `{ user, isAuthenticated, isAdmin, isLoading, signup, login, logout, forgotPassword, resetPassword, refresh }`. Uses orval-generated functions; `setQueryData` updates the `/me` cache after signup/login so UI flips immediately.
+- `src/components/Header.tsx` — shared header with logo + brand + tagline, nav links (Courses / Features / Free Lessons / Level Assessment / Become an Affiliate), dark-mode toggle, hamburger drawer for `<lg`. When authed, shows a gradient initials avatar with a dropdown (My Dashboard, Admin Panel for admins, Log Out).
+- `src/components/ProtectedRoute.tsx` — redirects unauth users to `/login` (or `/dashboard` if a non-admin hits an admin route). Shows a spinner while `isLoading`.
+- Pages: `Signup`, `Login`, `ForgotPassword`, `ResetPassword`, `Dashboard`, `ComingSoon`. Signup/Login redirect via a `useEffect` keyed on `isAuthenticated` (declarative, avoids a render-order race where ProtectedRoute could fire a stale-state redirect on direct `navigate("/dashboard")`).
+- Routes: `/signup`, `/login`, `/forgot-password`, `/reset-password`, `/dashboard` (protected), `/admin` (protected, requireAdmin), and `ComingSoon` placeholders for `/free-lessons`, `/assessment`, `/affiliate`, `/faq`.
+
+E2E verified flow: signup → dashboard → avatar dropdown → logout → unauth `/dashboard` redirects to `/login` → login → forgot-password → reset (hashed token verified, replay rejected, old password rejected). Mobile hamburger drawer verified at 480x800.
+
+Env: `SESSION_SECRET` is set. `APP_PUBLIC_URL` is optional — falls back to `https://${REPLIT_DOMAINS[0]}` then `http://localhost:80`.
 
 Oxford 3000 flashcards with Arabic translations, day/night theme, and consistent native British TTS via OpenAI `fable` voice.
 

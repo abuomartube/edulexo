@@ -8,3 +8,88 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export type PublicUserRole =
+  (typeof PublicUserRole)[keyof typeof PublicUserRole];
+
+export const PublicUserRole = {
+  student: "student",
+  admin: "admin",
+} as const;
+
+export interface PublicUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  role: PublicUserRole;
+  emailVerified: boolean;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  user: PublicUser;
+}
+
+export interface MeResponse {
+  user: PublicUser | null;
+}
+
+export interface SignupRequest {
+  /**
+   * @minLength 2
+   * @maxLength 120
+   */
+  name: string;
+  email: string;
+  /** @maxLength 32 */
+  phone?: string;
+  /**
+   * @minLength 8
+   * @maxLength 128
+   */
+  password: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  /** @minLength 1 */
+  password: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  /** @minLength 8 */
+  token: string;
+  /**
+   * @minLength 8
+   * @maxLength 128
+   */
+  password: string;
+}
+
+/**
+ * Validation failed
+ */
+export type ValidationErrorResponse = ErrorResponse;
+
+/**
+ * Not authorized
+ */
+export type UnauthorizedResponse = ErrorResponse;
+
+/**
+ * Resource already exists
+ */
+export type ConflictResponse = ErrorResponse;

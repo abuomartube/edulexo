@@ -14,3 +14,91 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary Register a new student account
+ */
+export const signupBodyNameMin = 2;
+export const signupBodyNameMax = 120;
+
+export const signupBodyPhoneMax = 32;
+
+export const signupBodyPasswordMin = 8;
+export const signupBodyPasswordMax = 128;
+
+export const SignupBody = zod.object({
+  name: zod.string().min(signupBodyNameMin).max(signupBodyNameMax),
+  email: zod.string().email(),
+  phone: zod.string().max(signupBodyPhoneMax).optional(),
+  password: zod.string().min(signupBodyPasswordMin).max(signupBodyPasswordMax),
+});
+
+/**
+ * @summary Log in with email and password
+ */
+
+export const LoginBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string().min(1),
+});
+
+export const LoginResponse = zod.object({
+  user: zod.object({
+    id: zod.string().uuid(),
+    name: zod.string(),
+    email: zod.string().email(),
+    phone: zod.string().nullish(),
+    role: zod.enum(["student", "admin"]),
+    emailVerified: zod.boolean(),
+    createdAt: zod.coerce.date(),
+  }),
+});
+
+/**
+ * @summary Get the currently authenticated user
+ */
+export const GetCurrentUserResponse = zod.object({
+  user: zod.union([
+    zod.object({
+      id: zod.string().uuid(),
+      name: zod.string(),
+      email: zod.string().email(),
+      phone: zod.string().nullish(),
+      role: zod.enum(["student", "admin"]),
+      emailVerified: zod.boolean(),
+      createdAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary Request a password reset link
+ */
+export const ForgotPasswordBody = zod.object({
+  email: zod.string().email(),
+});
+
+export const ForgotPasswordResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Reset password using a token
+ */
+export const resetPasswordBodyTokenMin = 8;
+
+export const resetPasswordBodyPasswordMin = 8;
+export const resetPasswordBodyPasswordMax = 128;
+
+export const ResetPasswordBody = zod.object({
+  token: zod.string().min(resetPasswordBodyTokenMin),
+  password: zod
+    .string()
+    .min(resetPasswordBodyPasswordMin)
+    .max(resetPasswordBodyPasswordMax),
+});
+
+export const ResetPasswordResponse = zod.object({
+  message: zod.string(),
+});

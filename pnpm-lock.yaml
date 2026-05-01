@@ -166,6 +166,9 @@ importers:
 
   artifacts/api-server:
     dependencies:
+      '@google-cloud/storage':
+        specifier: ^7.19.0
+        version: 7.19.0
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod
@@ -199,6 +202,9 @@ importers:
       express-session:
         specifier: ^1.19.0
         version: 1.19.0
+      google-auth-library:
+        specifier: ^10.6.2
+        version: 10.6.2
       pdfkit:
         specifier: ^0.18.0
         version: 0.18.0

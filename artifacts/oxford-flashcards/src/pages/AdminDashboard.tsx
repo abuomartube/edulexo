@@ -27,6 +27,10 @@ import {
   Download,
   CreditCard,
   RefreshCw,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
 } from "lucide-react";
 import {
   LineChart,
@@ -85,6 +89,9 @@ import {
   type AdminCertificate,
   type CertificateCourse,
   fetchAdminPayments,
+  adminVerifyBankPayment,
+  adminRejectBankPayment,
+  bankProofViewUrl,
   type AdminPayment,
   type CheckoutCourse,
   type CheckoutProvider,
@@ -3084,7 +3091,20 @@ function IssueCertificateModal({
 // ───────────────────────── PAYMENTS ─────────────────────────
 
 const PAYMENT_COURSE_OPTS: ReadonlyArray<CheckoutCourse> = ["intro", "english"];
-const PAYMENT_PROVIDER_OPTS: ReadonlyArray<CheckoutProvider> = ["tabby", "tamara"];
+const PAYMENT_PROVIDER_OPTS: ReadonlyArray<CheckoutProvider> = [
+  "tabby",
+  "tamara",
+  "bank_transfer",
+];
+
+function providerLabel(p: CheckoutProvider, t: (k: TranslationKey) => string): string {
+  // Provider names stay branded for the admin (Tabby/Tamara are the actual
+  // settlement partners — admin needs to know which one to reconcile against).
+  // Bank transfer is the only one we translate, since it isn't a brand.
+  if (p === "tabby") return "Tabby";
+  if (p === "tamara") return "Tamara";
+  return t("admin.payments.provider.bank_transfer");
+}
 const PAYMENT_STATUS_OPTS: ReadonlyArray<PaymentStatus> = [
   "created",
   "pending",
@@ -3114,6 +3134,7 @@ function paymentStatusTone(s: PaymentStatus): string {
 function PaymentsTab() {
   const t = useT();
   const { lang } = useLanguage();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const [course, setCourse] = useState<CheckoutCourse | "">("");
   const [provider, setProvider] = useState<CheckoutProvider | "">("");
@@ -3137,6 +3158,25 @@ function PaymentsTab() {
 
   const payments: AdminPayment[] = data ?? [];
 
+  // Quick-filter chip: "Pending bank transfers" — pre-selects
+  // provider=bank_transfer + status=pending so the admin can triage manual
+  // verifications in one click.
+  const pendingBankTransferActive =
+    provider === "bank_transfer" && status === "pending";
+  const applyPendingBankTransfer = () => {
+    if (pendingBankTransferActive) {
+      setProvider("");
+      setStatus("");
+    } else {
+      setProvider("bank_transfer");
+      setStatus("pending");
+    }
+  };
+
+  const refetchAll = () => {
+    void qc.invalidateQueries({ queryKey: ["admin-payments"] });
+  };
+
   return (
     <div className="space-y-5" data-testid="admin-payments">
       <div>
@@ -3144,6 +3184,22 @@ function PaymentsTab() {
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
           {t("admin.payments.subtitle")}
         </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={applyPendingBankTransfer}
+          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ring-1 transition ${
+            pendingBankTransferActive
+              ? "bg-indigo-600 text-white ring-indigo-600 shadow"
+              : "bg-white dark:bg-gray-900 text-slate-700 dark:text-slate-200 ring-slate-200 dark:ring-gray-800 hover:ring-indigo-300"
+          }`}
+          data-testid="quick-filter-pending-bank-transfers"
+        >
+          <Clock size={12} />
+          {t("admin.payments.bankTransferPending")}
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-stretch">
@@ -3174,7 +3230,7 @@ function PaymentsTab() {
           allLabel={t("admin.payments.filter.all")}
           options={PAYMENT_PROVIDER_OPTS.map((p) => ({
             value: p,
-            label: p === "tabby" ? "Tabby" : "Tamara",
+            label: providerLabel(p, t),
           }))}
           testId="payments-provider-filter"
         />
@@ -3209,12 +3265,13 @@ function PaymentsTab() {
                 <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.amount")}</th>
                 <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.status")}</th>
                 <th className="text-start px-4 py-3 font-semibold">{t("admin.payments.col.created")}</th>
+                <th className="text-end px-4 py-3 font-semibold">{t("admin.payments.col.actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
               {isLoading && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                     <Loader2 size={16} className="animate-spin inline mr-2" />
                     …
                   </td>
@@ -3222,13 +3279,19 @@ function PaymentsTab() {
               )}
               {!isLoading && payments.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
                     {t("admin.payments.empty")}
                   </td>
                 </tr>
               )}
               {payments.map((p) => (
-                <PaymentRow key={p.id} payment={p} lang={lang} t={t} />
+                <PaymentRow
+                  key={p.id}
+                  payment={p}
+                  lang={lang}
+                  t={t}
+                  onChanged={refetchAll}
+                />
               ))}
             </tbody>
           </table>
@@ -3272,17 +3335,64 @@ function PaymentRow({
   payment,
   lang,
   t,
+  onChanged,
 }: {
   payment: AdminPayment;
   lang: "en" | "ar";
   t: (k: TranslationKey) => string;
+  /** Re-fetch the payments list once the row's status has flipped. */
+  onChanged: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState<null | "verify" | "reject">(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const major = (payment.amountMinor / 100).toFixed(0);
   const created = new Date(payment.createdAt).toLocaleString(
     lang === "ar" ? "ar-EG" : "en-US",
     { dateStyle: "medium", timeStyle: "short" },
   );
+
+  // Bank-transfer rows that haven't been actioned yet are the only ones
+  // where Verify / Reject buttons should appear. Tabby/Tamara settle
+  // automatically through their webhooks.
+  const isPendingBankTransfer =
+    payment.provider === "bank_transfer" &&
+    (payment.status === "pending" || payment.status === "created");
+
+  const proofUrl = bankProofViewUrl(payment.bankProofObjectPath);
+
+  const onVerify = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (busy) return;
+    if (!confirm(t("admin.payments.verifyConfirm"))) return;
+    setBusy("verify");
+    setActionError(null);
+    try {
+      await adminVerifyBankPayment(payment.id);
+      onChanged();
+    } catch (err) {
+      setActionError((err as Error).message ?? "error");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const onReject = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (busy) return;
+    if (!confirm(t("admin.payments.rejectConfirm"))) return;
+    setBusy("reject");
+    setActionError(null);
+    try {
+      await adminRejectBankPayment(payment.id);
+      onChanged();
+    } catch (err) {
+      setActionError((err as Error).message ?? "error");
+    } finally {
+      setBusy(null);
+    }
+  };
+
   return (
     <>
       <tr
@@ -3302,7 +3412,7 @@ function PaymentRow({
         </td>
         <td className="px-4 py-3">
           <span className="inline-flex items-center gap-1.5">
-            <span className="font-medium capitalize">{payment.provider}</span>
+            <span className="font-medium">{providerLabel(payment.provider, t)}</span>
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-gray-700 text-slate-700 dark:text-slate-200 uppercase tracking-wide">
               {payment.mode}
             </span>
@@ -3317,21 +3427,95 @@ function PaymentRow({
           </span>
         </td>
         <td className="px-4 py-3 text-slate-500 text-xs">{created}</td>
+        <td className="px-4 py-3 text-end">
+          {isPendingBankTransfer ? (
+            <div className="inline-flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onVerify}
+                disabled={busy !== null}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60 disabled:cursor-wait"
+                data-testid={`payment-verify-${payment.id}`}
+              >
+                {busy === "verify" ? (
+                  <Loader2 size={11} className="animate-spin" />
+                ) : (
+                  <CheckCircle2 size={11} />
+                )}
+                {busy === "verify"
+                  ? t("admin.payments.verifying")
+                  : t("admin.payments.verify")}
+              </button>
+              <button
+                type="button"
+                onClick={onReject}
+                disabled={busy !== null}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white disabled:opacity-60 disabled:cursor-wait"
+                data-testid={`payment-reject-${payment.id}`}
+              >
+                {busy === "reject" ? (
+                  <Loader2 size={11} className="animate-spin" />
+                ) : (
+                  <XCircle size={11} />
+                )}
+                {busy === "reject"
+                  ? t("admin.payments.rejecting")
+                  : t("admin.payments.reject")}
+              </button>
+            </div>
+          ) : (
+            <span className="text-slate-400">—</span>
+          )}
+        </td>
       </tr>
       {open && (
         <tr className="bg-slate-50/70 dark:bg-gray-800/30">
-          <td colSpan={6} className="px-4 py-4 text-xs">
+          <td colSpan={7} className="px-4 py-4 text-xs">
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
               <DetailKV label="Payment ID" value={payment.id} mono />
               <DetailKV label="Provider session ID" value={payment.providerSessionId ?? "—"} mono />
               <DetailKV label="Provider payment ID" value={payment.providerPaymentId ?? "—"} mono />
               <DetailKV label="Captured at" value={payment.capturedAt ? new Date(payment.capturedAt).toLocaleString(lang === "ar" ? "ar-EG" : "en-US") : "—"} />
+              {payment.bankSenderName && (
+                <DetailKV
+                  label={t("admin.payments.bankSenderName")}
+                  value={payment.bankSenderName}
+                />
+              )}
+              {proofUrl && (
+                <div>
+                  <dt className="text-[10px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
+                    {t("admin.payments.bankProof")}
+                  </dt>
+                  <dd className="text-sm">
+                    <a
+                      href={proofUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 hover:underline"
+                      data-testid={`payment-proof-${payment.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ExternalLink size={12} />
+                      {payment.bankProofFilename ?? t("admin.payments.bankProofView")}
+                    </a>
+                  </dd>
+                </div>
+              )}
               {payment.failureReason && (
                 <div className="sm:col-span-2">
                   <DetailKV label="Failure reason" value={payment.failureReason} />
                 </div>
               )}
             </dl>
+            {actionError && (
+              <p
+                className="mt-2 text-xs text-rose-600 dark:text-rose-400"
+                data-testid={`payment-action-error-${payment.id}`}
+              >
+                {actionError}
+              </p>
+            )}
             {/* unused t: keep param so existing callers stay typed */}
             <span className="sr-only">{t("admin.payments.modeBadge")}</span>
           </td>

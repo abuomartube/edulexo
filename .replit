@@ -76,6 +76,12 @@ TAMARA_MODE = "live"
 TABBY_MERCHANT_CODE = "TCI"
 TAMARA_LIVE_API_URL = "https://api.tamara.co"
 TAMARA_SANDBOX_API_URL = "https://api-sandbox.tamara.co"
+BANK_NAME = "Al Rajhi Bank"
+BANK_NAME_AR = "مصرف الراجحي"
+BANK_ACCOUNT_NAME = "TEST LIT company"
+BANK_ACCOUNT_NAME_AR = "شركة الاختبار الملهم"
+BANK_IBAN = "SA4680000133608016497687"
+BANK_SWIFT = "RJHISARI"
 
 [nix]
 channel = "stable-25_05"

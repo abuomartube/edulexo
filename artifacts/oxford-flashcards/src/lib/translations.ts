@@ -905,6 +905,92 @@ export const translations = {
   },
   "checkout.payWithTabby": { en: "Pay with Tabby", ar: "ادفع باستخدام تابي" },
   "checkout.payWithTamara": { en: "Pay with Tamara", ar: "ادفع باستخدام تمارا" },
+  "checkout.payWithBankTransfer": {
+    en: "Pay by bank transfer",
+    ar: "ادفع عبر التحويل البنكي",
+  },
+  "checkout.bankTransferLine1": {
+    en: "Bank transfer (IBAN)",
+    ar: "تحويل بنكي (آيبان)",
+  },
+  "checkout.bankTransferLine2": {
+    en: "Manual verification by admin",
+    ar: "تحقّق يدوي من قِبَل الإدارة",
+  },
+  "checkout.bankTransfer.title": {
+    en: "Transfer to our bank account",
+    ar: "حوّل إلى حسابنا البنكي",
+  },
+  "checkout.bankTransfer.instructions": {
+    en: "Send the exact amount to the IBAN below, then tap \"I have transferred\". An admin will verify your transfer (usually within one business day) and activate your enrollment by email.",
+    ar: "حوّل المبلغ بالضبط إلى الآيبان أدناه، ثم اضغط \"تم التحويل\". سيقوم المسؤول بالتحقق من تحويلك (عادةً خلال يوم عمل واحد) وسيتم تفعيل تسجيلك عبر البريد الإلكتروني.",
+  },
+  "checkout.bankTransfer.amount": { en: "Amount", ar: "المبلغ" },
+  "checkout.bankTransfer.bankName": { en: "Bank", ar: "البنك" },
+  "checkout.bankTransfer.accountName": {
+    en: "Account name",
+    ar: "اسم الحساب",
+  },
+  "checkout.bankTransfer.iban": { en: "IBAN", ar: "الآيبان" },
+  "checkout.bankTransfer.swift": { en: "SWIFT / BIC", ar: "سويفت / بيك" },
+  "checkout.bankTransfer.copy": { en: "Copy", ar: "نسخ" },
+  "checkout.bankTransfer.copied": { en: "Copied", ar: "تم النسخ" },
+  "checkout.bankTransfer.iSentIt": {
+    en: "I have transferred — notify admin",
+    ar: "تم التحويل — أبلغ الإدارة",
+  },
+  "checkout.bankTransfer.senderLabel": {
+    en: "Sender's full name (as on the bank account)",
+    ar: "اسم المُرسِل الكامل (كما في الحساب البنكي)",
+  },
+  "checkout.bankTransfer.senderPlaceholder": {
+    en: "e.g. Mohammed Abdullah Al-Ahmad",
+    ar: "مثال: محمد عبدالله الأحمد",
+  },
+  "checkout.bankTransfer.senderHelp": {
+    en: "We use this to match your transfer on the bank statement.",
+    ar: "نستخدم هذا الاسم لمطابقة تحويلك في كشف الحساب البنكي.",
+  },
+  "checkout.bankTransfer.senderRequired": {
+    en: "Please enter the sender's full name.",
+    ar: "يرجى إدخال اسم المُرسِل بالكامل.",
+  },
+  "checkout.bankTransfer.proofLabel": {
+    en: "Payment proof (transfer receipt)",
+    ar: "إثبات الدفع (إيصال التحويل)",
+  },
+  "checkout.bankTransfer.proofPick": {
+    en: "Tap to upload screenshot, PDF or document",
+    ar: "اضغط لرفع لقطة شاشة أو ملف PDF أو مستند",
+  },
+  "checkout.bankTransfer.proofHelp": {
+    en: "Accepted: JPG, PNG, PDF, DOC, DOCX. Max 10 MB.",
+    ar: "المقبول: JPG, PNG, PDF, DOC, DOCX. بحد أقصى 10 ميجابايت.",
+  },
+  "checkout.bankTransfer.proofRemove": {
+    en: "Remove file",
+    ar: "إزالة الملف",
+  },
+  "checkout.bankTransfer.proofRequired": {
+    en: "Please upload a payment proof file.",
+    ar: "يرجى رفع ملف إثبات الدفع.",
+  },
+  "checkout.bankTransfer.uploading": {
+    en: "Uploading…",
+    ar: "جاري الرفع…",
+  },
+  "checkout.bankTransfer.uploadFailed": {
+    en: "Upload failed. Please try again.",
+    ar: "فشل الرفع. يرجى المحاولة مرة أخرى.",
+  },
+  "checkout.bankTransfer.fileTooLarge": {
+    en: "File is too large (max 10 MB).",
+    ar: "حجم الملف كبير جدًا (الحد الأقصى 10 ميجابايت).",
+  },
+  "checkout.banner.pendingBankTransfer": {
+    en: "Your bank transfer was registered. We'll activate your enrollment as soon as an admin verifies the deposit (usually within one business day).",
+    ar: "تم تسجيل تحويلك البنكي. سنفعّل تسجيلك بمجرد تحقق المسؤول من الإيداع (عادةً خلال يوم عمل واحد).",
+  },
   "checkout.terms": {
     en: "I agree to the Terms of Service and Privacy Policy.",
     ar: "أوافق على شروط الاستخدام وسياسة الخصوصية.",
@@ -943,6 +1029,41 @@ export const translations = {
   "admin.payments.empty": { en: "No payments yet.", ar: "لا توجد مدفوعات بعد." },
   "admin.payments.refresh": { en: "Refresh", ar: "تحديث" },
   "admin.payments.modeBadge": { en: "Mode", ar: "الوضع" },
+  "admin.payments.col.actions": { en: "Actions", ar: "إجراءات" },
+  "admin.payments.verify": { en: "Verify & activate", ar: "تحقّق وفعّل" },
+  "admin.payments.reject": { en: "Reject", ar: "رفض" },
+  "admin.payments.verifyConfirm": {
+    en: "Mark this bank transfer as verified and activate the student's enrollment?",
+    ar: "هل تريد تأكيد هذا التحويل البنكي وتفعيل تسجيل الطالب؟",
+  },
+  "admin.payments.rejectConfirm": {
+    en: "Reject this bank transfer? The student will need to start over.",
+    ar: "هل تريد رفض هذا التحويل البنكي؟ سيحتاج الطالب إلى البدء من جديد.",
+  },
+  "admin.payments.bankTransferPending": {
+    en: "Pending bank transfers",
+    ar: "تحويلات بنكية بانتظار المراجعة",
+  },
+  "admin.payments.provider.bank_transfer": {
+    en: "Bank transfer",
+    ar: "تحويل بنكي",
+  },
+  "admin.payments.provider.tabby": { en: "Pay in 4", ar: "ادفع على 4 دفعات" },
+  "admin.payments.provider.tamara": { en: "Pay in 4", ar: "ادفع على 4 دفعات" },
+  "admin.payments.bankSenderName": {
+    en: "Sender name",
+    ar: "اسم المُرسِل",
+  },
+  "admin.payments.bankProof": {
+    en: "Payment proof",
+    ar: "إثبات الدفع",
+  },
+  "admin.payments.bankProofView": {
+    en: "View attachment",
+    ar: "عرض المرفق",
+  },
+  "admin.payments.verifying": { en: "Verifying…", ar: "جاري التحقق…" },
+  "admin.payments.rejecting": { en: "Rejecting…", ar: "جاري الرفض…" },
 
 } as const;
 

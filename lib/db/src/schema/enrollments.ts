@@ -24,6 +24,7 @@ export const ENROLLMENT_SOURCE_VALUES = [
   "stripe",
   "tabby",
   "tamara",
+  "bank_transfer",
 ] as const;
 export type EnrollmentSource = (typeof ENROLLMENT_SOURCE_VALUES)[number];
 

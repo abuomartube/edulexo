@@ -14,6 +14,10 @@ const PAYMENT_BANNER_KEYS: Record<string, { key: TranslationKey; tone: "success"
   failed: { key: "checkout.banner.failed", tone: "error" },
   cancelled: { key: "checkout.banner.cancelled", tone: "warning" },
   pending: { key: "checkout.banner.pending", tone: "warning" },
+  pending_bank_transfer: {
+    key: "checkout.banner.pendingBankTransfer",
+    tone: "warning",
+  },
 };
 
 export default function Dashboard() {

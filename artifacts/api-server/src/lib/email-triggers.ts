@@ -42,7 +42,7 @@ export async function notifyStudentSelfEnrolled(params: {
   course: "intro" | "english";
   tier: string;
   enrollmentId: string;
-  source?: "code" | "tabby" | "tamara";
+  source?: "code" | "tabby" | "tamara" | "bank_transfer";
 }): Promise<void> {
   const { log, userId, course, tier, enrollmentId } = params;
   const source = params.source ?? "code";

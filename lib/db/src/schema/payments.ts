@@ -14,7 +14,11 @@ import { usersTable } from "./users";
 export const PAYMENT_COURSE_VALUES = ["intro", "english"] as const;
 export type PaymentCourse = (typeof PAYMENT_COURSE_VALUES)[number];
 
-export const PAYMENT_PROVIDER_VALUES = ["tabby", "tamara"] as const;
+export const PAYMENT_PROVIDER_VALUES = [
+  "tabby",
+  "tamara",
+  "bank_transfer",
+] as const;
 export type PaymentProvider = (typeof PAYMENT_PROVIDER_VALUES)[number];
 
 export const PAYMENT_MODE_VALUES = ["sandbox", "live"] as const;
@@ -67,6 +71,22 @@ export const paymentsTable = pgTable(
     failureReason: text("failure_reason"),
     rawPayload: jsonb("raw_payload"),
     enrollmentId: uuid("enrollment_id"),
+    /**
+     * Bank-transfer fields. Only populated when `provider = "bank_transfer"`.
+     * The student types in the name on their sending account (Arabic or
+     * English) so the admin can match against the bank statement.
+     */
+    bankSenderName: varchar("bank_sender_name", { length: 200 }),
+    /**
+     * Object-storage path of the uploaded payment proof, e.g.
+     * `/objects/uploads/<uuid>`. Served via `/api/storage/objects/<uuid>`
+     * with auth + ACL guards (only the owner or an admin may view).
+     */
+    bankProofObjectPath: text("bank_proof_object_path"),
+    /** MIME type captured at upload-time (e.g. `image/jpeg`, `application/pdf`). */
+    bankProofContentType: varchar("bank_proof_content_type", { length: 128 }),
+    /** Original filename, kept for the admin UI download link. */
+    bankProofFilename: varchar("bank_proof_filename", { length: 256 }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

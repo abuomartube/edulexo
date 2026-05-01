@@ -42,7 +42,7 @@ export async function activateEnrollmentForPayment(
       return { status: "already_captured", enrollmentId: fresh.enrollmentId };
     }
 
-    const sourceLabel = fresh.provider as "tabby" | "tamara";
+    const sourceLabel = fresh.provider as "tabby" | "tamara" | "bank_transfer";
     const note = `Paid via ${sourceLabel} (${fresh.mode}) — payment ${fresh.id}`;
 
     let enrollmentId: string;
@@ -88,7 +88,7 @@ async function upsertEnrollmentIntro(
   params: {
     userId: string;
     tier: string;
-    source: "tabby" | "tamara";
+    source: "tabby" | "tamara" | "bank_transfer";
     note: string;
     paymentId: string;
   },
@@ -197,7 +197,7 @@ async function upsertEnrollmentEnglish(
   params: {
     userId: string;
     tier: string;
-    source: "tabby" | "tamara";
+    source: "tabby" | "tamara" | "bank_transfer";
     note: string;
     paymentId: string;
   },
@@ -327,7 +327,7 @@ export function fireActivationEmail(params: {
     course: payment.course as "intro" | "english",
     tier: payment.tier,
     enrollmentId,
-    source: payment.provider as "tabby" | "tamara",
+    source: payment.provider as "tabby" | "tamara" | "bank_transfer",
   }).catch(() => {
     // notifyStudentSelfEnrolled never throws, but belt-and-suspenders.
   });

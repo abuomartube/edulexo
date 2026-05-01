@@ -7,3 +7,4 @@ export * from "./courses";
 export * from "./emails";
 export * from "./certificates";
 export * from "./payments";
+export * from "./upload-grants";

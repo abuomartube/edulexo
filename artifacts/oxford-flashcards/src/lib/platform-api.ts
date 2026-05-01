@@ -603,10 +603,13 @@ export function getCertificatePdfUrl(id: string): string {
   return `/api/certificates/${id}/pdf`;
 }
 
-// ───── Checkout (Tabby + Tamara) ─────
+// ───── Checkout (Tabby + Tamara + Bank Transfer) ─────
 
 export type CheckoutCourse = "intro" | "english";
-export type CheckoutProvider = "tabby" | "tamara";
+/** Payment providers shown to the buyer at checkout. */
+export type CheckoutProvider = "tabby" | "tamara" | "bank_transfer";
+/** Provider that can produce a redirect URL — bank transfer cannot. */
+export type RedirectProvider = "tabby" | "tamara";
 export type PaymentMode = "sandbox" | "live";
 export type PaymentStatus =
   | "created"
@@ -616,6 +619,132 @@ export type PaymentStatus =
   | "failed"
   | "cancelled"
   | "expired";
+
+export interface BankTransferDetails {
+  bankNameEn: string;
+  bankNameAr: string;
+  accountNameEn: string;
+  accountNameAr: string;
+  iban: string;
+  swift: string;
+}
+
+export interface BankTransferDetailsResponse {
+  configured: boolean;
+  bank?: BankTransferDetails;
+  missing?: string;
+}
+
+export async function fetchBankTransferDetails(): Promise<BankTransferDetailsResponse> {
+  const res = await fetch("/api/checkout/bank-transfer/details", {
+    ...init,
+    method: "GET",
+  });
+  return jsonOrThrow<BankTransferDetailsResponse>(res);
+}
+
+export interface BankTransferStartResponse {
+  paymentId: string;
+  provider: "bank_transfer";
+  status: "pending";
+  reference: string;
+}
+
+export interface BankTransferStartArgs {
+  course: CheckoutCourse;
+  tier: string;
+  language: "en" | "ar";
+  senderName: string;
+  proofObjectPath: string;
+  proofContentType: string;
+  proofFilename: string;
+}
+
+export async function startBankTransferPayment(
+  args: BankTransferStartArgs,
+): Promise<BankTransferStartResponse> {
+  const res = await fetch("/api/checkout/bank-transfer", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(args),
+  });
+  return jsonOrThrow<BankTransferStartResponse>(res);
+}
+
+/**
+ * Two-step direct-to-GCS upload used by the bank-transfer checkout for
+ * payment-proof attachments. (1) ask the server for a presigned PUT URL,
+ * then (2) PUT the file bytes straight to GCS. The server only sees the
+ * resulting `objectPath` once the buyer submits the checkout form.
+ */
+export interface UploadedProof {
+  objectPath: string;
+  contentType: string;
+  filename: string;
+}
+
+export async function uploadPaymentProof(file: File): Promise<UploadedProof> {
+  const reqRes = await fetch("/api/storage/uploads/request-url", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({
+      name: file.name,
+      size: file.size,
+      contentType: file.type || "application/octet-stream",
+    }),
+  });
+  const { uploadURL, objectPath } = await jsonOrThrow<{
+    uploadURL: string;
+    objectPath: string;
+  }>(reqRes);
+  const putRes = await fetch(uploadURL, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!putRes.ok) {
+    throw new Error(`upload_failed_${putRes.status}`);
+  }
+  return {
+    objectPath,
+    contentType: file.type || "application/octet-stream",
+    filename: file.name,
+  };
+}
+
+/**
+ * Convert an object-storage path (`/objects/uploads/<id>`) to its viewable
+ * URL behind the API auth wall. Returns `null` if the path is missing or
+ * malformed so callers can hide the link gracefully.
+ */
+export function bankProofViewUrl(objectPath: string | null | undefined): string | null {
+  if (!objectPath || !objectPath.startsWith("/objects/")) return null;
+  return `/api/storage${objectPath}`;
+}
+
+export async function adminVerifyBankPayment(
+  paymentId: string,
+  note?: string,
+): Promise<{ ok: true; status: "activated" | "already_captured"; enrollmentId: string | null }> {
+  const res = await fetch(`/api/admin/payments/${paymentId}/verify`, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ note: note ?? undefined }),
+  });
+  return jsonOrThrow(res);
+}
+
+export async function adminRejectBankPayment(
+  paymentId: string,
+  reason?: string,
+): Promise<{ ok: true }> {
+  const res = await fetch(`/api/admin/payments/${paymentId}/reject`, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ reason: reason ?? undefined }),
+  });
+  return jsonOrThrow(res);
+}
 
 export interface CheckoutPreview {
   course: CheckoutCourse;
@@ -631,7 +760,7 @@ export interface CheckoutPreview {
 
 export interface CheckoutStartResponse {
   paymentId: string;
-  provider: CheckoutProvider;
+  provider: RedirectProvider;
   mode: PaymentMode;
   redirectUrl: string;
 }
@@ -649,7 +778,7 @@ export async function fetchCheckoutPreview(
 }
 
 export async function startCheckout(
-  provider: CheckoutProvider,
+  provider: RedirectProvider,
   course: CheckoutCourse,
   tier: string,
   language: "en" | "ar",
@@ -680,6 +809,14 @@ export interface AdminPayment {
   createdAt: string;
   updatedAt: string;
   capturedAt: string | null;
+  /** Sender name typed by the student (bank-transfer rows only). */
+  bankSenderName?: string | null;
+  /** Object-storage path of the uploaded payment proof. */
+  bankProofObjectPath?: string | null;
+  /** MIME type of the uploaded proof. */
+  bankProofContentType?: string | null;
+  /** Original filename of the uploaded proof. */
+  bankProofFilename?: string | null;
 }
 
 export interface AdminPaymentsFilters {

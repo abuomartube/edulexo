@@ -41,6 +41,41 @@ export interface TamaraConfig {
   publicKey: string | null;
 }
 
+export interface BankTransferConfig {
+  bankNameEn: string;
+  bankNameAr: string;
+  accountNameEn: string;
+  accountNameAr: string;
+  iban: string;
+  swift: string;
+}
+
+/**
+ * Resolve manual-bank-transfer display config from env. These values are NOT
+ * secrets — they are publicly displayed to every buyer on the checkout page.
+ * Required: BANK_NAME, BANK_ACCOUNT_NAME, BANK_IBAN.
+ * Optional (fall back to EN value, or empty for SWIFT): BANK_NAME_AR,
+ * BANK_ACCOUNT_NAME_AR, BANK_SWIFT.
+ *
+ * Throws ProviderConfigError if any required value is missing so the
+ * /api/checkout/bank-transfer/details route can return `{ configured: false }`
+ * and the UI can hide the bank-transfer tile.
+ */
+export function getBankTransferConfig(): BankTransferConfig {
+  const bankNameEn = requireEnv("BANK_NAME");
+  const accountNameEn = requireEnv("BANK_ACCOUNT_NAME");
+  const iban = requireEnv("BANK_IBAN").replace(/\s+/g, "").toUpperCase();
+  return {
+    bankNameEn,
+    bankNameAr: (process.env.BANK_NAME_AR ?? "").trim() || bankNameEn,
+    accountNameEn,
+    accountNameAr:
+      (process.env.BANK_ACCOUNT_NAME_AR ?? "").trim() || accountNameEn,
+    iban,
+    swift: (process.env.BANK_SWIFT ?? "").trim().toUpperCase(),
+  };
+}
+
 /**
  * Resolve Tabby config for an explicit mode (used for webhook/return paths
  * verifying historical payments) or — when no mode is given — for the mode

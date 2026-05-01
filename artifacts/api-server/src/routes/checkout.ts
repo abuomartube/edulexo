@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { z } from "zod";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, or, gt } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -8,14 +8,17 @@ import {
   englishEnrollmentsTable,
   paymentsTable,
   tierPricesTable,
+  uploadGrantsTable,
   PAYMENT_COURSE_VALUES,
   PAYMENT_PROVIDER_VALUES,
   PAYMENT_STATUS_VALUES,
 } from "@workspace/db";
 import { requireAuth, requireAdmin, getUserById } from "../lib/auth";
+import { ObjectStorageService } from "../lib/objectStorage";
 import {
   buildReturnUrl,
   buildWebhookUrl,
+  getBankTransferConfig,
   getCheckoutBaseUrl,
   getTabbyConfig,
   getTamaraConfig,
@@ -817,6 +820,349 @@ const AdminListQuery = z.object({
   limit: z.coerce.number().int().min(1).max(500).optional(),
 });
 
+// ----------------------------------------------------------------------------
+// Bank Transfer (manual / IBAN) — third payment method.
+//
+// Flow:
+//   1. Buyer fetches /api/checkout/bank-transfer/details to render the IBAN
+//      panel. If env vars not set, returns { configured: false } so the UI
+//      hides the bank-transfer tile.
+//   2. Buyer clicks "I have transferred" — POST /api/checkout/bank-transfer
+//      creates a payments row (status='pending', provider='bank_transfer').
+//   3. Admin opens Admin → Payments → Pending bank transfers, clicks Verify
+//      (POST /api/admin/payments/:id/verify) which calls the shared
+//      activateEnrollmentForPayment() → enrollment becomes active and the
+//      confirmation email fires (same path as a Tabby/Tamara capture).
+//   4. Admin can also Reject (POST /api/admin/payments/:id/reject) which
+//      marks the payment as failed without touching enrollments.
+// ----------------------------------------------------------------------------
+
+router.get("/checkout/bank-transfer/details", requireAuth, (_req, res, next) => {
+  try {
+    const cfg = getBankTransferConfig();
+    res.json({
+      configured: true,
+      bank: {
+        bankNameEn: cfg.bankNameEn,
+        bankNameAr: cfg.bankNameAr,
+        accountNameEn: cfg.accountNameEn,
+        accountNameAr: cfg.accountNameAr,
+        iban: cfg.iban,
+        swift: cfg.swift,
+      },
+    });
+  } catch (err) {
+    if (err instanceof ProviderConfigError) {
+      res.json({ configured: false, missing: err.missing });
+      return;
+    }
+    next(err);
+  }
+});
+
+/**
+ * Body for POST /checkout/bank-transfer.
+ *
+ * `senderName` and `proofObjectPath` are now required — Phase-6 v2 demands
+ * the student attach a name + payment proof at submission time so an admin
+ * can reconcile against the bank statement before activating the
+ * enrollment. The proof was already uploaded directly to GCS via a
+ * presigned URL (see POST /storage/uploads/request-url) so all we need
+ * here is the object path that came back from the upload endpoint.
+ */
+const BankTransferStartBody = z.object({
+  course: z.string(),
+  tier: z.string(),
+  language: z.enum(["en", "ar"]).optional(),
+  senderName: z.string().trim().min(2).max(200),
+  proofObjectPath: z.string().regex(/^\/objects\/.+/, "invalid_object_path"),
+  proofContentType: z.string().min(1).max(128),
+  proofFilename: z.string().min(1).max(256),
+});
+
+const bankTransferObjectStorage = new ObjectStorageService();
+
+router.post("/checkout/bank-transfer", requireAuth, async (req, res, next) => {
+  try {
+    // Verify the bank-transfer config is set before creating the payment row,
+    // otherwise we'd accept "I sent it" with nowhere for the buyer to send to.
+    try {
+      getBankTransferConfig();
+    } catch (err) {
+      if (err instanceof ProviderConfigError) {
+        res.status(503).json({
+          error: "bank_transfer_not_configured",
+          missing: err.missing,
+        });
+        return;
+      }
+      throw err;
+    }
+
+    const parsed = BankTransferStartBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "invalid_body",
+        issues: parsed.error.flatten().fieldErrors,
+      });
+      return;
+    }
+    const body = parsed.data;
+
+    const loaded = await loadStartContext(
+      { course: body.course, tier: body.tier, language: body.language },
+      req.session.userId!,
+    );
+    if (loaded.kind === "error") {
+      res.status(loaded.status).json(loaded.body);
+      return;
+    }
+    const ctx = loaded.ctx;
+
+    // Verify the proof object belongs to *this* user. Without this check
+    // any logged-in attacker who learned another buyer's `/objects/<uuid>`
+    // path could attach it to their own payment and (worse) reassign its
+    // ACL owner via trySetObjectEntityAclPolicy below — a textbook IDOR.
+    //
+    // We mark the grant `used_at` atomically inside the same UPDATE so a
+    // double-submit race can't reuse the same upload twice.
+    const claimedGrants = await db
+      .update(uploadGrantsTable)
+      .set({ usedAt: new Date() })
+      .where(
+        and(
+          eq(uploadGrantsTable.objectPath, body.proofObjectPath),
+          eq(uploadGrantsTable.userId, ctx.userId),
+          isNull(uploadGrantsTable.usedAt),
+          gt(uploadGrantsTable.expiresAt, new Date()),
+        ),
+      )
+      .returning({ id: uploadGrantsTable.id });
+    if (claimedGrants.length === 0) {
+      req.log.warn(
+        { objectPath: body.proofObjectPath, userId: ctx.userId },
+        "bank-transfer proof grant invalid (missing/expired/used/wrong-owner)",
+      );
+      res.status(403).json({ error: "proof_object_invalid" });
+      return;
+    }
+
+    // Now that ownership is proven, lock the uploaded proof down so only
+    // the buyer (and admins, who bypass the ACL check in the storage route)
+    // can read it.
+    let normalizedProofPath: string;
+    try {
+      normalizedProofPath = await bankTransferObjectStorage
+        .trySetObjectEntityAclPolicy(body.proofObjectPath, {
+          owner: ctx.userId,
+          visibility: "private",
+        });
+    } catch (err) {
+      req.log.warn(
+        { err, objectPath: body.proofObjectPath, userId: ctx.userId },
+        "bank-transfer proof ACL set failed",
+      );
+      res.status(400).json({ error: "proof_object_invalid" });
+      return;
+    }
+
+    const [payment] = await db
+      .insert(paymentsTable)
+      .values({
+        userId: ctx.userId,
+        course: ctx.course,
+        tier: ctx.tier,
+        amountMinor: ctx.amountMinor,
+        currency: ctx.currency,
+        provider: "bank_transfer",
+        // Bank transfer has no sandbox/live distinction — it's always real
+        // money to a real IBAN. We store "live" so admin filtering works.
+        mode: "live",
+        status: "pending",
+        bankSenderName: body.senderName,
+        bankProofObjectPath: normalizedProofPath,
+        bankProofContentType: body.proofContentType,
+        bankProofFilename: body.proofFilename,
+      })
+      .returning();
+
+    // Stamp a deterministic provider_session_id so admins have a stable
+    // reference handle and the unique index is exercised.
+    await db
+      .update(paymentsTable)
+      .set({
+        providerSessionId: `bt-${payment.id}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(paymentsTable.id, payment.id));
+
+    req.log.info(
+      {
+        paymentId: payment.id,
+        userId: ctx.userId,
+        course: ctx.course,
+        tier: ctx.tier,
+        amountMinor: ctx.amountMinor,
+      },
+      "bank-transfer payment registered (awaiting admin verification)",
+    );
+
+    res.json({
+      paymentId: payment.id,
+      provider: "bank_transfer",
+      status: "pending",
+      reference: `bt-${payment.id}`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const AdminVerifyBody = z.object({
+  note: z.string().trim().max(500).optional(),
+});
+const AdminRejectBody = z.object({
+  reason: z.string().trim().max(500).optional(),
+});
+
+router.post(
+  "/admin/payments/:id/verify",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const paymentId = String(req.params.id ?? "");
+      if (!isUuid(paymentId)) {
+        res.status(400).json({ error: "Invalid payment id" });
+        return;
+      }
+      const parsed = AdminVerifyBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ error: "Invalid body" });
+        return;
+      }
+      const adminId = req.session.userId!;
+      const [pay] = await db
+        .select()
+        .from(paymentsTable)
+        .where(eq(paymentsTable.id, paymentId))
+        .limit(1);
+      if (!pay) {
+        res.status(404).json({ error: "payment_not_found" });
+        return;
+      }
+      // Only manual bank transfers are admin-verifiable. Tabby/Tamara
+      // captures must come from the provider — never let an admin
+      // hand-flip those, that would skip the provider verification.
+      if (pay.provider !== "bank_transfer") {
+        res.status(400).json({ error: "not_a_bank_transfer" });
+        return;
+      }
+      if (pay.status === "captured") {
+        // Idempotent: re-verifying a captured row is a no-op success.
+        res.json({
+          ok: true,
+          status: "already_captured",
+          enrollmentId: pay.enrollmentId,
+        });
+        return;
+      }
+      if (pay.status !== "pending" && pay.status !== "created") {
+        res.status(409).json({
+          error: "not_verifiable_in_current_status",
+          status: pay.status,
+        });
+        return;
+      }
+
+      const result = await activateEnrollmentForPayment(pay, {
+        providerPaymentId: null,
+        rawPayload: {
+          verifiedBy: adminId,
+          verifiedAt: new Date().toISOString(),
+          note: parsed.data.note ?? null,
+        },
+      });
+      if (result.status === "activated") {
+        fireActivationEmail({
+          log: req.log,
+          payment: { ...pay, enrollmentId: result.enrollmentId },
+          enrollmentId: result.enrollmentId,
+        });
+      }
+      req.log.info(
+        {
+          paymentId: pay.id,
+          adminId,
+          activationStatus: result.status,
+          enrollmentId: result.enrollmentId,
+        },
+        "bank-transfer payment verified by admin",
+      );
+      res.json({
+        ok: true,
+        status: result.status,
+        enrollmentId: result.enrollmentId,
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.post(
+  "/admin/payments/:id/reject",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const paymentId = String(req.params.id ?? "");
+      if (!isUuid(paymentId)) {
+        res.status(400).json({ error: "Invalid payment id" });
+        return;
+      }
+      const parsed = AdminRejectBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({ error: "Invalid body" });
+        return;
+      }
+      const adminId = req.session.userId!;
+      const [pay] = await db
+        .select()
+        .from(paymentsTable)
+        .where(eq(paymentsTable.id, paymentId))
+        .limit(1);
+      if (!pay) {
+        res.status(404).json({ error: "payment_not_found" });
+        return;
+      }
+      if (pay.provider !== "bank_transfer") {
+        res.status(400).json({ error: "not_a_bank_transfer" });
+        return;
+      }
+      if (pay.status === "captured") {
+        res.status(409).json({ error: "already_captured" });
+        return;
+      }
+      await markPaymentTerminal(
+        pay.id,
+        "failed",
+        "admin_rejected",
+        {
+          rejectedBy: adminId,
+          rejectedAt: new Date().toISOString(),
+          reason: parsed.data.reason ?? null,
+        },
+      );
+      req.log.info(
+        { paymentId: pay.id, adminId, reason: parsed.data.reason ?? null },
+        "bank-transfer payment rejected by admin",
+      );
+      res.json({ ok: true });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
 router.get("/admin/payments", requireAdmin, async (req, res, next) => {
   try {
     const parsed = AdminListQuery.safeParse(req.query);
@@ -858,6 +1204,10 @@ router.get("/admin/payments", requireAdmin, async (req, res, next) => {
         createdAt: paymentsTable.createdAt,
         updatedAt: paymentsTable.updatedAt,
         capturedAt: paymentsTable.capturedAt,
+        bankSenderName: paymentsTable.bankSenderName,
+        bankProofObjectPath: paymentsTable.bankProofObjectPath,
+        bankProofContentType: paymentsTable.bankProofContentType,
+        bankProofFilename: paymentsTable.bankProofFilename,
       })
       .from(paymentsTable)
       .innerJoin(usersTable, eq(usersTable.id, paymentsTable.userId))

@@ -100,6 +100,8 @@ export default function Header() {
   const { t } = useLanguage();
   const [, navigate] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileMounted, setMobileMounted] = useState(false);
+  const [mobileShown, setMobileShown] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +115,33 @@ export default function Header() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [menuOpen]);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      setMobileMounted(true);
+      const id = window.requestAnimationFrame(() => setMobileShown(true));
+      return () => window.cancelAnimationFrame(id);
+    }
+    setMobileShown(false);
+    const t = window.setTimeout(() => setMobileMounted(false), 320);
+    return () => window.clearTimeout(t);
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!mobileMounted) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMobileOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = original;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [mobileMounted]);
+
+  const closeMobile = () => setMobileOpen(false);
 
   const handleLogout = async () => {
     setMenuOpen(false);
@@ -239,42 +268,81 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div className="lg:hidden border-t border-slate-100 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur">
-          <nav className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-1">
-            {NAV.map((item) => (
+      {/* Mobile drawer + backdrop (slides in from the left) */}
+      {mobileMounted && (
+        <div className="lg:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t("header.toggleMenu")}>
+          {/* Backdrop */}
+          <div
+            data-testid="mobile-backdrop"
+            onClick={closeMobile}
+            className={`absolute inset-0 bg-black/65 backdrop-blur-sm transition-opacity duration-300 ease-in-out ${
+              mobileShown ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          {/* Sidebar */}
+          <aside
+            data-testid="mobile-drawer"
+            className={`absolute top-0 left-0 h-full w-80 max-w-[85vw] bg-white dark:bg-gray-950 shadow-2xl shadow-black/40 ring-1 ring-black/5 dark:ring-white/10 flex flex-col transition-transform duration-300 ease-in-out ${
+              mobileShown ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-gray-800">
               <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className="px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
+                href="/"
+                onClick={closeMobile}
+                className="flex items-center gap-2"
               >
-                {t(item.labelKey)}
+                <img src={edulexoLogo} alt="Abu Omar EduLexo" className="w-9 h-9 object-contain" />
+                <span className="text-base font-extrabold tracking-tight">
+                  <span className="text-slate-900 dark:text-white">{t("common.brandPrefix")}</span>
+                  <span className="bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 dark:from-indigo-400 dark:via-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
+                    {t("common.brandSuffix")}
+                  </span>
+                </span>
               </Link>
-            ))}
-            <div className="pt-2 mt-2 border-t border-slate-100 dark:border-gray-800">
-              <LangToggle compact={false} onToggle={() => setMobileOpen(false)} />
+              <button
+                onClick={closeMobile}
+                aria-label="Close menu"
+                data-testid="mobile-close"
+                className="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition"
+              >
+                <X size={18} />
+              </button>
             </div>
-            {!isAuthenticated && (
-              <div className="flex gap-2 pt-2 mt-2 border-t border-slate-100 dark:border-gray-800">
+            <nav className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
+              {NAV.map((item) => (
                 <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex-1 text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30"
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMobile}
+                  className="px-3 py-3 rounded-lg text-base font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
                 >
-                  {t("header.login")}
+                  {t(item.labelKey)}
                 </Link>
-                <Link
-                  href="/signup"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex-1 text-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white"
-                >
-                  {t("header.signup")}
-                </Link>
+              ))}
+              <div className="pt-3 mt-3 border-t border-slate-100 dark:border-gray-800">
+                <LangToggle compact={false} />
               </div>
-            )}
-          </nav>
+              {!isAuthenticated && (
+                <div className="flex gap-2 pt-3 mt-3 border-t border-slate-100 dark:border-gray-800">
+                  <Link
+                    href="/login"
+                    onClick={closeMobile}
+                    className="flex-1 text-center px-4 py-2.5 rounded-xl text-sm font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/30"
+                  >
+                    {t("header.login")}
+                  </Link>
+                  <Link
+                    href="/signup"
+                    onClick={closeMobile}
+                    className="flex-1 text-center px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white"
+                  >
+                    {t("header.signup")}
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </aside>
         </div>
       )}
     </header>

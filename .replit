@@ -1,4 +1,4 @@
-modules = ["nodejs-24", "python-3.11"]
+modules = ["nodejs-24", "python-3.11", "postgresql-16"]
 
 [deployment]
 router = "application"
@@ -18,6 +18,10 @@ expertMode = true
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 20000
+
+[[ports]]
+localPort = 5173
+externalPort = 6000
 
 [[ports]]
 localPort = 8080
@@ -52,6 +56,10 @@ localPort = 23227
 externalPort = 3000
 
 [[ports]]
+localPort = 23567
+externalPort = 8000
+
+[[ports]]
 localPort = 24500
 externalPort = 3002
 
@@ -63,3 +71,6 @@ externalPort = 4200
 
 [userenv.shared]
 SSO_SHARED_SECRET = "2yQwCIR5ZyajD-nbLDL0Y9UHuAWG2bTwRqoanPjw8lo0bBtT11FfRn4AYRez4Ldw"
+
+[nix]
+channel = "stable-25_05"

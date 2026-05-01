@@ -51,6 +51,13 @@ The project is built as a pnpm workspace monorepo using TypeScript, Node.js 24, 
 **Feature Specifications:**
 - **Abu Omar EduLexo Platform:** `/` (landing), `/english` (LEXO for English details), `/ielts` (LEXO for IELTS details), `/demo` (public flashcards), `/app` (full flashcard app, to be gated).
 - **IELTS Application:** Hosted at `/app-ielts/`, with its API at `/api-ielts/` (port 8082). Uses a separate OpenAPI spec (`lib/ielts-api-spec/openapi.yaml`).
+- **LEXO Intro Application:** Hosted at `/app-intro/` with its API at `/api-intro/`. Used by students enrolled in the `intro` tier.
+- **LEXO for English Application:** Hosted at `/app-english/` (artifact `artifacts/english`, port 23567). Shares the **platform** API server (`/api`, no separate API artifact) and uses the **same** session cookie as the rest of LEXO. Three internal tiers — `beginner`, `intermediate`, `advanced` — defined in `ENGLISH_TIER_VALUES` (separate enum from IELTS tiers). Schema lives in `lib/db/src/schema/english.ts`: `english_enrollments` (per-user tier rows) and `english_access_codes` (admin-issued single-use codes). Routes in `artifacts/api-server/src/routes/english.ts`: student endpoints `GET /api/english/me` and `POST /api/english/redeem`; admin endpoints `POST/GET/DELETE /api/admin/english/codes`, `POST /api/admin/english/students/:id/grant`, and `DELETE /api/admin/english/enrollments/:id`. Unique-violation (SQLSTATE 23505) on duplicate code redemption is detected by walking `err.cause` and surfaced as HTTP 409.
+
+**Phase 3 — Cross-product SSO:**
+- Platform `POST /api/sso/:tier/launch` issues an HMAC-signed, single-use, JTI-tracked launch URL. `TIER_ROUTES` maps `intro → /app-intro` (redeem `/api-intro/sso/redeem`) and both `advance` and `complete → /app-ielts` (redeem `/api-ielts/sso/redeem`).
+- Each downstream redeem route verifies HMAC, enforces single-use via JTI, finds-or-creates the local `access_requests` row with year-long expiry, mints the downstream app's session token (`HMAC(email + ":approved")`), and returns a tiny HTML bootstrap that writes `{email, token}` into the app's expected localStorage keys (`lexo_intro_email`/`4ielts_email`) before redirecting into the app.
+- The English app does NOT use SSO — it is a first-party section of the platform that reads the shared session cookie directly via `/api/auth/me` and `/api/english/me`.
 
 ## External Dependencies
 

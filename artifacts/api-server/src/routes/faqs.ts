@@ -216,7 +216,17 @@ router.delete("/admin/faqs/:id", requireAdmin, async (req, res, next) => {
 });
 
 // POST /admin/faqs/reorder — accepts an ordered array of FAQ IDs and assigns
-// display_order = index. All IDs must exist; we update in a single transaction.
+// display_order = index. To prevent lost updates and inconsistent ordering
+// when admins reorder concurrently (or while a new FAQ is being created in the
+// same bucket), the entire operation runs inside a single transaction guarded
+// by:
+//   1. A bucket-level pg_advisory_xact_lock keyed on the course_slug so two
+//      reorder requests for the same bucket serialise.
+//   2. SELECT ... FOR UPDATE on the affected rows.
+//   3. A completeness check: the submitted IDs must be exactly the set of
+//      FAQs in that bucket (same course_slug). This prevents partial payloads
+//      from leaving gaps or duplicate display_order values, and makes the
+//      contract explicit: "reorder = full bucket ordering".
 const ReorderBodySchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(500),
 });
@@ -232,17 +242,64 @@ router.post("/admin/faqs/reorder", requireAdmin, async (req, res, next) => {
     }
     const { ids } = parsed.data;
 
-    // Verify every id exists.
-    const found = await db
-      .select({ id: platformFaqsTable.id })
-      .from(platformFaqsTable)
-      .where(inArray(platformFaqsTable.id, ids));
-    if (found.length !== ids.length) {
-      res.status(400).json({ error: "One or more FAQ IDs do not exist." });
+    // Reject duplicate ids in the payload up-front — they would silently
+    // collapse into the same display_order otherwise.
+    if (new Set(ids).size !== ids.length) {
+      res.status(400).json({ error: "Duplicate FAQ IDs in payload." });
       return;
     }
 
     await db.transaction(async (tx) => {
+      // Resolve the bucket from the first ID, then verify every other ID
+      // belongs to the same bucket and that the bucket has no other FAQs.
+      const rows = await tx
+        .select({
+          id: platformFaqsTable.id,
+          courseSlug: platformFaqsTable.courseSlug,
+        })
+        .from(platformFaqsTable)
+        .where(inArray(platformFaqsTable.id, ids))
+        .for("update");
+
+      if (rows.length !== ids.length) {
+        throw new ReorderError(400, "One or more FAQ IDs do not exist.");
+      }
+
+      // All submitted FAQs must share the same bucket (course_slug).
+      const firstSlug = rows[0]!.courseSlug;
+      if (!rows.every((r) => r.courseSlug === firstSlug)) {
+        throw new ReorderError(
+          400,
+          "All FAQ IDs in a reorder request must share the same course scope.",
+        );
+      }
+
+      // Acquire a bucket-level advisory lock so concurrent reorder/insert
+      // attempts for the same bucket serialise. We hash the bucket key
+      // (`global` for null) to fit into pg_advisory_xact_lock's bigint arg.
+      const bucketKey = firstSlug === null ? "__global__" : firstSlug;
+      await tx.execute(
+        sql`SELECT pg_advisory_xact_lock(hashtext(${"faq_reorder_" + bucketKey}))`,
+      );
+
+      // Re-check bucket membership AFTER the lock, since it's the lock that
+      // serialises. Make sure the submitted IDs are exactly the bucket.
+      const bucketRows = await tx
+        .select({ id: platformFaqsTable.id })
+        .from(platformFaqsTable)
+        .where(
+          firstSlug === null
+            ? sql`${platformFaqsTable.courseSlug} IS NULL`
+            : eq(platformFaqsTable.courseSlug, firstSlug),
+        );
+      const bucketIds = new Set(bucketRows.map((r) => r.id));
+      if (bucketIds.size !== ids.length || !ids.every((id) => bucketIds.has(id))) {
+        throw new ReorderError(
+          400,
+          "Reorder must include every FAQ in the bucket exactly once.",
+        );
+      }
+
       for (let i = 0; i < ids.length; i++) {
         await tx
           .update(platformFaqsTable)
@@ -252,8 +309,18 @@ router.post("/admin/faqs/reorder", requireAdmin, async (req, res, next) => {
     });
     res.json({ message: "Reordered.", count: ids.length });
   } catch (err) {
+    if (err instanceof ReorderError) {
+      res.status(err.status).json({ error: err.message });
+      return;
+    }
     next(err);
   }
 });
+
+class ReorderError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
 
 export default router;

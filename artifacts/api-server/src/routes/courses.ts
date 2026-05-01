@@ -33,6 +33,26 @@ router.get("/admin/courses", requireAdmin, async (_req, res, next) => {
   }
 });
 
+// GET /admin/courses/:slug — single course (parity with student/enrollment
+// admin GET-by-id endpoints).
+router.get("/admin/courses/:slug", requireAdmin, async (req, res, next) => {
+  try {
+    const slug = String(req.params.slug);
+    const [row] = await db
+      .select()
+      .from(platformCoursesTable)
+      .where(eq(platformCoursesTable.slug, slug))
+      .limit(1);
+    if (!row) {
+      res.status(404).json({ error: "Course not found" });
+      return;
+    }
+    res.json({ course: row });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // PATCH /admin/courses/:slug — edit title/subtitle/published/order.
 // Slug is the primary key and is NOT editable here — changing slugs would
 // orphan tier mappings and FAQ filters; deletion is also intentionally not

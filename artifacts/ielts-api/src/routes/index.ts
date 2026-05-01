@@ -18,10 +18,12 @@ import lessonsRouter from "./lessons";
 import sentenceCheckRouter from "./sentence-check";
 import sentenceSessionsRouter from "./sentence-sessions";
 import spellItRouter from "./spell-it";
+import ssoRouter from "./sso";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(ssoRouter);
 router.use(authRouter);
 router.use(flashcardsRouter);
 router.use(vocabPdfRouter);

@@ -13,8 +13,8 @@ const router: IRouter = Router();
 
 const TIER_ROUTES: Record<Tier, { basePath: string; redeemPath: string } | null> = {
   intro: { basePath: "/app-ielts-intro", redeemPath: "/api-intro/sso/redeem" },
-  advance: null, // not built yet
-  complete: null, // not built yet
+  advance: { basePath: "/app-ielts", redeemPath: "/api-ielts/sso/redeem" },
+  complete: { basePath: "/app-ielts", redeemPath: "/api-ielts/sso/redeem" },
 };
 
 router.post("/sso/:tier/launch", requireAuth, async (req, res, next) => {

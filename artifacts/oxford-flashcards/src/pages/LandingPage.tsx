@@ -9,7 +9,6 @@ import {
   Trophy,
   Video,
   ArrowRight,
-  ArrowLeft,
   CheckCircle2,
   GraduationCap,
   Globe2,
@@ -17,6 +16,7 @@ import {
   Layers,
 } from "lucide-react";
 import lexoLogo from "@/assets/lexo-icon.png";
+import lexoEnglishLogo from "@/assets/lexo-english.png";
 import Header from "@/components/Header";
 
 const arabicFont = "'Cairo', 'Amiri', 'Noto Sans Arabic', sans-serif";
@@ -221,8 +221,23 @@ export default function LandingPage() {
 
             {/* Right column — preview card */}
             <div className="lg:col-span-5">
-              <div className="relative max-w-md mx-auto">
+              <div className="relative max-w-md mx-auto space-y-4">
                 <div className="absolute -inset-4 bg-gradient-to-br from-violet-400/30 to-orange-300/30 dark:from-violet-600/30 dark:to-amber-600/30 rounded-3xl blur-2xl" />
+
+                {/* Brand showcase — LEXO for English logo on dark gradient panel */}
+                <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-[#0d0e2a] via-[#1a1340] to-[#0d0e2a] border border-violet-500/20 shadow-xl shadow-violet-900/20 p-5 sm:p-6 flex items-center justify-center aspect-[16/9]">
+                  <div className="absolute inset-0 opacity-30 pointer-events-none">
+                    <div className="absolute -top-10 -left-10 w-48 h-48 bg-violet-600 rounded-full blur-3xl" />
+                    <div className="absolute -bottom-12 -right-12 w-52 h-52 bg-fuchsia-500 rounded-full blur-3xl" />
+                  </div>
+                  <img
+                    src={lexoEnglishLogo}
+                    alt="LEXO for English — Master English the smart way"
+                    className="relative w-full h-full object-contain select-none drop-shadow-[0_0_20px_rgba(168,85,247,0.35)]"
+                    draggable={false}
+                  />
+                </div>
+
                 <div className="relative bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xl">
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-2">

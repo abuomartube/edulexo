@@ -1,7 +1,5 @@
 import { Link } from "wouter";
 import {
-  Moon,
-  Sun,
   Sparkles,
   ArrowRight,
   ArrowLeft,
@@ -18,12 +16,11 @@ import {
   FileText,
   Repeat,
   Target,
-  Volume2,
   Globe2,
   Layers,
-  PlayCircle,
 } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
+import lexoIeltsLogo from "@/assets/lexo-ielts.png";
 import Header from "@/components/Header";
 
 const arabicFont = "'Cairo', 'Amiri', 'Noto Sans Arabic', sans-serif";
@@ -220,32 +217,17 @@ export default function IeltsCourse() {
               <div className="relative max-w-md mx-auto">
                 <div className="absolute -inset-4 bg-gradient-to-br from-emerald-400/30 to-teal-300/30 dark:from-emerald-600/30 dark:to-teal-600/30 rounded-3xl blur-2xl" />
                 <div className="relative bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm border border-slate-100 dark:border-slate-800 rounded-3xl p-3 shadow-xl overflow-hidden">
-                  <div className="relative rounded-2xl overflow-hidden bg-slate-900 aspect-video">
-                    {/* Placeholder for video — will be replaced with real YouTube embed */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-700 via-teal-700 to-slate-900 flex items-center justify-center">
-                      <div className="absolute top-3 left-3">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/15 border border-white/30 text-white text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm">
-                          Coming Soon
-                        </span>
-                      </div>
-                      <div
-                        aria-label="Demo video coming soon"
-                        className="w-20 h-20 rounded-full bg-white/95 text-emerald-700 flex items-center justify-center shadow-2xl"
-                      >
-                        <PlayCircle size={56} fill="currentColor" />
-                      </div>
-                      <div className="absolute bottom-4 left-4 right-4 text-left">
-                        <p className="text-[11px] uppercase tracking-widest text-emerald-200 font-semibold">
-                          Demo video
-                        </p>
-                        <p className="text-white font-bold mt-0.5">
-                          LEXO for IELTS in 90 seconds
-                        </p>
-                        <p className="text-emerald-100/80 text-xs mt-0.5">
-                          Recording in progress — launching soon
-                        </p>
-                      </div>
+                  <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#0a1f1d] via-[#0d2a26] to-[#0a1f1d] border border-emerald-500/20 aspect-square sm:aspect-[4/3] flex items-center justify-center p-5 sm:p-6">
+                    <div className="absolute inset-0 opacity-30 pointer-events-none">
+                      <div className="absolute -top-16 -left-16 w-56 h-56 bg-emerald-500 rounded-full blur-3xl" />
+                      <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-teal-500 rounded-full blur-3xl" />
                     </div>
+                    <img
+                      src={lexoIeltsLogo}
+                      alt="LEXO for IELTS — AI-powered IELTS preparation"
+                      className="relative w-full h-full object-contain select-none drop-shadow-[0_0_20px_rgba(16,185,129,0.35)]"
+                      draggable={false}
+                    />
                   </div>
                   <div className="grid grid-cols-3 gap-2 p-3">
                     <div className="rounded-lg bg-emerald-50 dark:bg-emerald-900/30 p-3 text-center">

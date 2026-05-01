@@ -13,10 +13,10 @@ import {
   Mic,
   PenLine,
   Headphones,
-  BookMarked,
   Star,
 } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
+import edulexoMaster from "@/assets/edulexo-master-transparent.png";
 import Header from "@/components/Header";
 
 const arabicFont = "'Cairo', 'Amiri', 'Noto Sans Arabic', sans-serif";
@@ -105,7 +105,24 @@ export default function PlatformLanding() {
           <div className="absolute top-1/3 left-1/2 w-[400px] h-[400px] bg-purple-200 dark:bg-purple-800 rounded-full blur-3xl" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 sm:pt-16 pb-10 sm:pb-12 text-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-10 sm:pb-12 text-center">
+          {/* Master brand showcase — dark gradient panel that matches the logo's native palette */}
+          <div className="relative mx-auto max-w-4xl mb-8 sm:mb-10">
+            <div className="absolute -inset-3 bg-gradient-to-r from-indigo-500/30 via-purple-500/30 to-blue-500/30 dark:from-indigo-500/40 dark:via-purple-500/40 dark:to-blue-500/40 rounded-[2rem] blur-2xl" />
+            <div className="relative rounded-3xl bg-gradient-to-br from-[#0d0e2a] via-[#161a3d] to-[#0d0e2a] border border-indigo-500/20 shadow-2xl shadow-indigo-900/30 px-6 sm:px-10 py-7 sm:py-9 overflow-hidden">
+              <div className="absolute inset-0 opacity-30 pointer-events-none">
+                <div className="absolute -top-16 -left-16 w-64 h-64 bg-purple-600 rounded-full blur-3xl" />
+                <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-blue-600 rounded-full blur-3xl" />
+              </div>
+              <img
+                src={edulexoMaster}
+                alt="Abu Omar EduLexo — Learn · Practice · Achieve · Powered by AI"
+                className="relative w-full max-w-2xl h-auto mx-auto select-none drop-shadow-[0_0_24px_rgba(139,92,246,0.35)]"
+                draggable={false}
+              />
+            </div>
+          </div>
+
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-100 dark:bg-indigo-900/40 border border-indigo-200 dark:border-indigo-700/50 text-indigo-700 dark:text-indigo-300 text-xs font-semibold uppercase tracking-wider">
             <Sparkles size={14} />
             Powered by AI

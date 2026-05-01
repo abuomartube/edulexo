@@ -11,6 +11,7 @@ import {
   Trophy,
   Video,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   GraduationCap,
   Globe2,
@@ -174,6 +175,13 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
+              href="/"
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/60 transition"
+            >
+              <ArrowLeft size={14} />
+              Platform
+            </Link>
+            <Link
               href="/app"
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-900/30 transition"
             >
@@ -183,7 +191,7 @@ export default function LandingPage() {
               href="/app"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-violet-600 to-purple-700 text-white shadow-md hover:shadow-lg hover:scale-[1.03] active:scale-95 transition"
             >
-              Register
+              Enroll Now
             </Link>
             <button
               onClick={toggle}

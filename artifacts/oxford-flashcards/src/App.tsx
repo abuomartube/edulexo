@@ -1,5 +1,7 @@
 import { Router, Route, Switch } from "wouter";
+import PlatformLanding from "@/pages/PlatformLanding";
 import LandingPage from "@/pages/LandingPage";
+import IeltsCourse from "@/pages/IeltsCourse";
 import FlashcardApp from "@/pages/FlashcardApp";
 import DemoFlashcards from "@/pages/DemoFlashcards";
 import NotFound from "@/pages/not-found";
@@ -11,7 +13,9 @@ export default function App() {
   return (
     <Router base={base}>
       <Switch>
-        <Route path="/" component={LandingPage} />
+        <Route path="/" component={PlatformLanding} />
+        <Route path="/english" component={LandingPage} />
+        <Route path="/ielts" component={IeltsCourse} />
         <Route path="/demo" component={DemoFlashcards} />
         <Route path="/app" component={FlashcardApp} />
         <Route component={NotFound} />

@@ -28,19 +28,32 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Apps
 
-### LEXO (`artifacts/oxford-flashcards`)
+### Abu Omar EduLexo (`artifacts/oxford-flashcards`)
 
-A bilingual (English + Arabic) English-learning platform. Three pages so far, routed with `wouter`:
-- `/` — public **Landing page** (`src/pages/LandingPage.tsx`): header, hero ("Master English the smart way"), three packages (Foundation A1→B1, Mastery A1→C1, Fluency B1+→C1), modules grid (Vocabulary live, Lessons/Speaking/Writing/Listening/Reading/Final Test as Coming Soon), CTA, footer. All "try" CTAs point to `/demo`.
-- `/demo` — public **Demo flashcards** (`src/pages/DemoFlashcards.tsx`): 40-word sample (10 per CEFR level, curated in `src/data/demo-words.ts`) for unregistered visitors, with a "Demo mode" banner inviting them to get an access code.
-- `/app` — the **full Flashcard app** (`src/pages/FlashcardApp.tsx`): all 2,988 words + 75 word families. Phase 2 will gate this route behind login.
+A bilingual (English + Arabic) learning **platform** branded as **Abu Omar EduLexo** ("Learn · Practice · Achieve · Powered by AI") that hosts two products: **LEXO for English** and **LEXO for IELTS**. Master logo: `src/assets/edulexo-logo.png`. Brand colors taken from the logo:
+- Deep navy/indigo `#1E2155` — primary text & wordmark
+- Vibrant violet `#6B2FE6` — gradient mid-tone
+- Royal blue `#4F7FFF` — "Lexo" wordmark + accent
+- Brand gradient: `from-indigo-700 via-purple-600 to-blue-600`
+
+Routes (wouter):
+- `/` — **Platform landing** (`src/pages/PlatformLanding.tsx`): EduLexo master brand. Hero ("Two powerful courses. One smart platform."), two product cards (LEXO for English in violet/purple, LEXO for IELTS in emerald/teal) each with View Details + Enroll Now, 6-feature platform-benefits grid, final CTA, footer. All copy is bilingual EN+AR.
+- `/english` — **LEXO for English product detail** (`src/pages/LandingPage.tsx`): existing English landing kept intact (hero, three CEFR packages, modules grid, CTA). Header now has a "← Platform" breadcrumb back to `/`. CTA button is "Enroll Now" → `/app`.
+- `/ielts` — **LEXO for IELTS product detail** (`src/pages/IeltsCourse.tsx`): emerald/teal palette. Hero with video placeholder, 12-module grid (Vocabulary 2,198 words, Churchill AI Speaking, Orwell AI Writing, Listening test, Reading test, Mock tests, LEXO AI chat, Stories, Spell-It, Spaced Repetition, Grammar/Phrasal verbs, Daily streaks/PDF), Enroll section showing all four payment methods (Tabby/Tamara/Stripe/Bank Transfer), footer.
+- `/demo` — public **Demo flashcards** (`src/pages/DemoFlashcards.tsx`): 40-word sample (10 per CEFR level) for the English course.
+- `/app` — full **Flashcard app** (`src/pages/FlashcardApp.tsx`): all 2,988 words + 75 word families. Phase 2 will gate this behind login.
 
 **Package naming convention (locked):** internally the three packages are referenced as **A**, **B**, **C** in the database schema, access codes, and lesson tags:
 - **A** = Foundation Package (CEFR A1→B1, Levels 1-3)
 - **B** = Mastery Package (CEFR A1→C1, Levels 1-6) — featured "BEST VALUE" tier
 - **C** = Fluency Package (CEFR B1+→C1, Levels 4-6)
 
-Roadmap: Phase 1 landing (done) → Phase 2 database + auth (PostgreSQL, register-with-access-code, sessions) → Phase 3 student dashboard listing the 7 modules → Phase 4 teacher admin at `/admin` (generate/track access codes per package, approve/reject pending students, manage Vimeo lessons tagged by package) → Phase 5+ build the remaining modules.
+Roadmap (per user-specified iterations):
+- **Iteration 1 — DONE**: New EduLexo platform landing + IELTS detail page + brand applied across the site.
+- **Iteration 2**: Auth (signup/login/password reset, protected routes, email verification via SendGrid) + Postgres schema for users + enrollments. **No access codes** — open registration.
+- **Iteration 3**: Payments (Tabby, Tamara, Stripe, Bank Transfer) + confirmation emails + manual admin approval gate (payment ≠ access; admin must approve enrollment).
+- **Iteration 4**: Student dashboard (enrolled courses, materials, account settings).
+- **Iteration 5**: Admin dashboard (approve/reject enrollments, bulk + targeted emails, sales analytics, product/price management).
 
 Oxford 3000 flashcards with Arabic translations, day/night theme, and consistent native British TTS via OpenAI `fable` voice.
 

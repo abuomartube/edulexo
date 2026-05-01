@@ -1,6 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { Readable } from "stream";
 import { z } from "zod";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { db, uploadGrantsTable } from "@workspace/db";
 import {
   ObjectStorageService,
@@ -11,6 +12,31 @@ import { requireAuth, getUserById } from "../lib/auth";
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
+
+/**
+ * Allow-listed MIME types for uploads. Bank-transfer proofs are the only
+ * thing this endpoint is used for today, so we restrict to images, PDF and
+ * Word docs. Server-side enforcement complements the client `accept=` and
+ * stops a malicious client posting `application/x-msdownload` etc.
+ */
+export const ALLOWED_UPLOAD_CONTENT_TYPES = new Set<string>([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]);
+
+/**
+ * Per-user rate limit: at most this many upload-URL grants minted in any
+ * 1-hour window. The grant table doubles as our counter — no extra storage.
+ * 20 is generous (5+ retries per checkout × 3 checkouts/hour).
+ */
+const UPLOAD_RATE_LIMIT_PER_HOUR = 20;
 
 const RequestUploadUrlBody = z.object({
   name: z.string().min(1).max(256),
@@ -44,6 +70,46 @@ router.post(
       res.status(400).json({ error: "invalid_body" });
       return;
     }
+    const body = parsed.data;
+
+    // Phase-7a: server-side MIME allow-list. The client also restricts via
+    // `accept=` but that's trivially bypassed; this is the real gate.
+    const lowerType = body.contentType.toLowerCase().split(";")[0].trim();
+    if (!ALLOWED_UPLOAD_CONTENT_TYPES.has(lowerType)) {
+      res.status(400).json({
+        error: "unsupported_content_type",
+        contentType: body.contentType,
+      });
+      return;
+    }
+
+    const userId = req.session.userId!;
+
+    // Phase-7a: per-user rate limit. Counts grants minted in the last hour
+    // — covers both the legitimate flow (a few retries per attempt) and the
+    // pathological (script hammering the endpoint to exhaust upload-URL
+    // signing quota or inflate bucket cost).
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const [{ count: recentCount }] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(uploadGrantsTable)
+      .where(
+        and(
+          eq(uploadGrantsTable.userId, userId),
+          gt(uploadGrantsTable.createdAt, oneHourAgo),
+        ),
+      );
+    if (recentCount >= UPLOAD_RATE_LIMIT_PER_HOUR) {
+      req.log.warn(
+        { userId, recentCount, limit: UPLOAD_RATE_LIMIT_PER_HOUR },
+        "upload-url request rate-limited",
+      );
+      res.status(429).json({
+        error: "rate_limited",
+        retryAfterSeconds: 60 * 60,
+      });
+      return;
+    }
 
     try {
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -55,7 +121,6 @@ router.post(
       // verify ownership against this row to prevent IDOR. Grants live for
       // 1 hour — well past the presigned URL's 15-minute TTL but short
       // enough that abandoned uploads age out.
-      const userId = req.session.userId!;
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
       await db
         .insert(uploadGrantsTable)
@@ -105,6 +170,17 @@ router.get(
       const response = await objectStorageService.downloadObject(objectFile);
       res.status(response.status);
       response.headers.forEach((value, key) => res.setHeader(key, value));
+      // Defense-in-depth for proof attachments: even though we re-validate
+      // MIME against an allow-list both at upload-grant time and again
+      // sink-side via GCS metadata, an attacker can still PUT arbitrary
+      // bytes while *declaring* an allow-listed Content-Type. `nosniff`
+      // forces the browser to honour the served Content-Type rather than
+      // sniff the bytes — so even if the bytes look like HTML/JS, the
+      // admin's browser will not interpret them as HTML and will not
+      // execute embedded scripts. CSP adds a second layer that disables
+      // any external loads/inline scripts the document might attempt.
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.setHeader("Content-Security-Policy", "default-src 'none'");
       if (response.body) {
         const nodeStream = Readable.fromWeb(
           response.body as ReadableStream<Uint8Array>,

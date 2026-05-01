@@ -817,6 +817,12 @@ export interface AdminPayment {
   bankProofContentType?: string | null;
   /** Original filename of the uploaded proof. */
   bankProofFilename?: string | null;
+  /** Phase-7: persisted admin verification trail. */
+  rejectionReason?: string | null;
+  verifiedByUserId?: string | null;
+  verifiedAt?: string | null;
+  rejectedByUserId?: string | null;
+  rejectedAt?: string | null;
 }
 
 export interface AdminPaymentsFilters {
@@ -843,4 +849,103 @@ export async function fetchAdminPayments(
   );
   const data = await jsonOrThrow<{ payments: AdminPayment[] }>(res);
   return data.payments;
+}
+
+/**
+ * Phase-7c — student-facing payment row.
+ */
+export interface MyPayment {
+  id: string;
+  course: CheckoutCourse;
+  tier: string;
+  amountMinor: number;
+  currency: string;
+  provider: CheckoutProvider;
+  status: PaymentStatus;
+  failureReason: string | null;
+  rejectionReason: string | null;
+  rejectedAt: string | null;
+  verifiedAt: string | null;
+  capturedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  bankSenderName?: string | null;
+  bankProofObjectPath?: string | null;
+  bankProofContentType?: string | null;
+  bankProofFilename?: string | null;
+}
+
+export async function fetchMyPayments(): Promise<MyPayment[]> {
+  const res = await fetch(`/api/payments/me`, { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ payments: MyPayment[] }>(res);
+  return data.payments;
+}
+
+export async function resubmitBankProof(
+  paymentId: string,
+  body: {
+    senderName: string;
+    proofObjectPath: string;
+    proofContentType: string;
+    proofFilename: string;
+  },
+): Promise<{ ok: true; paymentId: string; status: "pending" }> {
+  const res = await fetch(`/api/payments/${paymentId}/resubmit-proof`, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return jsonOrThrow(res);
+}
+
+/**
+ * Phase-7d — admin revenue report.
+ */
+export interface RevenueReportRow {
+  id: string;
+  createdAt: string;
+  capturedAt: string | null;
+  studentName: string;
+  studentEmail: string;
+  course: CheckoutCourse;
+  tier: string;
+  amountMinor: number;
+  currency: string;
+  provider: CheckoutProvider;
+  status: PaymentStatus;
+}
+
+export interface RevenueReportSummary {
+  provider: CheckoutProvider;
+  transactions: number;
+  revenueMinor: number;
+  currency: string;
+}
+
+export interface RevenueReport {
+  from: string;
+  to: string;
+  rows: RevenueReportRow[];
+  summary: RevenueReportSummary[];
+}
+
+export async function fetchRevenueReport(
+  from: string,
+  to: string,
+): Promise<RevenueReport> {
+  const params = new URLSearchParams({ from, to, format: "json" });
+  const res = await fetch(`/api/admin/reports/revenue?${params.toString()}`, {
+    ...init,
+    method: "GET",
+  });
+  return jsonOrThrow<RevenueReport>(res);
+}
+
+/**
+ * Returns a download URL for the CSV revenue report. The browser hits
+ * this directly so the cookie session is sent.
+ */
+export function revenueReportCsvUrl(from: string, to: string): string {
+  const params = new URLSearchParams({ from, to, format: "csv" });
+  return `/api/admin/reports/revenue?${params.toString()}`;
 }

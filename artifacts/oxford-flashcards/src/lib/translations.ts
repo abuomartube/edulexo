@@ -1064,6 +1064,71 @@ export const translations = {
   },
   "admin.payments.verifying": { en: "Verifying…", ar: "جاري التحقق…" },
   "admin.payments.rejecting": { en: "Rejecting…", ar: "جاري الرفض…" },
+  "admin.payments.rejectionReasonPrompt": {
+    en: "Optional: provide a short reason the student will see in the rejection email.",
+    ar: "اختياري: اكتب سبباً مختصراً سيظهر للطالب في بريد الرفض.",
+  },
+
+  "admin.reports.title": { en: "Reports", ar: "التقارير" },
+  "admin.reports.subtitle": {
+    en: "Monthly revenue export by payment method.",
+    ar: "تقرير إيرادات شهري مفصّل حسب وسيلة الدفع.",
+  },
+  "admin.reports.from": { en: "From", ar: "من" },
+  "admin.reports.to": { en: "To", ar: "إلى" },
+  "admin.reports.run": { en: "Run report", ar: "احسب التقرير" },
+  "admin.reports.downloadCsv": { en: "Download CSV", ar: "تحميل CSV" },
+  "admin.reports.summaryTitle": {
+    en: "Summary (captured payments only)",
+    ar: "ملخّص (المدفوعات المُحصّلة فقط)",
+  },
+  "admin.reports.method": { en: "Payment method", ar: "وسيلة الدفع" },
+  "admin.reports.transactions": { en: "Transactions", ar: "العمليات" },
+  "admin.reports.revenue": { en: "Revenue (SAR)", ar: "الإيراد (ر.س)" },
+  "admin.reports.empty": {
+    en: "No payments in this date range.",
+    ar: "لا توجد مدفوعات في هذا النطاق.",
+  },
+  "admin.reports.col.date": { en: "Date", ar: "التاريخ" },
+  "admin.reports.col.student": { en: "Student", ar: "الطالب" },
+  "admin.reports.col.course": { en: "Course / Tier", ar: "الدورة / المستوى" },
+  "admin.reports.col.amount": { en: "Amount", ar: "المبلغ" },
+  "admin.reports.col.method": { en: "Method", ar: "الوسيلة" },
+  "admin.reports.col.status": { en: "Status", ar: "الحالة" },
+  "admin.reports.tab": { en: "Reports", ar: "التقارير" },
+
+  "payments.my.title": { en: "My Payments", ar: "مدفوعاتي" },
+  "payments.my.subtitle": {
+    en: "All your payments and bank-transfer status in one place.",
+    ar: "كل مدفوعاتك وحالة التحويل البنكي في مكان واحد.",
+  },
+  "payments.my.empty": {
+    en: "You haven't made any payments yet.",
+    ar: "لم تقم بأي عمليات دفع بعد.",
+  },
+  "payments.my.status.pending": { en: "Pending verification", ar: "بانتظار التحقق" },
+  "payments.my.status.captured": { en: "Completed", ar: "مكتمل" },
+  "payments.my.status.failed": { en: "Rejected", ar: "مرفوض" },
+  "payments.my.status.cancelled": { en: "Cancelled", ar: "أُلغي" },
+  "payments.my.status.expired": { en: "Expired", ar: "منتهي الصلاحية" },
+  "payments.my.status.created": { en: "Started", ar: "بدأت" },
+  "payments.my.status.authorized": { en: "Authorized", ar: "مُعتمد" },
+  "payments.my.status.refunded": { en: "Refunded", ar: "مُسترد" },
+  "payments.my.rejectionReason": { en: "Reason from admin", ar: "السبب من المسؤول" },
+  "payments.my.reupload": { en: "Re-upload proof", ar: "أعد رفع الإثبات" },
+  "payments.my.reuploadHint": {
+    en: "Upload a new payment proof and we'll send it back to the admin.",
+    ar: "ارفع إثباتاً جديداً وسنرسله للمراجعة مجدداً.",
+  },
+  "payments.my.reuploadSubmit": {
+    en: "Submit new proof",
+    ar: "إرسال الإثبات الجديد",
+  },
+  "payments.my.reuploadSuccess": {
+    en: "Your new proof was submitted. The admin will review it shortly.",
+    ar: "تم إرسال الإثبات الجديد. سيراجعه المسؤول قريباً.",
+  },
+  "payments.my.viewProof": { en: "View current proof", ar: "عرض الإثبات الحالي" },
 
 } as const;
 

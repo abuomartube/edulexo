@@ -373,3 +373,66 @@ export function buildAdminNewEnrollmentEmail(params: {
     text: `Hi ${adminName},\n\nA new enrollment was created:\n  • Student: ${studentName} (${studentEmail})\n  • Course: ${courseStr}\n  • Tier: ${tierStr}\n  • Source: ${source}\n\nDetails in the admin dashboard:\n${adminUrl}\n\n${SIGN_OFF.en}`,
   };
 }
+
+export function buildPaymentVerifiedEmail(params: {
+  to: string;
+  name: string;
+  course: string;
+  tier: string;
+  amountSar: number;
+  verifiedAt: Date;
+  dashboardUrl: string;
+  locale?: Locale;
+}): EmailMessage {
+  const { to, name, course, tier, amountSar, verifiedAt, dashboardUrl, locale = "en" } = params;
+  const courseStr = courseLabel(course, locale);
+  const tierStr = tierLabel(tier, locale);
+  const when =
+    locale === "ar"
+      ? verifiedAt.toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" })
+      : verifiedAt.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  if (locale === "ar") {
+    return {
+      to,
+      subject: `تم تأكيد الدفع ✅ — ${courseStr}`,
+      text: `مرحباً ${name},\n\nتم التحقق من تحويلك البنكي وتفعيل اشتراكك.\n  • الدورة: ${courseStr} — ${tierStr}\n  • المبلغ: ${amountSar} ر.س\n  • تاريخ التفعيل: ${when}\n\nيمكنك الآن الدخول إلى الدورة:\n${dashboardUrl}\n\n${SIGN_OFF.ar}`,
+    };
+  }
+  return {
+    to,
+    subject: `Payment Verified ✅ — ${courseStr}`,
+    text: `Hi ${name},\n\nWe've verified your bank transfer and your enrollment is now active.\n  • Course: ${courseStr} — ${tierStr}\n  • Amount: ${amountSar} SAR\n  • Activated on: ${when}\n\nAccess your course here:\n${dashboardUrl}\n\n${SIGN_OFF.en}`,
+  };
+}
+
+export function buildPaymentRejectedEmail(params: {
+  to: string;
+  name: string;
+  course: string;
+  tier: string;
+  reason: string | null;
+  paymentsUrl: string;
+  locale?: Locale;
+}): EmailMessage {
+  const { to, name, course, tier, reason, paymentsUrl, locale = "en" } = params;
+  const courseStr = courseLabel(course, locale);
+  const tierStr = tierLabel(tier, locale);
+  if (locale === "ar") {
+    const reasonLine = reason
+      ? `\n  • السبب: ${reason}`
+      : "\n  • لم يُذكر سبب محدد.";
+    return {
+      to,
+      subject: `لم يتم قبول إثبات الدفع ❌ — ${courseStr}`,
+      text: `مرحباً ${name},\n\nراجع المسؤول إثبات تحويلك البنكي ولم يتم قبوله.\n  • الدورة: ${courseStr} — ${tierStr}${reasonLine}\n\nيمكنك رفع إثبات جديد من صفحة المدفوعات:\n${paymentsUrl}\n\nإن كنت بحاجة إلى مساعدة، لا تتردد بالتواصل معنا.\n\n${SIGN_OFF.ar}`,
+    };
+  }
+  const reasonLine = reason
+    ? `\n  • Reason: ${reason}`
+    : "\n  • No specific reason was provided.";
+  return {
+    to,
+    subject: `Payment Rejected ❌ — ${courseStr}`,
+    text: `Hi ${name},\n\nAn admin reviewed your bank transfer proof and was unable to verify it.\n  • Course: ${courseStr} — ${tierStr}${reasonLine}\n\nYou can re-upload a new proof from your payments page:\n${paymentsUrl}\n\nIf you need help, please reply to this email.\n\n${SIGN_OFF.en}`,
+  };
+}

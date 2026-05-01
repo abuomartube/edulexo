@@ -11,14 +11,19 @@ import { notifyStudentSelfEnrolled } from "../email-triggers";
 
 type ActivationResult =
   | { status: "already_captured"; enrollmentId: string | null }
-  | { status: "activated"; enrollmentId: string };
+  | { status: "activated"; enrollmentId: string }
+  | { status: "not_activatable"; currentStatus: string };
 
 /**
  * Mark a payment as captured and ensure the matching enrollment is active.
  * Idempotent: if the payment is already captured + linked, this is a no-op.
  *
  * Returns a discriminated union so the caller can decide whether to fire the
- * confirmation email (only on first activation).
+ * confirmation email (only on first activation). Returns `not_activatable`
+ * when the row is in a terminal failure state (`failed/cancelled/expired`)
+ * — in that case the activation is REFUSED so a verify+reject race cannot
+ * resurrect a rejected payment into a captured one (which would orphan the
+ * already-sent rejection email and create contradictory state).
  */
 export async function activateEnrollmentForPayment(
   payment: Payment,
@@ -40,6 +45,20 @@ export async function activateEnrollmentForPayment(
     // Idempotency: already captured + linked → bail.
     if (fresh.status === "captured" && fresh.enrollmentId) {
       return { status: "already_captured", enrollmentId: fresh.enrollmentId };
+    }
+
+    // Terminal failure states — refuse to activate. This is the
+    // correctness guard for verify-after-reject: a concurrent reject may
+    // have flipped the row to `failed` between the route's pre-read and
+    // this transaction acquiring its row lock. Activating now would
+    // resurrect a rejected payment and contradict the rejection email
+    // that was already sent.
+    if (
+      fresh.status === "failed" ||
+      fresh.status === "cancelled" ||
+      fresh.status === "expired"
+    ) {
+      return { status: "not_activatable", currentStatus: fresh.status };
     }
 
     const sourceLabel = fresh.provider as "tabby" | "tamara" | "bank_transfer";
@@ -291,14 +310,20 @@ async function upsertEnrollmentEnglish(
 /**
  * Mark the payment as failed/cancelled/expired without touching enrollments.
  * Idempotent (safe to re-call).
+ *
+ * Returns `true` only when this call actually transitioned the row out of a
+ * non-terminal state. Callers that need to perform downstream side-effects
+ * (rejection email, audit row, snapshot columns) MUST gate them on this
+ * return value — otherwise a concurrent verify+reject race can email the
+ * student "rejected" while their payment is already `captured`.
  */
 export async function markPaymentTerminal(
   paymentId: string,
   status: "failed" | "cancelled" | "expired",
   reason: string | null,
   rawPayload: unknown,
-): Promise<void> {
-  await db
+): Promise<boolean> {
+  const updated = await db
     .update(paymentsTable)
     .set({
       status,
@@ -312,7 +337,9 @@ export async function markPaymentTerminal(
         // Only transition out of non-terminal states.
         sql`status IN ('created','pending','authorized')`,
       ),
-    );
+    )
+    .returning({ id: paymentsTable.id });
+  return updated.length > 0;
 }
 
 export function fireActivationEmail(params: {

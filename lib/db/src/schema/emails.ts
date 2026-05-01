@@ -18,6 +18,8 @@ export const EMAIL_TYPE_VALUES = [
   "admin_new_signup",
   "admin_new_enrollment",
   "broadcast",
+  "payment_verified",
+  "payment_rejected",
 ] as const;
 export type EmailType = (typeof EMAIL_TYPE_VALUES)[number];
 

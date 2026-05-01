@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { z } from "zod";
-import { and, desc, eq, ilike, isNull, or, gt } from "drizzle-orm";
+import { and, desc, eq, ilike, isNull, or, gt, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
@@ -9,12 +9,18 @@ import {
   paymentsTable,
   tierPricesTable,
   uploadGrantsTable,
+  paymentAuditLogTable,
   PAYMENT_COURSE_VALUES,
   PAYMENT_PROVIDER_VALUES,
   PAYMENT_STATUS_VALUES,
 } from "@workspace/db";
+import {
+  notifyPaymentVerified,
+  notifyPaymentRejected,
+} from "../lib/email-triggers";
 import { requireAuth, requireAdmin, getUserById } from "../lib/auth";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { ALLOWED_UPLOAD_CONTENT_TYPES } from "./storage";
 import {
   buildReturnUrl,
   buildWebhookUrl,
@@ -572,6 +578,14 @@ router.get("/checkout/return", async (req, res, next) => {
               enrollmentId: result.enrollmentId,
             });
           }
+          if (result.status === "not_activatable") {
+            req.log.warn(
+              { paymentId: pay.id, currentStatus: result.currentStatus },
+              "tabby return: payment in terminal failure state, skipping success redirect",
+            );
+            res.redirect(`${dashboard}?payment=pending`);
+            return;
+          }
           res.redirect(`${dashboard}?payment=success`);
           return;
         }
@@ -595,6 +609,14 @@ router.get("/checkout/return", async (req, res, next) => {
               payment: { ...pay, enrollmentId: result.enrollmentId },
               enrollmentId: result.enrollmentId,
             });
+          }
+          if (result.status === "not_activatable") {
+            req.log.warn(
+              { paymentId: pay.id, currentStatus: result.currentStatus },
+              "tamara return: payment in terminal failure state, skipping success redirect",
+            );
+            res.redirect(`${dashboard}?payment=pending`);
+            return;
           }
           res.redirect(`${dashboard}?payment=success`);
           return;
@@ -882,6 +904,38 @@ const BankTransferStartBody = z.object({
 
 const bankTransferObjectStorage = new ObjectStorageService();
 
+/**
+ * Sink-side MIME re-validation for an uploaded proof object.
+ *
+ * The presigned PUT URL we mint in `routes/storage.ts` does NOT bind the
+ * Content-Type — a malicious client could declare `image/png` to the
+ * grant endpoint to pass the request-side allow-list check, then PUT a
+ * `application/x-msdownload` (or anything) blob to the signed URL. Once
+ * the bytes are stored, the actual content-type GCS records is what the
+ * download endpoint will serve to admins. So before we accept the
+ * objectPath into a payment row we re-read the stored object's metadata
+ * and reject if its real content-type isn't allow-listed.
+ *
+ * Returns the actual stored content-type when valid; throws on mismatch
+ * or missing object so the caller can return 400.
+ */
+async function assertProofObjectMimeAllowed(
+  objectPath: string,
+): Promise<string> {
+  const file = await bankTransferObjectStorage.getObjectEntityFile(objectPath);
+  const [metadata] = await file.getMetadata();
+  const actual =
+    typeof metadata.contentType === "string" && metadata.contentType.length > 0
+      ? metadata.contentType.toLowerCase()
+      : "application/octet-stream";
+  if (!ALLOWED_UPLOAD_CONTENT_TYPES.has(actual)) {
+    const err = new Error(`proof_content_type_not_allowed:${actual}`);
+    (err as Error & { code?: string }).code = "proof_content_type_not_allowed";
+    throw err;
+  }
+  return actual;
+}
+
 router.post("/checkout/bank-transfer", requireAuth, async (req, res, next) => {
   try {
     // Verify the bank-transfer config is set before creating the payment row,
@@ -918,6 +972,31 @@ router.post("/checkout/bank-transfer", requireAuth, async (req, res, next) => {
       return;
     }
     const ctx = loaded.ctx;
+
+    // Phase-7a: prevent the buyer from queuing multiple pending bank-
+    // transfer rows for the same course+tier (admin would have to reject
+    // duplicates one by one). If they already have one in flight, return
+    // it instead of creating a second.
+    const [existingPending] = await db
+      .select({ id: paymentsTable.id })
+      .from(paymentsTable)
+      .where(
+        and(
+          eq(paymentsTable.userId, ctx.userId),
+          eq(paymentsTable.course, ctx.course),
+          eq(paymentsTable.tier, ctx.tier),
+          eq(paymentsTable.provider, "bank_transfer"),
+          eq(paymentsTable.status, "pending"),
+        ),
+      )
+      .limit(1);
+    if (existingPending) {
+      res.status(409).json({
+        error: "duplicate_pending_bank_transfer",
+        paymentId: existingPending.id,
+      });
+      return;
+    }
 
     // Verify the proof object belongs to *this* user. Without this check
     // any logged-in attacker who learned another buyer's `/objects/<uuid>`
@@ -966,6 +1045,27 @@ router.post("/checkout/bank-transfer", requireAuth, async (req, res, next) => {
       return;
     }
 
+    // Defense-in-depth: re-validate the actual stored content-type against
+    // the allow-list (the signed PUT URL doesn't bind content-type).
+    let actualProofContentType: string;
+    try {
+      actualProofContentType = await assertProofObjectMimeAllowed(
+        normalizedProofPath,
+      );
+    } catch (err) {
+      req.log.warn(
+        {
+          err,
+          objectPath: normalizedProofPath,
+          declaredContentType: body.proofContentType,
+          userId: ctx.userId,
+        },
+        "bank-transfer proof MIME re-validation failed",
+      );
+      res.status(400).json({ error: "proof_content_type_not_allowed" });
+      return;
+    }
+
     const [payment] = await db
       .insert(paymentsTable)
       .values({
@@ -981,7 +1081,8 @@ router.post("/checkout/bank-transfer", requireAuth, async (req, res, next) => {
         status: "pending",
         bankSenderName: body.senderName,
         bankProofObjectPath: normalizedProofPath,
-        bankProofContentType: body.proofContentType,
+        // Trust the actual stored content-type, not the client's claim.
+        bankProofContentType: actualProofContentType,
         bankProofFilename: body.proofFilename,
       })
       .returning();
@@ -1059,6 +1160,27 @@ router.post(
       }
       if (pay.status === "captured") {
         // Idempotent: re-verifying a captured row is a no-op success.
+        // Backfill the snapshot columns if a previous verify ran before
+        // the Phase-7b columns existed (or if the prior snapshot write
+        // failed transiently and was never retried).
+        if (!pay.verifiedAt || !pay.verifiedByUserId) {
+          await db
+            .update(paymentsTable)
+            .set({
+              verifiedByUserId: adminId,
+              verifiedAt: new Date(),
+              rejectionReason: null,
+              rejectedByUserId: null,
+              rejectedAt: null,
+            })
+            .where(eq(paymentsTable.id, pay.id))
+            .catch((err) => {
+              req.log.warn(
+                { err, paymentId: pay.id },
+                "verify backfill snapshot update failed",
+              );
+            });
+        }
         res.json({
           ok: true,
           status: "already_captured",
@@ -1074,20 +1196,97 @@ router.post(
         return;
       }
 
+      const verifiedAt = new Date();
       const result = await activateEnrollmentForPayment(pay, {
         providerPaymentId: null,
         rawPayload: {
           verifiedBy: adminId,
-          verifiedAt: new Date().toISOString(),
+          verifiedAt: verifiedAt.toISOString(),
           note: parsed.data.note ?? null,
         },
       });
+
+      // Concurrent reject won the race and flipped the row to a terminal
+      // failure state in between our pre-read and the activation
+      // transaction. Refuse to resurrect the payment — the rejection
+      // email has already been sent, contradicting it would confuse the
+      // student. Return 409 so the admin UI can refetch and reconcile.
+      if (result.status === "not_activatable") {
+        req.log.warn(
+          {
+            paymentId: pay.id,
+            adminId,
+            currentStatus: result.currentStatus,
+          },
+          "verify refused: payment is in terminal failure state (concurrent reject won)",
+        );
+        res.status(409).json({
+          error: "not_verifiable_in_current_status",
+          status: result.currentStatus,
+        });
+        return;
+      }
+
+      // Only stamp the verifier snapshot + append the audit row when
+      // *this* call performed the transition. Otherwise a second admin
+      // racing the first would overwrite verifiedByUserId/verifiedAt and
+      // log a duplicate verify entry against the same payment.
+      if (result.status === "activated") {
+        // Persist the verification snapshot as proper columns so admin
+        // filtering / CSV export / student "this was approved on …" UI
+        // can query them without crawling rawPayload. The activation has
+        // already committed at this point, so we never let a snapshot or
+        // audit-log failure take down the response — log and move on.
+        try {
+          await db
+            .update(paymentsTable)
+            .set({
+              verifiedByUserId: adminId,
+              verifiedAt,
+              rejectionReason: null,
+              rejectedByUserId: null,
+              rejectedAt: null,
+            })
+            .where(eq(paymentsTable.id, pay.id));
+        } catch (err) {
+          req.log.warn(
+            { err, paymentId: pay.id, adminId },
+            "verify snapshot update failed (activation succeeded)",
+          );
+        }
+
+        // Append-only audit row.
+        try {
+          await db.insert(paymentAuditLogTable).values({
+            paymentId: pay.id,
+            adminId,
+            action: "verify",
+            reason: parsed.data.note ?? null,
+          });
+        } catch (err) {
+          req.log.warn(
+            { err, paymentId: pay.id, adminId },
+            "verify audit log insert failed (activation succeeded)",
+          );
+        }
+      }
+
       if (result.status === "activated") {
         fireActivationEmail({
           log: req.log,
           payment: { ...pay, enrollmentId: result.enrollmentId },
           enrollmentId: result.enrollmentId,
         });
+        // Phase-7b: explicit "Payment Verified ✅" message in addition to
+        // the generic course-access email.
+        void notifyPaymentVerified({
+          log: req.log,
+          paymentId: pay.id,
+          userId: pay.userId,
+          course: pay.course as "intro" | "english",
+          tier: pay.tier,
+          amountMinor: pay.amountMinor,
+        }).catch(() => undefined);
       }
       req.log.info(
         {
@@ -1142,18 +1341,87 @@ router.post(
         res.status(409).json({ error: "already_captured" });
         return;
       }
-      await markPaymentTerminal(
+      const rejectedAt = new Date();
+      const reason = parsed.data.reason ?? null;
+      // Atomic transition: only succeed if the row was still in a non-
+      // terminal state. This is the correctness gate against a concurrent
+      // verify+reject race — without it we could clear verified_* and
+      // email "rejected" to a student whose payment was just captured.
+      const transitioned = await markPaymentTerminal(
         pay.id,
         "failed",
         "admin_rejected",
         {
           rejectedBy: adminId,
-          rejectedAt: new Date().toISOString(),
-          reason: parsed.data.reason ?? null,
+          rejectedAt: rejectedAt.toISOString(),
+          reason,
         },
       );
+      if (!transitioned) {
+        // Re-read to figure out whether somebody else already captured or
+        // already failed the row, and answer accordingly.
+        const [fresh] = await db
+          .select({ status: paymentsTable.status })
+          .from(paymentsTable)
+          .where(eq(paymentsTable.id, pay.id))
+          .limit(1);
+        if (fresh?.status === "captured") {
+          res.status(409).json({ error: "already_captured" });
+          return;
+        }
+        // Already in some other terminal state (failed/cancelled/expired);
+        // treat as idempotent no-op so the admin UI doesn't error out.
+        res.json({ ok: true, status: "already_terminal" });
+        return;
+      }
+      // Persist the rejection snapshot as proper columns + clear any
+      // verification snapshot from a previous round (in case of resubmit).
+      // The transition above has committed, so we never let a snapshot or
+      // audit-log failure take down the response.
+      try {
+        await db
+          .update(paymentsTable)
+          .set({
+            rejectedByUserId: adminId,
+            rejectedAt,
+            rejectionReason: reason,
+            verifiedByUserId: null,
+            verifiedAt: null,
+          })
+          .where(eq(paymentsTable.id, pay.id));
+      } catch (err) {
+        req.log.warn(
+          { err, paymentId: pay.id, adminId },
+          "reject snapshot update failed (status already failed)",
+        );
+      }
+      try {
+        await db.insert(paymentAuditLogTable).values({
+          paymentId: pay.id,
+          adminId,
+          action: "reject",
+          reason,
+        });
+      } catch (err) {
+        req.log.warn(
+          { err, paymentId: pay.id, adminId },
+          "reject audit log insert failed (status already failed)",
+        );
+      }
+      // Only fire the rejection email when *this* call performed the
+      // transition. Otherwise concurrent verify+reject could email the
+      // student "your payment was rejected" while their enrollment is
+      // already active.
+      void notifyPaymentRejected({
+        log: req.log,
+        paymentId: pay.id,
+        userId: pay.userId,
+        course: pay.course as "intro" | "english",
+        tier: pay.tier,
+        reason,
+      }).catch(() => undefined);
       req.log.info(
-        { paymentId: pay.id, adminId, reason: parsed.data.reason ?? null },
+        { paymentId: pay.id, adminId, reason },
         "bank-transfer payment rejected by admin",
       );
       res.json({ ok: true });
@@ -1208,6 +1476,11 @@ router.get("/admin/payments", requireAdmin, async (req, res, next) => {
         bankProofObjectPath: paymentsTable.bankProofObjectPath,
         bankProofContentType: paymentsTable.bankProofContentType,
         bankProofFilename: paymentsTable.bankProofFilename,
+        rejectionReason: paymentsTable.rejectionReason,
+        verifiedByUserId: paymentsTable.verifiedByUserId,
+        verifiedAt: paymentsTable.verifiedAt,
+        rejectedByUserId: paymentsTable.rejectedByUserId,
+        rejectedAt: paymentsTable.rejectedAt,
       })
       .from(paymentsTable)
       .innerJoin(usersTable, eq(usersTable.id, paymentsTable.userId))
@@ -1219,5 +1492,372 @@ router.get("/admin/payments", requireAdmin, async (req, res, next) => {
     next(err);
   }
 });
+
+/**
+ * GET /api/payments/me — Phase-7c.
+ * Lists every payment row owned by the logged-in user (oldest → newest is
+ * less useful than newest → oldest for the UI). Includes the rejection
+ * reason so the student can read why an admin sent it back.
+ */
+router.get("/payments/me", requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.session.userId!;
+    const rows = await db
+      .select({
+        id: paymentsTable.id,
+        course: paymentsTable.course,
+        tier: paymentsTable.tier,
+        amountMinor: paymentsTable.amountMinor,
+        currency: paymentsTable.currency,
+        provider: paymentsTable.provider,
+        status: paymentsTable.status,
+        failureReason: paymentsTable.failureReason,
+        rejectionReason: paymentsTable.rejectionReason,
+        rejectedAt: paymentsTable.rejectedAt,
+        verifiedAt: paymentsTable.verifiedAt,
+        capturedAt: paymentsTable.capturedAt,
+        createdAt: paymentsTable.createdAt,
+        updatedAt: paymentsTable.updatedAt,
+        bankSenderName: paymentsTable.bankSenderName,
+        bankProofObjectPath: paymentsTable.bankProofObjectPath,
+        bankProofContentType: paymentsTable.bankProofContentType,
+        bankProofFilename: paymentsTable.bankProofFilename,
+      })
+      .from(paymentsTable)
+      .where(eq(paymentsTable.userId, userId))
+      .orderBy(desc(paymentsTable.createdAt))
+      .limit(200);
+    res.json({ payments: rows });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/payments/:id/resubmit-proof — Phase-7c.
+ * Body: { senderName, proofObjectPath, proofContentType, proofFilename }.
+ * Lets a student replace the proof on a bank-transfer that the admin
+ * rejected. Reuses the same upload-grant ownership check as the original
+ * submission so an attacker can't smuggle in someone else's object path.
+ * On success the row goes back to status="pending" and the admin sees it
+ * again in the queue. The previous failure/rejection reason is cleared.
+ */
+const ResubmitProofBody = z.object({
+  senderName: z.string().trim().min(2).max(200),
+  proofObjectPath: z
+    .string()
+    .regex(/^\/objects\/.+/, "invalid_object_path"),
+  proofContentType: z.string().min(1).max(128),
+  proofFilename: z.string().trim().min(1).max(256),
+});
+
+router.post(
+  "/payments/:id/resubmit-proof",
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      const paymentId = String(req.params.id ?? "");
+      if (!isUuid(paymentId)) {
+        res.status(400).json({ error: "invalid_payment_id" });
+        return;
+      }
+      const parsed = ResubmitProofBody.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        res.status(400).json({
+          error: "invalid_body",
+          issues: parsed.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const body = parsed.data;
+      const userId = req.session.userId!;
+
+      const [pay] = await db
+        .select()
+        .from(paymentsTable)
+        .where(eq(paymentsTable.id, paymentId))
+        .limit(1);
+      if (!pay) {
+        res.status(404).json({ error: "payment_not_found" });
+        return;
+      }
+      // Ownership: must be the buyer's row.
+      if (pay.userId !== userId) {
+        res.status(403).json({ error: "forbidden" });
+        return;
+      }
+      if (pay.provider !== "bank_transfer") {
+        res.status(400).json({ error: "not_a_bank_transfer" });
+        return;
+      }
+      // Only "rejected" rows (failed/cancelled/expired) may be resubmitted.
+      // Captured/pending/created rows must not be touched.
+      if (
+        pay.status !== "failed" &&
+        pay.status !== "cancelled" &&
+        pay.status !== "expired"
+      ) {
+        res.status(409).json({
+          error: "not_resubmittable_in_current_status",
+          status: pay.status,
+        });
+        return;
+      }
+
+      // Same upload-grant ownership/single-use check as the initial flow.
+      const claimedGrants = await db
+        .update(uploadGrantsTable)
+        .set({ usedAt: new Date() })
+        .where(
+          and(
+            eq(uploadGrantsTable.objectPath, body.proofObjectPath),
+            eq(uploadGrantsTable.userId, userId),
+            isNull(uploadGrantsTable.usedAt),
+            gt(uploadGrantsTable.expiresAt, new Date()),
+          ),
+        )
+        .returning({ id: uploadGrantsTable.id });
+      if (claimedGrants.length === 0) {
+        res.status(403).json({ error: "proof_object_invalid" });
+        return;
+      }
+
+      let normalizedProofPath: string;
+      try {
+        normalizedProofPath = await bankTransferObjectStorage
+          .trySetObjectEntityAclPolicy(body.proofObjectPath, {
+            owner: userId,
+            visibility: "private",
+          });
+      } catch (err) {
+        req.log.warn(
+          { err, objectPath: body.proofObjectPath, userId },
+          "resubmit proof ACL set failed",
+        );
+        res.status(400).json({ error: "proof_object_invalid" });
+        return;
+      }
+
+      // Defense-in-depth: re-validate actual stored content-type against
+      // the allow-list (the signed PUT URL doesn't bind content-type).
+      let actualProofContentType: string;
+      try {
+        actualProofContentType = await assertProofObjectMimeAllowed(
+          normalizedProofPath,
+        );
+      } catch (err) {
+        req.log.warn(
+          {
+            err,
+            objectPath: normalizedProofPath,
+            declaredContentType: body.proofContentType,
+            userId,
+          },
+          "resubmit proof MIME re-validation failed",
+        );
+        res.status(400).json({ error: "proof_content_type_not_allowed" });
+        return;
+      }
+
+      await db
+        .update(paymentsTable)
+        .set({
+          status: "pending",
+          failureReason: null,
+          rejectionReason: null,
+          rejectedByUserId: null,
+          rejectedAt: null,
+          bankSenderName: body.senderName,
+          bankProofObjectPath: normalizedProofPath,
+          // Trust the actual stored content-type, not the client's claim.
+          bankProofContentType: actualProofContentType,
+          bankProofFilename: body.proofFilename,
+          updatedAt: new Date(),
+        })
+        .where(eq(paymentsTable.id, pay.id));
+
+      // Audit row — actor is the student, so adminId stays NULL. Don't
+      // let an audit failure take down the response since the payment
+      // row itself has already been updated.
+      try {
+        await db.insert(paymentAuditLogTable).values({
+          paymentId: pay.id,
+          adminId: null,
+          action: "resubmit",
+          reason: null,
+        });
+      } catch (err) {
+        req.log.warn(
+          { err, paymentId: pay.id, userId },
+          "resubmit audit log insert failed (status flipped back to pending)",
+        );
+      }
+
+      req.log.info(
+        { paymentId: pay.id, userId },
+        "bank-transfer payment proof resubmitted by student",
+      );
+      res.json({ ok: true, paymentId: pay.id, status: "pending" });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+/**
+ * GET /api/admin/reports/revenue — Phase-7d.
+ * Query: from=YYYY-MM-DD, to=YYYY-MM-DD, format=json|csv (default json).
+ * Returns per-row payment data + a summary breakdown by provider. Only
+ * captured payments count toward revenue totals.
+ */
+const RevenueReportQuery = z.object({
+  from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "invalid_from"),
+  to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "invalid_to"),
+  format: z.enum(["json", "csv"]).optional(),
+});
+
+router.get(
+  "/admin/reports/revenue",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const parsed = RevenueReportQuery.safeParse(req.query);
+      if (!parsed.success) {
+        res.status(400).json({
+          error: "invalid_query",
+          issues: parsed.error.flatten().fieldErrors,
+        });
+        return;
+      }
+      const fromDate = new Date(`${parsed.data.from}T00:00:00.000Z`);
+      const toDate = new Date(`${parsed.data.to}T23:59:59.999Z`);
+      if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+        res.status(400).json({ error: "invalid_date_range" });
+        return;
+      }
+      const rows = await db
+        .select({
+          id: paymentsTable.id,
+          createdAt: paymentsTable.createdAt,
+          capturedAt: paymentsTable.capturedAt,
+          studentName: usersTable.name,
+          studentEmail: usersTable.email,
+          course: paymentsTable.course,
+          tier: paymentsTable.tier,
+          amountMinor: paymentsTable.amountMinor,
+          currency: paymentsTable.currency,
+          provider: paymentsTable.provider,
+          status: paymentsTable.status,
+        })
+        .from(paymentsTable)
+        .innerJoin(usersTable, eq(usersTable.id, paymentsTable.userId))
+        .where(
+          and(
+            gt(paymentsTable.createdAt, fromDate),
+            // gt: createdAt > from. We want createdAt <= to, so use lt() on (to + 1ms)
+            // But drizzle exposes lte via sql. Use raw comparison:
+            sql`${paymentsTable.createdAt} <= ${toDate}`,
+          ),
+        )
+        .orderBy(desc(paymentsTable.createdAt));
+
+      // Build per-provider summary across captured rows only.
+      type Bucket = {
+        provider: string;
+        transactions: number;
+        revenueMinor: number;
+        currency: string;
+      };
+      const summary = new Map<string, Bucket>();
+      for (const r of rows) {
+        if (r.status !== "captured") continue;
+        const bucket = summary.get(r.provider) ?? {
+          provider: r.provider,
+          transactions: 0,
+          revenueMinor: 0,
+          currency: r.currency,
+        };
+        bucket.transactions += 1;
+        bucket.revenueMinor += r.amountMinor;
+        summary.set(r.provider, bucket);
+      }
+
+      const fmt = parsed.data.format ?? "json";
+      if (fmt === "csv") {
+        const csvEscape = (v: string | number | null | undefined): string => {
+          const s = String(v ?? "");
+          if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+            return `"${s.replace(/"/g, '""')}"`;
+          }
+          return s;
+        };
+        // The CSV is structured with the per-provider summary block at the
+        // top so the merchant sees totals at-a-glance, then a blank line,
+        // then the per-payment detail rows.
+        const lines: string[] = [];
+        lines.push("summary (captured only)");
+        lines.push("Payment Method,Transactions,Revenue (SAR),Currency");
+        for (const b of summary.values()) {
+          lines.push(
+            [
+              b.provider,
+              b.transactions,
+              (b.revenueMinor / 100).toFixed(2),
+              b.currency,
+            ].join(","),
+          );
+        }
+        lines.push("");
+        lines.push(
+          [
+            "Date",
+            "Payment ID",
+            "Student Name",
+            "Student Email",
+            "Course",
+            "Tier",
+            "Amount (SAR)",
+            "Currency",
+            "Payment Method",
+            "Status",
+          ].join(","),
+        );
+        for (const r of rows) {
+          lines.push(
+            [
+              r.createdAt.toISOString(),
+              r.id,
+              csvEscape(r.studentName),
+              csvEscape(r.studentEmail),
+              r.course,
+              r.tier,
+              (r.amountMinor / 100).toFixed(2),
+              r.currency,
+              r.provider,
+              r.status,
+            ].join(","),
+          );
+        }
+        const csv = lines.join("\r\n");
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename="revenue-${parsed.data.from}-to-${parsed.data.to}.csv"`,
+        );
+        res.send(csv);
+        return;
+      }
+
+      res.json({
+        from: parsed.data.from,
+        to: parsed.data.to,
+        rows,
+        summary: Array.from(summary.values()),
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 export default router;

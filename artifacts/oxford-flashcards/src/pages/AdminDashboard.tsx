@@ -31,6 +31,7 @@ import {
   CheckCircle2,
   XCircle,
   ExternalLink,
+  BarChart3,
 } from "lucide-react";
 import {
   LineChart,
@@ -92,10 +93,13 @@ import {
   adminVerifyBankPayment,
   adminRejectBankPayment,
   bankProofViewUrl,
+  fetchRevenueReport,
+  revenueReportCsvUrl,
   type AdminPayment,
   type CheckoutCourse,
   type CheckoutProvider,
   type PaymentStatus,
+  type RevenueReport,
 } from "@/lib/platform-api";
 
 type Tab =
@@ -107,7 +111,8 @@ type Tab =
   | "communication"
   | "codes"
   | "certificates"
-  | "payments";
+  | "payments"
+  | "reports";
 
 const TAB_DEFS: {
   key: Tab;
@@ -123,6 +128,7 @@ const TAB_DEFS: {
   { key: "codes", icon: <KeyRound size={16} />, labelKey: "admin.tab.codes" },
   { key: "certificates", icon: <Award size={16} />, labelKey: "admin.tab.certificates" },
   { key: "payments", icon: <CreditCard size={16} />, labelKey: "admin.tab.payments" },
+  { key: "reports", icon: <BarChart3 size={16} />, labelKey: "admin.reports.tab" },
 ];
 
 export default function AdminDashboard() {
@@ -204,6 +210,7 @@ export default function AdminDashboard() {
             {tab === "codes" && <CodesTab />}
             {tab === "certificates" && <CertificatesTab />}
             {tab === "payments" && <PaymentsTab />}
+            {tab === "reports" && <ReportsTab />}
           </section>
         </div>
       </main>
@@ -3381,10 +3388,17 @@ function PaymentRow({
     e.stopPropagation();
     if (busy) return;
     if (!confirm(t("admin.payments.rejectConfirm"))) return;
+    // Prompt the admin for the rejection reason. The student will see this
+    // verbatim in their "My Payments" page and rejection email, so we
+    // discourage empty submissions but allow the admin to bail.
+    const raw = prompt(t("admin.payments.rejectionReasonPrompt"), "");
+    if (raw === null) return;
+    const reason = raw.trim();
+    if (!reason) return;
     setBusy("reject");
     setActionError(null);
     try {
-      await adminRejectBankPayment(payment.id);
+      await adminRejectBankPayment(payment.id, reason);
       onChanged();
     } catch (err) {
       setActionError((err as Error).message ?? "error");
@@ -3507,6 +3521,30 @@ function PaymentRow({
                   <DetailKV label="Failure reason" value={payment.failureReason} />
                 </div>
               )}
+              {payment.rejectionReason && (
+                <div className="sm:col-span-2">
+                  <DetailKV
+                    label={t("payments.my.rejectionReason")}
+                    value={payment.rejectionReason}
+                  />
+                </div>
+              )}
+              {payment.verifiedAt && (
+                <DetailKV
+                  label="Verified at"
+                  value={new Date(payment.verifiedAt).toLocaleString(
+                    lang === "ar" ? "ar-EG" : "en-US",
+                  )}
+                />
+              )}
+              {payment.rejectedAt && (
+                <DetailKV
+                  label="Rejected at"
+                  value={new Date(payment.rejectedAt).toLocaleString(
+                    lang === "ar" ? "ar-EG" : "en-US",
+                  )}
+                />
+              )}
             </dl>
             {actionError && (
               <p
@@ -3537,6 +3575,203 @@ function DetailKV({ label, value, mono }: { label: string; value: string; mono?:
       >
         {value}
       </dd>
+    </div>
+  );
+}
+
+// ───────────────────────── REPORTS TAB ─────────────────────────
+
+/**
+ * Default the date range to the current calendar month — the most common
+ * reporting need ("how much did we book this month?"). Both fields accept
+ * `YYYY-MM-DD` and the server treats the range as inclusive.
+ */
+function defaultRange(): { from: string; to: string } {
+  const now = new Date();
+  const y = now.getUTCFullYear();
+  const m = now.getUTCMonth();
+  const first = new Date(Date.UTC(y, m, 1));
+  const last = new Date(Date.UTC(y, m + 1, 0));
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  return { from: fmt(first), to: fmt(last) };
+}
+
+function ReportsTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const initial = useMemo(defaultRange, []);
+  const [from, setFrom] = useState(initial.from);
+  const [to, setTo] = useState(initial.to);
+  const [params, setParams] = useState<{ from: string; to: string } | null>(
+    initial,
+  );
+
+  const { data, isFetching, error, refetch } = useQuery<RevenueReport>({
+    queryKey: ["admin-revenue-report", params],
+    queryFn: () => fetchRevenueReport(params!.from, params!.to),
+    enabled: params !== null,
+    staleTime: 30_000,
+  });
+
+  const onRun = (e: React.FormEvent) => {
+    e.preventDefault();
+    setParams({ from, to });
+    void refetch();
+  };
+
+  const fmtMoney = (minor: number, currency: string) =>
+    `${(minor / 100).toLocaleString(lang === "ar" ? "ar-EG" : "en-US")} ${currency}`;
+
+  return (
+    <div className="space-y-5" data-testid="admin-reports">
+      <div>
+        <h2 className="text-xl font-bold">{t("admin.reports.title")}</h2>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+          {t("admin.reports.subtitle")}
+        </p>
+      </div>
+
+      <form
+        onSubmit={onRun}
+        className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4"
+      >
+        <label className="text-sm">
+          <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            {t("admin.reports.from")}
+          </span>
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+            data-testid="reports-from"
+            required
+          />
+        </label>
+        <label className="text-sm">
+          <span className="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">
+            {t("admin.reports.to")}
+          </span>
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+            data-testid="reports-to"
+            required
+          />
+        </label>
+        <button
+          type="submit"
+          disabled={isFetching || !from || !to}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white"
+          data-testid="reports-run"
+        >
+          {isFetching ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+          {t("admin.reports.run")}
+        </button>
+        {params && (
+          <a
+            href={revenueReportCsvUrl(params.from, params.to)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+            data-testid="reports-csv"
+          >
+            <Download size={14} />
+            {t("admin.reports.downloadCsv")}
+          </a>
+        )}
+      </form>
+
+      {error && <ErrorPanel msg={(error as Error).message} />}
+
+      {data && (
+        <>
+          <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+            <h3 className="text-sm font-bold mb-3">
+              {t("admin.reports.summaryTitle")}
+            </h3>
+            <table className="min-w-full text-sm" data-testid="reports-summary">
+              <thead className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <tr>
+                  <th className="text-start py-2 font-semibold">{t("admin.reports.method")}</th>
+                  <th className="text-start py-2 font-semibold">{t("admin.reports.transactions")}</th>
+                  <th className="text-start py-2 font-semibold">{t("admin.reports.revenue")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
+                {data.summary.map((s) => (
+                  <tr key={s.provider} data-testid={`reports-summary-row-${s.provider}`}>
+                    <td className="py-2 font-medium">{providerLabel(s.provider, t)}</td>
+                    <td className="py-2">{s.transactions}</td>
+                    <td className="py-2 font-bold" dir="ltr">
+                      {fmtMoney(s.revenueMinor, s.currency)}
+                    </td>
+                  </tr>
+                ))}
+                {data.summary.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="py-3 text-slate-500">—</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm" data-testid="reports-rows">
+                <thead className="bg-slate-50 dark:bg-gray-800/60 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  <tr>
+                    <th className="text-start px-4 py-3 font-semibold">{t("admin.reports.col.date")}</th>
+                    <th className="text-start px-4 py-3 font-semibold">{t("admin.reports.col.student")}</th>
+                    <th className="text-start px-4 py-3 font-semibold">{t("admin.reports.col.course")}</th>
+                    <th className="text-start px-4 py-3 font-semibold">{t("admin.reports.col.amount")}</th>
+                    <th className="text-start px-4 py-3 font-semibold">{t("admin.reports.col.method")}</th>
+                    <th className="text-start px-4 py-3 font-semibold">{t("admin.reports.col.status")}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
+                  {data.rows.map((r) => (
+                    <tr key={r.id}>
+                      <td className="px-4 py-2 text-slate-600 dark:text-slate-300 text-xs">
+                        {new Date(r.capturedAt ?? r.createdAt).toLocaleDateString(
+                          lang === "ar" ? "ar-EG" : "en-US",
+                          { year: "numeric", month: "short", day: "numeric" },
+                        )}
+                      </td>
+                      <td className="px-4 py-2">
+                        <div className="font-medium">{r.studentName}</div>
+                        <div className="text-xs text-slate-500" dir="ltr">{r.studentEmail}</div>
+                      </td>
+                      <td className="px-4 py-2 text-xs">
+                        {r.course === "intro" ? "LEXO Intro" : "LEXO English"} · {r.tier}
+                      </td>
+                      <td className="px-4 py-2 font-bold" dir="ltr">
+                        {fmtMoney(r.amountMinor, r.currency)}
+                      </td>
+                      <td className="px-4 py-2 text-xs">{providerLabel(r.provider, t)}</td>
+                      <td className="px-4 py-2">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase ${paymentStatusTone(r.status)}`}>
+                          {r.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {data.rows.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-slate-500">
+                        {t("admin.reports.empty")}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

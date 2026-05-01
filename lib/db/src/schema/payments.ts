@@ -87,6 +87,20 @@ export const paymentsTable = pgTable(
     bankProofContentType: varchar("bank_proof_content_type", { length: 128 }),
     /** Original filename, kept for the admin UI download link. */
     bankProofFilename: varchar("bank_proof_filename", { length: 256 }),
+    /**
+     * Phase-7 admin verification trail. Persisted as proper columns (rather
+     * than only inside `rawPayload`) so admin filtering, CSV export, and
+     * student-facing rejection messaging can query them efficiently.
+     */
+    rejectionReason: text("rejection_reason"),
+    verifiedByUserId: uuid("verified_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    rejectedByUserId: uuid("rejected_by_user_id").references(() => usersTable.id, {
+      onDelete: "set null",
+    }),
+    rejectedAt: timestamp("rejected_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

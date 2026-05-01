@@ -3,6 +3,8 @@ import {
   buildCourseAccessEmail,
   buildEnrollmentConfirmationEmail,
   buildAdminNewEnrollmentEmail,
+  buildPaymentVerifiedEmail,
+  buildPaymentRejectedEmail,
   sendEmail,
   getAdminEmails,
   normalizeLocale,
@@ -134,6 +136,91 @@ export async function notifyEnrollmentApproved(params: {
     log.warn(
       { err, userId, course, tier, enrollmentId },
       "notifyEnrollmentApproved failed",
+    );
+  }
+}
+
+/**
+ * Notify the buyer that an admin verified their bank transfer and the
+ * enrollment is now active. Sent in addition to the standard course-access
+ * email (which `activateEnrollmentForPayment` already fires) so the student
+ * sees an explicit "your payment was approved" confirmation.
+ */
+export async function notifyPaymentVerified(params: {
+  log: Logger;
+  paymentId: string;
+  userId: string;
+  course: "intro" | "english";
+  tier: string;
+  amountMinor: number;
+}): Promise<void> {
+  const { log, paymentId, userId, course, tier, amountMinor } = params;
+  const dashboardUrl = `${getAppOrigin()}/dashboard`;
+  try {
+    const user = await loadUserForEmail(userId);
+    if (!user) return;
+    await sendEmail(
+      buildPaymentVerifiedEmail({
+        to: user.email,
+        name: user.name,
+        course,
+        tier,
+        amountSar: Math.round(amountMinor / 100),
+        verifiedAt: new Date(),
+        dashboardUrl,
+        locale: normalizeLocale(user.preferredLanguage),
+      }),
+      {
+        emailType: "payment_verified",
+        userId: user.id,
+        relatedId: paymentId,
+      },
+    );
+  } catch (err) {
+    log.warn(
+      { err, paymentId, userId, course, tier },
+      "notifyPaymentVerified failed",
+    );
+  }
+}
+
+/**
+ * Notify the buyer that an admin rejected their bank-transfer proof. The
+ * email links to /payments where they can re-upload.
+ */
+export async function notifyPaymentRejected(params: {
+  log: Logger;
+  paymentId: string;
+  userId: string;
+  course: "intro" | "english";
+  tier: string;
+  reason: string | null;
+}): Promise<void> {
+  const { log, paymentId, userId, course, tier, reason } = params;
+  const paymentsUrl = `${getAppOrigin()}/payments`;
+  try {
+    const user = await loadUserForEmail(userId);
+    if (!user) return;
+    await sendEmail(
+      buildPaymentRejectedEmail({
+        to: user.email,
+        name: user.name,
+        course,
+        tier,
+        reason,
+        paymentsUrl,
+        locale: normalizeLocale(user.preferredLanguage),
+      }),
+      {
+        emailType: "payment_rejected",
+        userId: user.id,
+        relatedId: paymentId,
+      },
+    );
+  } catch (err) {
+    log.warn(
+      { err, paymentId, userId, course, tier },
+      "notifyPaymentRejected failed",
     );
   }
 }

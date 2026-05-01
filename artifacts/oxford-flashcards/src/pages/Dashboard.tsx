@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock, CheckCircle2, AlertCircle, X, Receipt } from "lucide-react";
 import Header from "@/components/Header";
 import MyCourses from "@/components/MyCourses";
 import MyCertificates from "@/components/MyCertificates";
@@ -120,6 +120,13 @@ export default function Dashboard() {
               />
               <ProfileRow icon={<Clock size={15} />} label={t("dashboard.profile.memberSince")} value={memberSince} />
             </ul>
+            <Link
+              href="/payments"
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-300 hover:underline"
+              data-testid="link-my-payments"
+            >
+              <Receipt size={15} /> {t("payments.my.title")}
+            </Link>
           </div>
         </section>
       </main>

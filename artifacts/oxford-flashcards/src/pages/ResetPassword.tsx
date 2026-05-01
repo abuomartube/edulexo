@@ -3,9 +3,11 @@ import { Link, useLocation } from "wouter";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 import { useAuth } from "@/lib/auth-context";
+import { useT } from "@/lib/i18n";
 
 export default function ResetPassword() {
   const { resetPassword } = useAuth();
+  const t = useT();
   const [location] = useLocation();
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
@@ -17,23 +19,23 @@ export default function ResetPassword() {
   useEffect(() => {
     const search = window.location.search;
     const params = new URLSearchParams(search);
-    const t = params.get("token") ?? "";
-    setToken(t);
+    const tk = params.get("token") ?? "";
+    setToken(tk);
   }, [location]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     if (!token) {
-      setError("Missing reset token. Please use the link from your email.");
+      setError(t("auth.reset.errMissingToken"));
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("auth.reset.errPasswordShort"));
       return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError(t("auth.reset.errPasswordMismatch"));
       return;
     }
     setSubmitting(true);
@@ -42,7 +44,7 @@ export default function ResetPassword() {
       setDone(true);
     } catch (err) {
       const data = (err as { data?: { error?: string } } | null)?.data;
-      setError(data?.error ?? (err instanceof Error ? err.message : "Reset failed"));
+      setError(data?.error ?? (err instanceof Error ? err.message : t("auth.reset.errFailed")));
     } finally {
       setSubmitting(false);
     }
@@ -50,19 +52,19 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <AuthShell title="Password updated">
+      <AuthShell title={t("auth.reset.doneTitle")}>
         <div className="flex flex-col items-center text-center gap-4 py-2">
           <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
             <CheckCircle2 size={28} />
           </div>
           <p className="text-sm text-slate-700 dark:text-slate-200">
-            Your password has been reset. You can now log in with your new password.
+            {t("auth.reset.doneBody")}
           </p>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white shadow-md"
           >
-            Go to log in
+            {t("auth.reset.goLogin")}
           </Link>
         </div>
       </AuthShell>
@@ -70,11 +72,11 @@ export default function ResetPassword() {
   }
 
   return (
-    <AuthShell title="Choose a new password">
+    <AuthShell title={t("auth.reset.title")}>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            New password
+            {t("auth.reset.newPassword")}
           </label>
           <input
             id="password"
@@ -85,12 +87,12 @@ export default function ResetPassword() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputCls}
-            placeholder="At least 8 characters"
+            placeholder={t("auth.reset.newPasswordPh")}
           />
         </div>
         <div>
           <label htmlFor="confirm" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            Confirm new password
+            {t("auth.reset.confirm")}
           </label>
           <input
             id="confirm"
@@ -114,7 +116,7 @@ export default function ResetPassword() {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white shadow-md disabled:opacity-60"
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          Update password
+          {t("auth.reset.submit")}
         </button>
       </form>
     </AuthShell>

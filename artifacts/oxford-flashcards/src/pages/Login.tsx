@@ -3,10 +3,12 @@ import { Link, useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 import { useAuth } from "@/lib/auth-context";
+import { useT } from "@/lib/i18n";
 
 export default function Login() {
   const { login, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const t = useT();
 
   useEffect(() => {
     if (isAuthenticated) navigate("/dashboard", { replace: true });
@@ -22,9 +24,8 @@ export default function Login() {
     setSubmitting(true);
     try {
       await login({ email: email.trim(), password });
-      // Redirect handled by isAuthenticated effect above.
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Login failed";
+      const message = err instanceof Error ? err.message : t("auth.login.errFailed");
       const data = (err as { data?: { error?: string } } | null)?.data;
       setError(data?.error ?? message);
     } finally {
@@ -34,13 +35,13 @@ export default function Login() {
 
   return (
     <AuthShell
-      title="Welcome back"
-      subtitle="Log in to continue your learning journey."
+      title={t("auth.login.title")}
+      subtitle={t("auth.login.subtitle")}
       footer={
         <>
-          New here?{" "}
+          {t("auth.login.newHere")}{" "}
           <Link href="/signup" className="font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
-            Create an account
+            {t("common.createAccount")}
           </Link>
         </>
       }
@@ -48,7 +49,7 @@ export default function Login() {
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            Email
+            {t("auth.login.email")}
           </label>
           <input
             id="email"
@@ -59,15 +60,16 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
             className={inputCls}
             placeholder="you@example.com"
+            dir="ltr"
           />
         </div>
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label htmlFor="password" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-              Password
+              {t("auth.login.password")}
             </label>
             <Link href="/forgot-password" className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
-              Forgot?
+              {t("auth.login.forgot")}
             </Link>
           </div>
           <input
@@ -91,7 +93,7 @@ export default function Login() {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white shadow-md hover:shadow-lg transition disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          Log in
+          {t("auth.login.submit")}
         </button>
       </form>
     </AuthShell>

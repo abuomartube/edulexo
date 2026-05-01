@@ -2,13 +2,19 @@ import { Link } from "wouter";
 import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock } from "lucide-react";
 import Header from "@/components/Header";
 import { useAuth } from "@/lib/auth-context";
+import { useT, useLanguage } from "@/lib/i18n";
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const t = useT();
+  const { lang } = useLanguage();
   if (!user) return null;
 
   const created = new Date(user.createdAt);
-  const memberSince = created.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const memberSince = created.toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 dark:from-gray-950 dark:via-indigo-950/50 dark:to-slate-950 text-slate-900 dark:text-slate-100">
@@ -16,12 +22,14 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Welcome */}
         <section className="bg-gradient-to-br from-indigo-700 via-purple-600 to-blue-600 text-white rounded-3xl p-7 sm:p-10 shadow-xl">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-100/90">My Dashboard</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-100/90">
+            {t("dashboard.eyebrow")}
+          </p>
           <h1 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Welcome back, {user.name.split(" ")[0]} 👋
+            {t("dashboard.welcome")} {user.name.split(" ")[0]} 👋
           </h1>
           <p className="mt-2 text-indigo-100 text-sm sm:text-base max-w-xl">
-            Pick up where you left off, browse free lessons, or take the level assessment to find your starting point.
+            {t("dashboard.subtitle")}
           </p>
         </section>
 
@@ -30,22 +38,22 @@ export default function Dashboard() {
           <ActionCard
             href="/ielts"
             icon={<GraduationCap size={22} />}
-            title="LEXO for IELTS"
-            description="Band 7+ in 12 weeks with AI-powered practice."
+            title={t("dashboard.action.ielts.title")}
+            description={t("dashboard.action.ielts.desc")}
             tone="from-purple-600 to-indigo-700"
           />
           <ActionCard
             href="/english"
             icon={<BookOpen size={22} />}
-            title="LEXO for English"
-            description="Master Oxford 3000 and build everyday fluency."
+            title={t("dashboard.action.english.title")}
+            description={t("dashboard.action.english.desc")}
             tone="from-blue-600 to-indigo-600"
           />
           <ActionCard
             href="/assessment"
             icon={<Sparkles size={22} />}
-            title="Level Assessment"
-            description="Find out exactly where to begin — A1 to C2."
+            title={t("dashboard.action.assessment.title")}
+            description={t("dashboard.action.assessment.desc")}
             tone="from-emerald-600 to-teal-600"
           />
         </section>
@@ -53,39 +61,41 @@ export default function Dashboard() {
         {/* Profile + Enrollments placeholder */}
         <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-6 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow">
-            <h2 className="text-lg font-bold mb-4">My enrollments</h2>
+            <h2 className="text-lg font-bold mb-4">{t("dashboard.enrollments.title")}</h2>
             <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-gray-800 p-8 text-center">
               <p className="text-slate-600 dark:text-slate-300 text-sm">
-                You haven’t enrolled in a course yet.
+                {t("dashboard.enrollments.empty")}
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
                 <Link
                   href="/ielts"
                   className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-600 to-indigo-700 text-white shadow"
                 >
-                  Browse LEXO for IELTS
+                  {t("dashboard.enrollments.browseIelts")}
                 </Link>
                 <Link
                   href="/english"
                   className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow"
                 >
-                  Browse LEXO for English
+                  {t("dashboard.enrollments.browseEnglish")}
                 </Link>
               </div>
             </div>
           </div>
 
           <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-6 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow">
-            <h2 className="text-lg font-bold mb-4">My profile</h2>
+            <h2 className="text-lg font-bold mb-4">{t("dashboard.profile.title")}</h2>
             <ul className="space-y-3 text-sm">
-              <ProfileRow icon={<Mail size={15} />} label="Email" value={user.email} />
-              {user.phone && <ProfileRow icon={<Phone size={15} />} label="Phone" value={user.phone} />}
+              <ProfileRow icon={<Mail size={15} />} label={t("dashboard.profile.email")} value={user.email} ltr />
+              {user.phone && (
+                <ProfileRow icon={<Phone size={15} />} label={t("dashboard.profile.phone")} value={user.phone} ltr />
+              )}
               <ProfileRow
                 icon={<ShieldCheck size={15} />}
-                label="Account type"
-                value={user.role === "admin" ? "Administrator" : "Student"}
+                label={t("dashboard.profile.accountType")}
+                value={user.role === "admin" ? t("dashboard.profile.admin") : t("dashboard.profile.student")}
               />
-              <ProfileRow icon={<Clock size={15} />} label="Member since" value={memberSince} />
+              <ProfileRow icon={<Clock size={15} />} label={t("dashboard.profile.memberSince")} value={memberSince} />
             </ul>
           </div>
         </section>
@@ -121,7 +131,17 @@ function ActionCard({
   );
 }
 
-function ProfileRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function ProfileRow({
+  icon,
+  label,
+  value,
+  ltr = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  ltr?: boolean;
+}) {
   return (
     <li className="flex items-start gap-3">
       <div className="mt-0.5 w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 flex items-center justify-center shrink-0">
@@ -131,7 +151,12 @@ function ProfileRow({ icon, label, value }: { icon: React.ReactNode; label: stri
         <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">
           {label}
         </p>
-        <p className="text-sm font-medium text-slate-800 dark:text-slate-100 break-words">{value}</p>
+        <p
+          className="text-sm font-medium text-slate-800 dark:text-slate-100 break-words"
+          {...(ltr ? { dir: "ltr" } : {})}
+        >
+          {value}
+        </p>
       </div>
     </li>
   );

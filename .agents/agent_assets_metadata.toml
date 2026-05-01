@@ -6,3 +6,15 @@ id = "-u7WpzamJZsY2xOBcn0D7"
 uri = "file://exports/lexo-for-english.zip"
 type = "unspecified"
 title = "LEXO for English — full project (zip)"
+
+[[outputs]]
+id = "0AC4zud1VjqBG30AQoSBw"
+uri = "file://screenshots/arabic-font-samples-1.jpeg"
+type = "image"
+title = "Arabic font samples — 1 to 5 (Cairo, Tajawal, IBM Plex, Readex Pro, Almarai)"
+
+[[outputs]]
+id = "y9tqisL_18RaCyI-w6MEE"
+uri = "file://screenshots/arabic-font-samples-6-7.jpeg"
+type = "image"
+title = "Arabic font samples — 6 & 7 (El Messiri, Noto Kufi Arabic)"

@@ -3,9 +3,11 @@ import { Link } from "wouter";
 import { Loader2, MailCheck } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 import { useAuth } from "@/lib/auth-context";
+import { useT } from "@/lib/i18n";
 
 export default function ForgotPassword() {
   const { forgotPassword } = useAuth();
+  const t = useT();
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -19,7 +21,7 @@ export default function ForgotPassword() {
       await forgotPassword({ email: email.trim() });
       setDone(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : t("auth.forgot.errFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -27,20 +29,19 @@ export default function ForgotPassword() {
 
   if (done) {
     return (
-      <AuthShell title="Check your inbox">
+      <AuthShell title={t("auth.forgot.doneTitle")}>
         <div className="flex flex-col items-center text-center gap-4 py-2">
           <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 flex items-center justify-center">
             <MailCheck size={26} />
           </div>
           <p className="text-sm text-slate-700 dark:text-slate-200">
-            If <strong>{email}</strong> is registered, we just sent a password-reset link to that address.
-            The link expires in 60 minutes.
+            {t("auth.forgot.doneBodyPrefix")} <strong dir="ltr">{email}</strong> {t("auth.forgot.doneBodySuffix")}
           </p>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white shadow-md"
           >
-            Back to log in
+            {t("auth.forgot.backToLogin")}
           </Link>
         </div>
       </AuthShell>
@@ -49,13 +50,13 @@ export default function ForgotPassword() {
 
   return (
     <AuthShell
-      title="Forgot your password?"
-      subtitle="Enter your email and we’ll send you a link to choose a new one."
+      title={t("auth.forgot.title")}
+      subtitle={t("auth.forgot.subtitle")}
       footer={
         <>
-          Remembered it?{" "}
+          {t("auth.forgot.remembered")}{" "}
           <Link href="/login" className="font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
-            Log in
+            {t("header.login")}
           </Link>
         </>
       }
@@ -63,7 +64,7 @@ export default function ForgotPassword() {
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-            Email
+            {t("auth.forgot.email")}
           </label>
           <input
             id="email"
@@ -74,6 +75,7 @@ export default function ForgotPassword() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-slate-300 dark:border-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-500"
             placeholder="you@example.com"
+            dir="ltr"
           />
         </div>
         {error && (
@@ -87,7 +89,7 @@ export default function ForgotPassword() {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white shadow-md disabled:opacity-60"
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          Send reset link
+          {t("auth.forgot.submit")}
         </button>
       </form>
     </AuthShell>

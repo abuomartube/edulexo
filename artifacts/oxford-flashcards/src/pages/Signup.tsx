@@ -3,10 +3,12 @@ import { Link, useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 import { useAuth } from "@/lib/auth-context";
+import { useT } from "@/lib/i18n";
 
 export default function Signup() {
   const { signup, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const t = useT();
 
   useEffect(() => {
     if (isAuthenticated) navigate("/dashboard", { replace: true });
@@ -23,11 +25,11 @@ export default function Signup() {
     e.preventDefault();
     setError(null);
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+      setError(t("auth.signup.errPasswordShort"));
       return;
     }
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError(t("auth.signup.errPasswordMismatch"));
       return;
     }
     setSubmitting(true);
@@ -40,7 +42,7 @@ export default function Signup() {
       });
       // Redirect handled by isAuthenticated effect above.
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Signup failed";
+      const message = err instanceof Error ? err.message : t("auth.signup.errFailed");
       const data = (err as { data?: { error?: string } } | null)?.data;
       setError(data?.error ?? message);
     } finally {
@@ -50,19 +52,19 @@ export default function Signup() {
 
   return (
     <AuthShell
-      title="Create your account"
-      subtitle="Start learning with Abu Omar — it’s free to sign up."
+      title={t("auth.signup.title")}
+      subtitle={t("auth.signup.subtitle")}
       footer={
         <>
-          Already have an account?{" "}
+          {t("auth.signup.haveAccount")}{" "}
           <Link href="/login" className="font-semibold text-indigo-700 dark:text-indigo-300 hover:underline">
-            Log in
+            {t("header.login")}
           </Link>
         </>
       }
     >
       <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Full name" htmlFor="name">
+        <Field label={t("auth.signup.fullName")} htmlFor="name">
           <input
             id="name"
             type="text"
@@ -71,10 +73,10 @@ export default function Signup() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className={inputCls}
-            placeholder="Your full name"
+            placeholder={t("auth.signup.fullNamePh")}
           />
         </Field>
-        <Field label="Email" htmlFor="email">
+        <Field label={t("auth.signup.email")} htmlFor="email">
           <input
             id="email"
             type="email"
@@ -83,10 +85,11 @@ export default function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className={inputCls}
-            placeholder="you@example.com"
+            placeholder={t("auth.signup.emailPh")}
+            dir="ltr"
           />
         </Field>
-        <Field label="Phone (optional)" htmlFor="phone">
+        <Field label={t("auth.signup.phone")} htmlFor="phone">
           <input
             id="phone"
             type="tel"
@@ -94,10 +97,11 @@ export default function Signup() {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             className={inputCls}
-            placeholder="+971 50 123 4567"
+            placeholder={t("auth.signup.phonePh")}
+            dir="ltr"
           />
         </Field>
-        <Field label="Password" htmlFor="password">
+        <Field label={t("auth.signup.password")} htmlFor="password">
           <input
             id="password"
             type="password"
@@ -107,10 +111,10 @@ export default function Signup() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={inputCls}
-            placeholder="At least 8 characters"
+            placeholder={t("auth.signup.passwordPh")}
           />
         </Field>
-        <Field label="Confirm password" htmlFor="confirm">
+        <Field label={t("auth.signup.confirm")} htmlFor="confirm">
           <input
             id="confirm"
             type="password"
@@ -133,7 +137,7 @@ export default function Signup() {
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {submitting && <Loader2 size={16} className="animate-spin" />}
-          Create account
+          {t("auth.signup.submit")}
         </button>
       </form>
     </AuthShell>

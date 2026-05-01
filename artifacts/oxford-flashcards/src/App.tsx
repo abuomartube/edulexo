@@ -10,6 +10,7 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
 import ComingSoon from "@/pages/ComingSoon";
+import FontSamples from "@/pages/FontSamples";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -43,29 +44,18 @@ export default function App() {
         </Route>
 
         <Route path="/free-lessons">
-          <ComingSoon
-            title="Free Lessons"
-            description="A growing library of free lessons — videos, vocabulary packs, and grammar guides — is on the way. Sign up to be the first to know when it launches."
-          />
+          <ComingSoon titleKey="comingSoon.freeLessons.title" descKey="comingSoon.freeLessons.desc" />
         </Route>
         <Route path="/assessment">
-          <ComingSoon
-            title="Level Assessment"
-            description="Take a short quiz to discover your CEFR level — from A1 to C2 — and get a personalised study plan."
-          />
+          <ComingSoon titleKey="comingSoon.assessment.title" descKey="comingSoon.assessment.desc" />
         </Route>
         <Route path="/affiliate">
-          <ComingSoon
-            title="Become an Affiliate"
-            description="Earn commission by sharing Abu Omar EduLexo with your audience. Affiliate applications open soon."
-          />
+          <ComingSoon titleKey="comingSoon.affiliate.title" descKey="comingSoon.affiliate.desc" />
         </Route>
+        <Route path="/font-samples" component={FontSamples} />
         <Route path="/admin">
           <ProtectedRoute requireAdmin>
-            <ComingSoon
-              title="Admin Dashboard"
-              description="Full admin tools — students, enrollments, FAQs, free lessons, affiliates, analytics — are coming in Iteration 4."
-            />
+            <ComingSoon titleKey="comingSoon.admin.title" descKey="comingSoon.admin.desc" />
           </ProtectedRoute>
         </Route>
 

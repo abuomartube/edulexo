@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import {
   ArrowLeft,
   CalendarDays,

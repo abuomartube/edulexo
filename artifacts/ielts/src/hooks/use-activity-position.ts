@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 
 interface SavedPosition {
   position: number;

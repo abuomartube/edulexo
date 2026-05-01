@@ -14,7 +14,7 @@ import {
   type ListeningTest,
   type ListeningQuestionSection,
 } from "@/data/listening-test";
-import { useAwardXp } from "@workspace/api-client-react";
+import { useAwardXp } from "@workspace/ielts-api-client-react";
 import ListeningSkills from "@/components/listening-skills";
 import { answerMatches } from "@/data/answer-matching";
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Sparkles, Flame, AlertTriangle, Mic, PenTool, Headphones, BookOpen, Trophy, ChevronRight, X } from "lucide-react";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 
 const TOUR_KEY = "lexo_tour_completed";
 

@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { useAddWeakWordByWord } from "@workspace/api-client-react";
+import { useAddWeakWordByWord } from "@workspace/ielts-api-client-react";
 import { cn } from "@/lib/utils";
 import {
   ArrowLeft, ArrowRight, RefreshCw, CheckCircle2, Flag,

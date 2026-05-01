@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useListFlashcards, useGetProgress, useListCategories } from "@workspace/api-client-react";
-import { useListBookmarks, useToggleBookmark } from "@workspace/api-client-react";
+import { useListFlashcards, useGetProgress, useListCategories } from "@workspace/ielts-api-client-react";
+import { useListBookmarks, useToggleBookmark } from "@workspace/ielts-api-client-react";
 import { Layout } from "@/components/layout";
 import { LevelBadge } from "@/components/level-badge";
 import { Input } from "@/components/ui/input";
 import { Search, CheckCircle2, Bookmark, BookmarkCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ListFlashcardsLevel } from "@workspace/api-client-react";
+import type { ListFlashcardsLevel } from "@workspace/ielts-api-client-react";
 
 export default function Browse() {
   const [search, setSearch] = useState("");

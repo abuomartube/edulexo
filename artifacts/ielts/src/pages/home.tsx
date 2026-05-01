@@ -1,5 +1,5 @@
-import { useGetProgressSummary } from "@workspace/api-client-react";
-import { useWordOfDay, useStreak, useXp } from "@workspace/api-client-react";
+import { useGetProgressSummary } from "@workspace/ielts-api-client-react";
+import { useWordOfDay, useStreak, useXp } from "@workspace/ielts-api-client-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";

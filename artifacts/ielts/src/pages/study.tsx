@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { useListFlashcards, useGetProgress, useUpsertProgress, useListCategories, useAddWeakWords } from "@workspace/api-client-react";
-import { useSrsDue, useUpdateSrs, useListBookmarks } from "@workspace/api-client-react";
+import { useListFlashcards, useGetProgress, useUpsertProgress, useListCategories, useAddWeakWords } from "@workspace/ielts-api-client-react";
+import { useSrsDue, useUpdateSrs, useListBookmarks } from "@workspace/ielts-api-client-react";
 import { cn } from "@/lib/utils";
 import { Layout } from "@/components/layout";
 import { FlashcardView } from "@/components/flashcard";
@@ -10,7 +10,7 @@ import { CheckCircle2, XCircle, ArrowRight, ArrowLeft, RefreshCw, Filter, BookOp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useActivityPosition } from "@/hooks/use-activity-position";
-import type { ListFlashcardsLevel } from "@workspace/api-client-react";
+import type { ListFlashcardsLevel } from "@workspace/ielts-api-client-react";
 
 type StudyMode = "all" | "srs" | "bookmarks" | "unknown";
 

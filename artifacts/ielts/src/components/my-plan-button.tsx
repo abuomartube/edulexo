@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import { CalendarDays, ClipboardList, X, CheckCircle2, Circle, Clock, ArrowRight, RotateCcw, LayoutGrid, Download, Loader2 } from "lucide-react";
 import { downloadPlanPdf } from "@/lib/plan-pdf-client";
 import {

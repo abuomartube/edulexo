@@ -13,7 +13,7 @@ import {
   type LItem,
   type AudioLine,
 } from "@/data/listening-skills";
-import { useAwardXp } from "@workspace/api-client-react";
+import { useAwardXp } from "@workspace/ielts-api-client-react";
 import { markTaskDone } from "@/lib/daily-plan";
 
 const STORAGE_KEY = "lexo:listening-skills:v1";

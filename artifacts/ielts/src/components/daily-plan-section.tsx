@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import { CalendarDays, ClipboardList, CheckCircle2, Circle, ArrowRight, TrendingUp, Clock } from "lucide-react";
 import {
   ensurePlanStartDate,

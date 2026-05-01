@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useWeakWords, useMasterWeakWord, useAwardXp } from "@workspace/api-client-react";
+import { useWeakWords, useMasterWeakWord, useAwardXp } from "@workspace/ielts-api-client-react";
 import { Layout } from "@/components/layout";
 import { LevelBadge } from "@/components/level-badge";
 import { PronounceButton } from "@/components/pronounce-button";

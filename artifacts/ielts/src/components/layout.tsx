@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { BookOpen, Home, Layers, PieChart, ExternalLink, Sun, Moon, HelpCircle, Sparkles, Shuffle, ArrowUpDown, FileText, BookMarked, Mic, LogOut, GraduationCap, Headphones, Menu, X, AlertTriangle, NotebookPen, Trophy, BookText, PlayCircle, User } from "lucide-react";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/context/theme-context";
 import { Button } from "@/components/ui/button";

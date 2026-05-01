@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetProgressSummary, useGetFlashcardLevelStats, customFetch } from "@workspace/api-client-react";
+import { useGetProgressSummary, useGetFlashcardLevelStats, customFetch } from "@workspace/ielts-api-client-react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { Progress } from "@/components/ui/progress";

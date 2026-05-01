@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import { Target, Calendar, ChevronRight, BookOpen, Headphones, FileText, Mic, Flame, Star, Trophy, Clock, CheckCircle2, GraduationCap, ClipboardList, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PlanDurationPicker } from "@/components/plan-duration-picker";

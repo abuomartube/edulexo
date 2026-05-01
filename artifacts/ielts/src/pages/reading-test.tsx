@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { useAwardXp } from "@workspace/api-client-react";
+import { useAwardXp } from "@workspace/ielts-api-client-react";
 import { Layout } from "@/components/layout";
 import {
   BookOpen, ChevronRight, ChevronLeft, CheckCircle2, XCircle,

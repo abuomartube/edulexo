@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "wouter";
-import { customFetch, useAwardXp, useAddWeakWords } from "@workspace/api-client-react";
+import { customFetch, useAwardXp, useAddWeakWords } from "@workspace/ielts-api-client-react";
 import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import {

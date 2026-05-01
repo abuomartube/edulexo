@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Layout } from "@/components/layout";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import {
   Mic, MicOff, Send, ChevronRight, RotateCcw, Timer, Trophy,
   MessageSquare, Loader2, CheckCircle, AlertCircle, BookOpen, Sparkles,

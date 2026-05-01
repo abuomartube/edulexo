@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/context/theme-context";
 import { PasswordGate } from "@/components/password-gate";
 import { PwaInstallPrompt } from "@/components/pwa-install-prompt";
-import { setStudentEmailGetter } from "@workspace/api-client-react";
+import { setStudentEmailGetter } from "@workspace/ielts-api-client-react";
 
 const Home = lazy(() => import("@/pages/home"));
 const Study = lazy(() => import("@/pages/study"));

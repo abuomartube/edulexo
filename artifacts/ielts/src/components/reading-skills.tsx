@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useAwardXp } from "@workspace/api-client-react";
+import { useAwardXp } from "@workspace/ielts-api-client-react";
 import {
   ChevronRight, ChevronLeft, BookOpen, CheckCircle2, XCircle,
   Trophy, Sparkles, Lightbulb, Clock,

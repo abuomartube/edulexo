@@ -1,7 +1,7 @@
 // Client-side helper that builds the PDF payload from the user's stored plan
 // data and triggers a browser download from /api/plan-pdf.
 
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import {
   addDays,
   ensurePlanStartDate,

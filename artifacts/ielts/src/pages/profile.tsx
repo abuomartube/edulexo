@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import { User, Mail, Lock, Camera, Trash2, CheckCircle2, AlertCircle, Loader2, GraduationCap, Target } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { cn } from "@/lib/utils";

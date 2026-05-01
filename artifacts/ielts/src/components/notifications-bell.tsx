@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Bell, X, Megaphone, Sparkles, Trophy, Clock as ClockIcon } from "lucide-react";
-import { customFetch } from "@workspace/api-client-react";
+import { customFetch } from "@workspace/ielts-api-client-react";
 import { cn } from "@/lib/utils";
 
 interface StudentNotification {

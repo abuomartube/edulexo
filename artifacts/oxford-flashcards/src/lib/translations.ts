@@ -81,6 +81,10 @@ export const translations = {
     en: "Not just another platform…",
     ar: "مو مجرد منصة…",
   },
+  "platform.features.tagline": {
+    en: "What makes our platform different",
+    ar: "ما الذي يميّز منصّتنا",
+  },
   "platform.features.subtitle": {
     en: "Abu Omar teaches you, and EduLexo trains you — the result: real progress from the start all the way to mastery.",
     ar: "أبو عمر يعلّمك، وEduLexo يدرّبك — والنتيجة: تقدّم حقيقي من البداية إلى الاحتراف",

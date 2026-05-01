@@ -258,6 +258,9 @@ export default function PlatformLanding() {
           <h3 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
             {t("platform.features.title")}
           </h3>
+          <p className="mt-4 text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100 max-w-3xl mx-auto">
+            {t("platform.features.tagline")}
+          </p>
           <p className="mt-2 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
             {t("platform.features.subtitle")}
           </p>

@@ -13,6 +13,16 @@ if (!rawPort) {
   );
 }
 
+// Hard-fail startup if SESSION_SECRET is missing. Several legacy route files
+// fall back to a hardcoded secret if the env var is unset, which would allow
+// session-token forgery. Asserting at boot guarantees the process never runs
+// without the real secret regardless of per-route fallbacks.
+if (!process.env["SESSION_SECRET"] || process.env["SESSION_SECRET"].length < 16) {
+  throw new Error(
+    "SESSION_SECRET environment variable is required (min 16 chars) and was not provided.",
+  );
+}
+
 const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {

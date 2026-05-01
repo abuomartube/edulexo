@@ -159,20 +159,20 @@ export const translations = {
     ar: "ثلاث باقات مصمّمة بعناية على منصّة واحدة.",
   },
   "english.packages.bestValue": { en: "BEST VALUE", ar: "الأفضل قيمةً" },
-  "english.pkg1.label": { en: "Levels 1 – 3", ar: "المستويات 1 – 3" },
-  "english.pkg1.name": { en: "Foundation Package", ar: "باقة التأسيس" },
+  "english.pkg1.label": { en: "CEFR A1 → A2", ar: "CEFR A1 → A2" },
+  "english.pkg1.name": { en: "Beginner Package", ar: "باقة المبتدئين" },
   "english.pkg1.desc": {
     en: "From your first words to confident everyday conversation.",
     ar: "من أولى الكلمات إلى محادثات يوميّة بثقة.",
   },
-  "english.pkg2.label": { en: "Levels 1 – 6", ar: "المستويات 1 – 6" },
-  "english.pkg2.name": { en: "Mastery Package", ar: "باقة الإتقان" },
+  "english.pkg2.label": { en: "CEFR A2 → B1", ar: "CEFR A2 → B1" },
+  "english.pkg2.name": { en: "Intermediate Package", ar: "باقة المتوسط" },
   "english.pkg2.desc": {
     en: "The full journey from first words to confident mastery — every level, every module.",
     ar: "الرحلة الكاملة من أولى الكلمات إلى الإتقان التام — جميع المستويات وكل الوحدات.",
   },
-  "english.pkg3.label": { en: "Levels 4 – 6", ar: "المستويات 4 – 6" },
-  "english.pkg3.name": { en: "Fluency Package", ar: "باقة الطلاقة" },
+  "english.pkg3.label": { en: "CEFR B1 → C1", ar: "CEFR B1 → C1" },
+  "english.pkg3.name": { en: "Advanced Package", ar: "باقة المتقدّم" },
   "english.pkg3.desc": {
     en: "Polish, precision, and the vocabulary to express any idea.",
     ar: "إتقان ودقّة ومفردات تعبّر بها عن أي فكرة.",
@@ -565,6 +565,39 @@ export const translations = {
     en: "✓ Access granted to {tier}",
     ar: "✓ تم منح الوصول إلى {tier}",
   },
+
+  // English course (separate enrollments section in dashboard)
+  "courses.section.ielts": { en: "LEXO for IELTS", ar: "LEXO for IELTS" },
+  "courses.section.english": { en: "LEXO for English", ar: "LEXO for English" },
+  "courses.english.empty": {
+    en: "You don't have any active English packages yet. Redeem an English access code below or browse the packages.",
+    ar: "ليس لديك أي باقة إنجليزية مفعّلة بعد. استخدم رمز وصول للإنجليزيّة أدناه أو تصفّح الباقات.",
+  },
+  "courses.english.tier.beginner": {
+    en: "LEXO for English — Beginner",
+    ar: "LEXO for English — مبتدئ",
+  },
+  "courses.english.tier.intermediate": {
+    en: "LEXO for English — Intermediate",
+    ar: "LEXO for English — متوسط",
+  },
+  "courses.english.tier.advanced": {
+    en: "LEXO for English — Advanced",
+    ar: "LEXO for English — متقدّم",
+  },
+  "courses.english.redeem.title": {
+    en: "Redeem English access code",
+    ar: "استخدم رمز وصول للإنجليزيّة",
+  },
+  "courses.english.browse": {
+    en: "Browse English packages",
+    ar: "تصفّح باقات الإنجليزيّة",
+  },
+  "english.tier.beginner.short": { en: "Beginner", ar: "مبتدئ" },
+  "english.tier.intermediate.short": { en: "Intermediate", ar: "متوسط" },
+  "english.tier.advanced.short": { en: "Advanced", ar: "متقدّم" },
+  "english.tier.signInToOpen": { en: "Sign in to open", ar: "سجّل الدخول لفتحه" },
+  "english.tier.openCourse": { en: "Open course", ar: "افتح الدورة" },
 
   // ───────────────────────── ADMIN ─────────────────────────
   "admin.title": { en: "Admin Dashboard", ar: "لوحة الإدارة" },

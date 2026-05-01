@@ -152,3 +152,45 @@ export const TIER_LABELS: Record<Tier, { en: string; ar: string }> = {
   advance: { en: "Advance (B1 → C1)", ar: "متقدم (B1 → C1)" },
   complete: { en: "Complete (A2 → C1)", ar: "شامل (A2 → C1)" },
 };
+
+// ───── LEXO for English (separate course, separate tier enum) ─────
+
+export type EnglishTier = "beginner" | "intermediate" | "advanced";
+
+export interface EnglishEnrollment {
+  id: string;
+  userId: string;
+  tier: EnglishTier;
+  status: "active" | "expired" | "revoked";
+  source: "admin" | "code" | "stripe";
+  grantedBy: string | null;
+  grantedAt: string;
+  expiresAt: string | null;
+  note: string | null;
+  isActive: boolean;
+}
+
+export async function fetchMyEnglishEnrollments(): Promise<EnglishEnrollment[]> {
+  const res = await fetch("/api/english/me", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ enrollments: EnglishEnrollment[] }>(res);
+  return data.enrollments;
+}
+
+export async function redeemEnglishCode(code: string): Promise<EnglishEnrollment> {
+  const res = await fetch("/api/english/redeem", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
+  const data = await jsonOrThrow<{ enrollment: EnglishEnrollment }>(res);
+  return data.enrollment;
+}
+
+// English uses the shared session cookie — no SSO needed; just navigate.
+export const ENGLISH_APP_URL = "/app-english/";
+
+export const ENGLISH_TIER_LABELS: Record<EnglishTier, { en: string; ar: string }> = {
+  beginner: { en: "Beginner", ar: "مبتدئ" },
+  intermediate: { en: "Intermediate", ar: "متوسط" },
+  advanced: { en: "Advanced", ar: "متقدّم" },
+};

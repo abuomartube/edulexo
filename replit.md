@@ -59,6 +59,14 @@ The project is built as a pnpm workspace monorepo using TypeScript, Node.js 24, 
 - Each downstream redeem route verifies HMAC, enforces single-use via JTI, finds-or-creates the local `access_requests` row with year-long expiry, mints the downstream app's session token (`HMAC(email + ":approved")`), and returns a tiny HTML bootstrap that writes `{email, token}` into the app's expected localStorage keys (`lexo_intro_email`/`4ielts_email`) before redirecting into the app.
 - The English app does NOT use SSO — it is a first-party section of the platform that reads the shared session cookie directly via `/api/auth/me` and `/api/english/me`.
 
+**Platform Dashboard — dual-course "My Courses":**
+- `artifacts/oxford-flashcards/src/components/MyCourses.tsx` renders two stacked sections (`section-courses-ielts`, `section-courses-english`) on the platform dashboard. IELTS section calls `fetchMyEnrollments` + `launchTier` (SSO-mediated launch via `/api/sso/:tier/launch`). English section calls `fetchMyEnglishEnrollments` and launches via plain `<a href="/app-english/">` (cookie-shared). A shared `RedeemForm` is mounted in each section, posting to `/api/codes/redeem` (IELTS) or `/api/english/redeem` (English).
+- `/english` landing page (`artifacts/oxford-flashcards/src/pages/LandingPage.tsx`) advertises three packages — Beginner (CEFR A1→A2), Intermediate (A2→B1), Advanced (B1→C1) — and every package CTA navigates to `/app-english/` (which is gated by the shared session cookie). The "Try Flashcards" secondary CTA still goes to `/demo` for unauth visitors who want to sample the public flashcard demo.
+
+**Phase 3 security & correctness hardening:**
+- `artifacts/api-server/src/routes/english.ts` redeem flow originally consumed the code-use atomically before attempting enrollment insert; if a unique-violation (23505) fired (user already enrolled in tier), the response was 409 but the code was burned. Fixed by introducing an `AlreadyEnrolledError` sentinel thrown inside the transaction so the enclosing `tx.update(...)` claim is rolled back, then caught outside via `.catch()` and mapped to HTTP 409. Verified with a smoke test: a fresh code stays `status:active, usedCount:0` after a 409 already-enrolled response.
+- `artifacts/ielts-api/src/index.ts` now hard-fails at startup if `SESSION_SECRET` is missing or shorter than 16 chars. Several legacy IELTS-API route files use `process.env["SESSION_SECRET"] ?? "fallback-secret"`; the boot-time guard guarantees the process never runs without the real secret regardless of per-route fallbacks, preventing session-token forgery.
+
 ## External Dependencies
 
 - **pnpm workspaces**: Monorepo management.

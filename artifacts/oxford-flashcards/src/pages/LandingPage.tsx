@@ -51,9 +51,9 @@ type Pkg = {
 };
 
 const packages: Pkg[] = [
-  { nameKey: "english.pkg1.name", labelKey: "english.pkg1.label", descKey: "english.pkg1.desc", levels: "A1 → B1", gradient: "from-emerald-400 via-teal-500 to-sky-600", icon: GraduationCap, badge: null },
-  { nameKey: "english.pkg2.name", labelKey: "english.pkg2.label", descKey: "english.pkg2.desc", levels: "A1 → C1", gradient: "from-violet-600 via-fuchsia-500 to-orange-500", icon: Trophy, badge: "english.packages.bestValue" },
-  { nameKey: "english.pkg3.name", labelKey: "english.pkg3.label", descKey: "english.pkg3.desc", levels: "B1+ → C1", gradient: "from-violet-500 via-purple-600 to-fuchsia-600", icon: Sparkles, badge: null },
+  { nameKey: "english.pkg1.name", labelKey: "english.pkg1.label", descKey: "english.pkg1.desc", levels: "A1 → A2", gradient: "from-emerald-400 via-teal-500 to-sky-600", icon: GraduationCap, badge: null },
+  { nameKey: "english.pkg2.name", labelKey: "english.pkg2.label", descKey: "english.pkg2.desc", levels: "A2 → B1", gradient: "from-violet-600 via-fuchsia-500 to-orange-500", icon: Trophy, badge: "english.packages.bestValue" },
+  { nameKey: "english.pkg3.name", labelKey: "english.pkg3.label", descKey: "english.pkg3.desc", levels: "B1 → C1", gradient: "from-violet-500 via-purple-600 to-fuchsia-600", icon: Sparkles, badge: null },
 ];
 
 type Highlight = {
@@ -105,13 +105,14 @@ export default function LandingPage() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">
-                <Link
-                  href="/demo"
+                <a
+                  href="/app-english/"
+                  data-testid="link-hero-open-english"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 text-white font-bold shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:scale-[1.03] active:scale-95 transition"
                 >
-                  {t("english.hero.cta1")}
+                  {t("english.tier.openCourse")}
                   <ArrowRight size={18} />
-                </Link>
+                </a>
                 <Link
                   href="/demo"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200 font-semibold hover:bg-gray-50 dark:hover:bg-gray-700/60 hover:scale-[1.03] active:scale-95 transition shadow-sm"
@@ -259,6 +260,15 @@ export default function LandingPage() {
                   <p className="mt-4 text-gray-600 dark:text-gray-300 text-sm leading-relaxed">
                     {t(pkg.descKey)}
                   </p>
+
+                  <a
+                    href="/app-english/"
+                    data-testid={`link-pkg-${pkg.nameKey}`}
+                    className={`mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition bg-gradient-to-r ${pkg.gradient}`}
+                  >
+                    {t("english.tier.openCourse")}
+                    <ArrowRight size={16} />
+                  </a>
                 </div>
               </div>
             );
@@ -334,13 +344,14 @@ export default function LandingPage() {
             <p className="mt-3 text-white/90 max-w-xl mx-auto">
               {t("english.cta.subtitle")}
             </p>
-            <Link
-              href="/demo"
+            <a
+              href="/app-english/"
+              data-testid="link-final-cta-english"
               className="mt-7 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white text-violet-700 font-bold shadow-xl hover:scale-105 active:scale-95 transition"
             >
-              {t("english.cta.button")}
+              {t("english.tier.openCourse")}
               <ArrowRight size={18} />
-            </Link>
+            </a>
           </div>
         </div>
       </section>

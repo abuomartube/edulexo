@@ -18,6 +18,15 @@ const TierSchema = z.enum(ENGLISH_TIER_VALUES);
 
 // PG SQLSTATE 23505 = unique_violation. drizzle-orm wraps query failures in
 // DrizzleQueryError where the original pg error sits on `.cause`.
+// Sentinel error: throw inside the redeem transaction so the surrounding
+// `tx.update(...)` that consumed a code-use is rolled back. Caught outside.
+class AlreadyEnrolledError extends Error {
+  constructor(public tier: EnglishTier) {
+    super("already_enrolled");
+    this.name = "AlreadyEnrolledError";
+  }
+}
+
 function isUniqueViolation(err: unknown): boolean {
   if (typeof err !== "object" || err === null) return false;
   const direct = (err as { code?: unknown }).code;
@@ -132,11 +141,18 @@ router.post("/english/redeem", requireAuth, async (req, res, next) => {
           .returning();
         return { enrollment };
       } catch (err) {
+        // Roll back the code-use claim above by throwing — caught outside the
+        // transaction so the unique-violation does not burn the access code.
         if (isUniqueViolation(err)) {
-          return { error: "already_enrolled" as const, tier };
+          throw new AlreadyEnrolledError(tier);
         }
         throw err;
       }
+    }).catch((err) => {
+      if (err instanceof AlreadyEnrolledError) {
+        return { error: "already_enrolled" as const, tier: err.tier };
+      }
+      throw err;
     });
 
     if ("error" in result && result.error) {

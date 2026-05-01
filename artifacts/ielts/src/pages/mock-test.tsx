@@ -635,7 +635,7 @@ export default function MockTestPage() {
           continue;
         }
         try {
-          const res = await fetch(`${API}/api/essay-check`, {
+          const res = await fetch(`${API}/api-ielts/essay-check`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ essay: text, taskType }),

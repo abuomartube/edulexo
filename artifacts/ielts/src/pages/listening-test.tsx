@@ -17,6 +17,9 @@ import {
 import { useAwardXp } from "@workspace/ielts-api-client-react";
 import ListeningSkills from "@/components/listening-skills";
 import { answerMatches } from "@/data/answer-matching";
+import { isLevelAllowed } from "@/lib/tier";
+
+const visibleListeningTests = listeningTests.filter((t) => isLevelAllowed(t.level));
 
 type Answers = Record<number, string>;
 type Phase = "select" | "intro" | "test" | "results";
@@ -54,7 +57,7 @@ export default function ListeningTestPage() {
       const params = new URLSearchParams(window.location.search);
       const testId = params.get("test");
       if (testId) {
-        const match = listeningTests.find((t) => t.id === testId);
+        const match = visibleListeningTests.find((t) => t.id === testId);
         if (match) {
           setMode("full");
           setSelectedTest(match);
@@ -191,7 +194,7 @@ export default function ListeningTestPage() {
           </div>
 
           <div className="grid gap-4">
-            {listeningTests.map(test => (
+            {visibleListeningTests.map(test => (
               <button
                 key={test.id}
                 onClick={() => selectTest(test)}

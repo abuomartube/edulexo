@@ -82,7 +82,7 @@ async function fetchAndDecodeTts(word: string, scriptText: string): Promise<Audi
   const ctx = getCtx();
   if (!ctx) throw new Error("audio_context_unavailable");
 
-  const res = await fetch(`${API_BASE}/api/speaking/tts`, {
+  const res = await fetch(`${API_BASE}/api-ielts/speaking/tts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: scriptText, voice: "onyx", model: "tts-1", speed: 1.0 }),
@@ -517,7 +517,7 @@ export default function SpellIt() {
     setLoading(true);
     setErr(null);
     try {
-      const all = await customFetch<Flashcard[]>(`/api/flashcards?level=${level}`);
+      const all = await customFetch<Flashcard[]>(`/api-ielts/flashcards?level=${level}`);
       if (!all || all.length === 0) {
         setErr(`No ${level} words available right now.`);
         return;

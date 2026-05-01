@@ -41,15 +41,15 @@ export interface SrsUpdateResult {
 
 export const useListBookmarks = () =>
   useQuery<number[]>({
-    queryKey: ["/api/bookmarks"],
-    queryFn: () => customFetch<number[]>("/api/bookmarks", { method: "GET" }),
+    queryKey: ["/api-ielts/bookmarks"],
+    queryFn: () => customFetch<number[]>("/api-ielts/bookmarks", { method: "GET" }),
   });
 
 export const useToggleBookmark = () => {
   const qc = useQueryClient();
   return useMutation<{ bookmarked: boolean }, unknown, number>({
-    mutationFn: (id) => customFetch<{ bookmarked: boolean }>(`/api/bookmarks/${id}`, { method: "POST" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/bookmarks"] }),
+    mutationFn: (id) => customFetch<{ bookmarked: boolean }>(`/api-ielts/bookmarks/${id}`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/bookmarks"] }),
   });
 };
 
@@ -57,16 +57,16 @@ export const useToggleBookmark = () => {
 
 export const useWordOfDay = () =>
   useQuery<WordOfDay | null>({
-    queryKey: ["/api/word-of-day"],
-    queryFn: () => customFetch<WordOfDay>("/api/word-of-day", { method: "GET" }),
+    queryKey: ["/api-ielts/word-of-day"],
+    queryFn: () => customFetch<WordOfDay>("/api-ielts/word-of-day", { method: "GET" }),
   });
 
 // ── Streak ─────────────────────────────────────────────────────────────────
 
 export const useStreak = () =>
   useQuery<StreakInfo>({
-    queryKey: ["/api/streak"],
-    queryFn: () => customFetch<StreakInfo>("/api/streak", { method: "GET" }),
+    queryKey: ["/api-ielts/streak"],
+    queryFn: () => customFetch<StreakInfo>("/api-ielts/streak", { method: "GET" }),
   });
 
 // ── XP ─────────────────────────────────────────────────────────────────────
@@ -87,20 +87,20 @@ export interface AwardXpResult {
 
 export const useXp = () =>
   useQuery<XpInfo>({
-    queryKey: ["/api/xp"],
-    queryFn: () => customFetch<XpInfo>("/api/xp", { method: "GET" }),
+    queryKey: ["/api-ielts/xp"],
+    queryFn: () => customFetch<XpInfo>("/api-ielts/xp", { method: "GET" }),
   });
 
 export const useAwardXp = () => {
   const qc = useQueryClient();
   return useMutation<AwardXpResult, unknown, { activity: string; amount: number }>({
     mutationFn: ({ activity, amount }) =>
-      customFetch<AwardXpResult>("/api/xp/award", {
+      customFetch<AwardXpResult>("/api-ielts/xp/award", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ activity, amount }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/xp"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/xp"] }),
   });
 };
 
@@ -121,20 +121,20 @@ export interface WeakWordItem {
 
 export const useWeakWords = () =>
   useQuery<WeakWordItem[]>({
-    queryKey: ["/api/weak-words"],
-    queryFn: () => customFetch<WeakWordItem[]>("/api/weak-words", { method: "GET" }),
+    queryKey: ["/api-ielts/weak-words"],
+    queryFn: () => customFetch<WeakWordItem[]>("/api-ielts/weak-words", { method: "GET" }),
   });
 
 export const useAddWeakWords = () => {
   const qc = useQueryClient();
   return useMutation<{ added: number }, unknown, number[]>({
     mutationFn: (flashcardIds) =>
-      customFetch<{ added: number }>("/api/weak-words/add", {
+      customFetch<{ added: number }>("/api-ielts/weak-words/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ flashcardIds }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/weak-words"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/weak-words"] }),
   });
 };
 
@@ -142,8 +142,8 @@ export const useMasterWeakWord = () => {
   const qc = useQueryClient();
   return useMutation<{ mastered: boolean }, unknown, number>({
     mutationFn: (id) =>
-      customFetch<{ mastered: boolean }>(`/api/weak-words/${id}/master`, { method: "POST" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/weak-words"] }),
+      customFetch<{ mastered: boolean }>(`/api-ielts/weak-words/${id}/master`, { method: "POST" }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/weak-words"] }),
   });
 };
 
@@ -152,12 +152,12 @@ export const useAddWeakWordByWord = () => {
   const qc = useQueryClient();
   return useMutation<{ added: number }, unknown, string>({
     mutationFn: (word) =>
-      customFetch<{ added: number }>("/api/weak-words/add-by-word", {
+      customFetch<{ added: number }>("/api-ielts/weak-words/add-by-word", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ word }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/weak-words"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/weak-words"] }),
   });
 };
 
@@ -165,18 +165,18 @@ export const useAddWeakWordByWord = () => {
 export const usePhrasalVerbWeak = () => {
   const qc = useQueryClient();
   const query = useQuery<{ ids: number[] }>({
-    queryKey: ["/api/phrasal-verbs/weak"],
-    queryFn: () => customFetch<{ ids: number[] }>("/api/phrasal-verbs/weak"),
+    queryKey: ["/api-ielts/phrasal-verbs/weak"],
+    queryFn: () => customFetch<{ ids: number[] }>("/api-ielts/phrasal-verbs/weak"),
     staleTime: 30_000,
   });
   const toggle = useMutation<{ weak: boolean }, unknown, number>({
     mutationFn: (id) =>
-      customFetch<{ weak: boolean }>("/api/phrasal-verbs/weak/toggle", {
+      customFetch<{ weak: boolean }>("/api-ielts/phrasal-verbs/weak/toggle", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/phrasal-verbs/weak"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/phrasal-verbs/weak"] }),
   });
   return { weakIds: query.data?.ids ?? [], toggle };
 };
@@ -185,12 +185,12 @@ export const usePhrasalVerbWeak = () => {
 
 export const useQuiz = (level?: string, count = 10) =>
   useQuery<QuizQuestion[]>({
-    queryKey: ["/api/quiz", level, count],
+    queryKey: ["/api-ielts/quiz", level, count],
     queryFn: () => {
       const params = new URLSearchParams();
       if (level && level !== "ALL") params.set("level", level);
       params.set("count", String(count));
-      return customFetch<QuizQuestion[]>(`/api/quiz?${params}`, { method: "GET" });
+      return customFetch<QuizQuestion[]>(`/api-ielts/quiz?${params}`, { method: "GET" });
     },
   });
 
@@ -198,12 +198,12 @@ export const useQuiz = (level?: string, count = 10) =>
 
 export const useFillBlank = (level?: string, count = 10) =>
   useQuery<FillBlankQuestion[]>({
-    queryKey: ["/api/fill-blank", level, count],
+    queryKey: ["/api-ielts/fill-blank", level, count],
     queryFn: () => {
       const params = new URLSearchParams();
       if (level && level !== "ALL") params.set("level", level);
       params.set("count", String(count));
-      return customFetch<FillBlankQuestion[]>(`/api/fill-blank?${params}`, { method: "GET" });
+      return customFetch<FillBlankQuestion[]>(`/api-ielts/fill-blank?${params}`, { method: "GET" });
     },
   });
 
@@ -211,10 +211,10 @@ export const useFillBlank = (level?: string, count = 10) =>
 
 export const useSrsDue = (level?: string) =>
   useQuery<WordOfDay[]>({
-    queryKey: ["/api/srs/due", level],
+    queryKey: ["/api-ielts/srs/due", level],
     queryFn: () => {
       const params = level && level !== "ALL" ? `?level=${level}` : "";
-      return customFetch<WordOfDay[]>(`/api/srs/due${params}`, { method: "GET" });
+      return customFetch<WordOfDay[]>(`/api-ielts/srs/due${params}`, { method: "GET" });
     },
   });
 
@@ -222,11 +222,11 @@ export const useUpdateSrs = () => {
   const qc = useQueryClient();
   return useMutation<SrsUpdateResult, unknown, { id: number; known: boolean }>({
     mutationFn: ({ id, known }) =>
-      customFetch<SrsUpdateResult>(`/api/srs/${id}`, {
+      customFetch<SrsUpdateResult>(`/api-ielts/srs/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ known }),
       }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/srs/due"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api-ielts/srs/due"] }),
   });
 };

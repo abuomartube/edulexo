@@ -20,7 +20,7 @@ function useActivityStats(activity: string) {
     queryKey: ["activity-stats", activity],
     queryFn: async () => {
       try {
-        const data = await customFetch<ActivityPosition>(`/api/activity-position/${activity}`);
+        const data = await customFetch<ActivityPosition>(`/api-ielts/activity-position/${activity}`);
         const f = JSON.parse(data.filters);
         return { known: f.known ?? 0, unknown: f.unknown ?? 0 };
       } catch {

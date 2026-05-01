@@ -65,6 +65,27 @@ Roadmap (per user-specified iterations):
 - **Iteration 4**: Admin dashboard (approve/reject enrollments, bulk + targeted emails, sales analytics, product/price management).
 - **Iteration 5**: Payments (Tabby, Tamara, Stripe, Bank Transfer) + SendGrid wiring (verification, reset, confirmation, marketing).
 
+### LEXO for IELTS — tiered single-codebase
+
+The full IELTS app (`artifacts/ielts/`) ships at `/app-ielts/` (path moved from `/ielts` to free that slug for the platform marketing page). Its API is at `/api-ielts/` (port 8082) and uses its own OpenAPI spec (`lib/ielts-api-spec/openapi.yaml`) → generated client (`lib/ielts-api-client-react`) + zod (`lib/ielts-api-zod`). The orval config writes to those IELTS-prefixed lib paths (do not let it write back into `lib/api-client-react/` — that would clobber the platform's auth client).
+
+The same codebase serves **two tiers** controlled by a `?tier=` query param on first load:
+- **Complete (A2→C1)** — default; sees everything.
+- **Advance (B1→C1)** — A2 vocabulary content is filtered out of: `study`, `quiz`, `stories`, `listening-test`, `reading-test`. Synonyms, antonyms, phrasal verbs, grammar, speaking, writing, etc. remain unchanged in both tiers.
+
+Implementation lives in `artifacts/ielts/src/lib/tier.ts`:
+- `getTier()` — reads `?tier=advance|complete` from URL (persists to `localStorage["lexo-ielts:tier"]`), then localStorage, default `complete`.
+- `getAllowedLevels()` → `["B1","B2","C1"]` for advance, `["A2","B1","B2","C1"]` for complete.
+- `isLevelAllowed(level)` — pass-through `true` for items without a `level` field, so listening/reading tests without CEFR metadata stay visible until tagged.
+
+Marketing tier cards on `/ielts` (in `artifacts/oxford-flashcards/src/pages/IeltsCourse.tsx`) link with the right query: Advance → `/app-ielts/?tier=advance`, Complete → `/app-ielts/?tier=complete`. The Intro tier card is "Coming Soon" — a separate `ielts-intro` artifact will be uploaded later.
+
+**Important caveats** (architect-flagged, intentional or out-of-scope):
+- Tier filtering is **UX only**, not entitlement. The `/api-ielts` API does not enforce tier — anyone with a valid IELTS account can fetch A2/B2/C1 vocabulary directly. If we ever sell tiers separately, add a `tier` claim to the IELTS session and filter server-side in the routes that return level-keyed content.
+- Tier filter only affects the 5 vocabulary-list pages per spec: `study`, `quiz`, `stories`, `listening-test`, `reading-test`. Other surfaces (`browse`, `flip-it`, `spell-it`, `sentence-builder`, `weak-words`, `mock-test`, speaking, writing) intentionally show all data.
+- During the `/api/` → `/api-ielts/` migration we found 28 stale paths in `flip-it.tsx`, `spell-it.tsx`, `sentence-builder.tsx`, `mock-test.tsx`, and `teacher-dashboard.tsx` (template form `${API}/api/...`); all were rerouted and the IELTS API confirmed to serve them. Service worker registration in `main.tsx` was also fixed to use `${import.meta.env.BASE_URL}sw.js` so PWA installs work under the `/app-ielts/` base.
+- `lib/ielts-api-spec/orval.config.ts` writes only to `lib/ielts-api-client-react` and `lib/ielts-api-zod`. **Never repoint it at `lib/api-client-react/`** — that is the platform's auth client and the prior misconfig clobbered `forgotPassword` exports, which had to be regenerated.
+
 ### Iteration 2 — Auth implementation notes
 
 Backend (`artifacts/api-server`):

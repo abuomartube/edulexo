@@ -66,7 +66,7 @@ export function StoryQuiz({ storyId, onComplete }: StoryQuizProps) {
     setAnswers({});
     try {
       const data = await customFetch<{ questions: PublicQuestion[] }>(
-        `/api/stories/${storyId}/quiz`,
+        `/api-ielts/stories/${storyId}/quiz`,
       );
       setQuestions(data.questions);
     } catch (err) {
@@ -88,7 +88,7 @@ export function StoryQuiz({ storyId, onComplete }: StoryQuizProps) {
     setSubmitError(null);
     try {
       const data = await customFetch<GradeResponse>(
-        `/api/stories/${storyId}/quiz/grade`,
+        `/api-ielts/stories/${storyId}/quiz/grade`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

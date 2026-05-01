@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useActivityPosition } from "@/hooks/use-activity-position";
 import type { ListFlashcardsLevel } from "@workspace/ielts-api-client-react";
+import { getAllowedLevels, isLevelAllowed } from "@/lib/tier";
 
 type StudyMode = "all" | "srs" | "bookmarks" | "unknown";
 
@@ -51,10 +52,11 @@ export default function Study() {
 
   const cards = useMemo(() => {
     if (!allCards) return [];
-    if (studyMode === "srs") return srsCards ?? [];
+    const allCardsTiered = allCards.filter(c => isLevelAllowed(c.level));
+    if (studyMode === "srs") return (srsCards ?? []).filter(c => isLevelAllowed(c.level));
     if (studyMode === "bookmarks") {
       const bSet = new Set(bookmarks ?? []);
-      return allCards.filter(c => bSet.has(c.id));
+      return allCardsTiered.filter(c => bSet.has(c.id));
     }
     if (studyMode === "unknown") {
       const latestMap = new Map<number, boolean>();
@@ -62,9 +64,9 @@ export default function Study() {
         const prev = latestMap.get(p.flashcardId);
         if (prev === undefined) latestMap.set(p.flashcardId, p.known);
       });
-      return allCards.filter(c => !latestMap.get(c.id));
+      return allCardsTiered.filter(c => !latestMap.get(c.id));
     }
-    return allCards;
+    return allCardsTiered;
   }, [allCards, studyMode, srsCards, bookmarks, progress]);
 
   const isLoading = cardsLoading || (studyMode === "srs" && srsLoading);
@@ -277,10 +279,9 @@ export default function Study() {
                 <SelectTrigger className="w-[110px]"><SelectValue placeholder="Level" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Levels</SelectItem>
-                  <SelectItem value="A2">A2</SelectItem>
-                  <SelectItem value="B1">B1</SelectItem>
-                  <SelectItem value="B2">B2</SelectItem>
-                  <SelectItem value="C1">C1</SelectItem>
+                  {getAllowedLevels().map((lvl) => (
+                    <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); resetSession(); }}>

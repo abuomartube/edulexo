@@ -105,7 +105,7 @@ const tiers: Tier[] = [
   {
     id: "mid",
     icon: GraduationCap,
-    href: "/app-ielts/",
+    href: "/app-ielts/?tier=advance",
     external: true,
     comingSoon: false,
     highlighted: false,
@@ -127,7 +127,7 @@ const tiers: Tier[] = [
   {
     id: "complete",
     icon: Crown,
-    href: "/app-ielts/",
+    href: "/app-ielts/?tier=complete",
     external: true,
     comingSoon: false,
     highlighted: true,

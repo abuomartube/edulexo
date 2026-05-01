@@ -178,7 +178,7 @@ export default function AdminPage() {
     try {
       const expiresAt = (pendingExpiry[id] ?? oneYearFromNow());
       const expiryIso = new Date(expiresAt + "T23:59:59").toISOString();
-      await fetch(`/api/admin/requests/${id}/approve`, {
+      await fetch(`/api-ielts/admin/requests/${id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ adminPassword, expiresAt: expiryIso }),
@@ -190,7 +190,7 @@ export default function AdminPage() {
   const handleAction = async (id: number, action: "reject" | "delete") => {
     setActionLoading(id);
     try {
-      const url = action === "delete" ? `/api/admin/requests/${id}` : `/api/admin/requests/${id}/${action}`;
+      const url = action === "delete" ? `/api-ielts/admin/requests/${id}` : `/api-ielts/admin/requests/${id}/${action}`;
       await fetch(url, {
         method: action === "delete" ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
@@ -205,7 +205,7 @@ export default function AdminPage() {
     try {
       const dateStr = editExpiry[id];
       const expiresAt = dateStr ? new Date(dateStr + "T23:59:59").toISOString() : null;
-      await fetch(`/api/admin/requests/${id}/set-expiry`, {
+      await fetch(`/api-ielts/admin/requests/${id}/set-expiry`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ adminPassword, expiresAt }),
@@ -260,7 +260,7 @@ export default function AdminPage() {
   const handleReviewAction = async (id: number, action: "approve" | "reject" | "delete") => {
     setReviewActionLoading(id);
     try {
-      const url = action === "delete" ? `/api/admin/reviews/${id}` : `/api/admin/reviews/${id}/${action}`;
+      const url = action === "delete" ? `/api-ielts/admin/reviews/${id}` : `/api-ielts/admin/reviews/${id}/${action}`;
       await fetch(url, {
         method: action === "delete" ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
@@ -287,7 +287,7 @@ export default function AdminPage() {
     setReplyLoading(id);
     setReplyError(null);
     try {
-      const res = await fetch(`/api/admin/reviews/${id}/reply`, {
+      const res = await fetch(`/api-ielts/admin/reviews/${id}/reply`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ reply: replyDraft.trim() }),
@@ -308,7 +308,7 @@ export default function AdminPage() {
     setReplyLoading(id);
     setReplyError(null);
     try {
-      const res = await fetch(`/api/admin/reviews/${id}/reply`, {
+      const res = await fetch(`/api-ielts/admin/reviews/${id}/reply`, {
         method: "DELETE",
         headers: { "x-admin-password": adminPassword },
       });

@@ -7,7 +7,7 @@ interface SavedPosition {
 }
 
 function doSave(activity: string, position: number, filters: string) {
-  customFetch(`/api/activity-position/${activity}`, {
+  customFetch(`/api-ielts/activity-position/${activity}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ position, filters }),
@@ -23,7 +23,7 @@ export function useActivityPosition(activity: string, filtersKey: string) {
 
   const load = useCallback(async (): Promise<SavedPosition | null> => {
     try {
-      const data = await customFetch<SavedPosition>(`/api/activity-position/${activity}`);
+      const data = await customFetch<SavedPosition>(`/api-ielts/activity-position/${activity}`);
       return data;
     } catch {
       return null;

@@ -17,6 +17,9 @@ import {
 } from "@/data/reading-test";
 import { ReadingSkills } from "@/components/reading-skills";
 import { answerMatches } from "@/data/answer-matching";
+import { isLevelAllowed } from "@/lib/tier";
+
+const visibleReadingTests = readingTests.filter((t) => isLevelAllowed(t.level));
 
 type Answers = Record<number, string>;
 type Mode = "menu" | "full" | "skills";
@@ -44,7 +47,7 @@ export default function ReadingTestPage() {
       const params = new URLSearchParams(window.location.search);
       const testId = params.get("test");
       if (testId) {
-        const match = readingTests.find((t) => t.id === testId);
+        const match = visibleReadingTests.find((t) => t.id === testId);
         if (match) {
           setMode("full");
           setSelectedTest(match);
@@ -207,7 +210,7 @@ export default function ReadingTestPage() {
           </div>
 
           <div className="grid gap-4">
-            {readingTests.map(test => (
+            {visibleReadingTests.map(test => (
               <button
                 key={test.id}
                 onClick={() => selectTest(test)}

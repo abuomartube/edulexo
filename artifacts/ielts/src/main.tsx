@@ -19,7 +19,7 @@ requestAnimationFrame(() => {
 // PWA features are inert in dev so they never interfere with HMR or desktop development.
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => {
       /* registration failed — fail silently, the web app still works */
     });
   });

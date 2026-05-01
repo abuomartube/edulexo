@@ -201,7 +201,7 @@ export function StoryWriting({ storyId, onComplete }: StoryWritingProps) {
     setSubmitting(true);
     try {
       const data = await customFetch<FeedbackResponse>(
-        `/api/stories/${storyId}/written-feedback`,
+        `/api-ielts/stories/${storyId}/written-feedback`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

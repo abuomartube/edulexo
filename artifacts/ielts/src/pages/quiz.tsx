@@ -11,6 +11,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getAllowedLevels, isLevelAllowed } from "@/lib/tier";
 
 interface QuizScore {
   id: number;
@@ -72,7 +73,8 @@ export default function Quiz() {
     level === "ALL" ? undefined : level, fbCount
   );
 
-  const questions = mode === "multiple-choice" ? (mcQuestions ?? []) : (fbQuestions ?? []);
+  const rawQuestions = mode === "multiple-choice" ? (mcQuestions ?? []) : (fbQuestions ?? []);
+  const questions = rawQuestions.filter((q: any) => isLevelAllowed(q?.flashcard?.level));
   const isLoading = mode === "multiple-choice" ? mcLoading : fbLoading;
 
   const currentQ = questions[currentIndex];
@@ -239,14 +241,19 @@ export default function Quiz() {
 
             <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Level</label>
-              <Select value={level} onValueChange={(v) => setLevel(v as Level)}>
+              <Select value={level} onValueChange={(v) => setLevel(v as Level)}>{/* tier-filtered options below */}
                 <SelectTrigger className="w-full bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Levels</SelectItem>
-                  <SelectItem value="A2">A2 – Elementary</SelectItem>
-                  <SelectItem value="B1">B1 – Intermediate</SelectItem>
-                  <SelectItem value="B2">B2 – Upper-Intermediate</SelectItem>
-                  <SelectItem value="C1">C1 – Advanced</SelectItem>
+                  {getAllowedLevels().map((lvl) => {
+                    const labels: Record<string, string> = {
+                      A2: "A2 – Elementary",
+                      B1: "B1 – Intermediate",
+                      B2: "B2 – Upper-Intermediate",
+                      C1: "C1 – Advanced",
+                    };
+                    return <SelectItem key={lvl} value={lvl}>{labels[lvl] ?? lvl}</SelectItem>;
+                  })}
                 </SelectContent>
               </Select>
             </div>

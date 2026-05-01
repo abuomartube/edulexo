@@ -261,7 +261,7 @@ export default function TeacherDashboard() {
   async function fetchPendingRequests() {
     setRequestsLoading(true);
     try {
-      const res = await fetch(`${API}/api/admin/requests`, {
+      const res = await fetch(`${API}/api-ielts/admin/requests`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) return;
@@ -276,7 +276,7 @@ export default function TeacherDashboard() {
     try {
       // Default expiry: 1 year from now
       const expiresAt = new Date(Date.now() + 365 * 86400000).toISOString();
-      const res = await fetch(`${API}/api/admin/requests/${id}/approve`, {
+      const res = await fetch(`${API}/api-ielts/admin/requests/${id}/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({ expiresAt }),
@@ -291,7 +291,7 @@ export default function TeacherDashboard() {
     if (!confirm(`Reject access request from ${email}?`)) return;
     setActingOnId(id);
     try {
-      const res = await fetch(`${API}/api/admin/requests/${id}/reject`, {
+      const res = await fetch(`${API}/api-ielts/admin/requests/${id}/reject`, {
         method: "POST",
         headers: { "x-admin-password": password },
       });
@@ -303,7 +303,7 @@ export default function TeacherDashboard() {
     setCodesLoading(true);
     setCodesError("");
     try {
-      const res = await fetch(`${API}/api/admin/access-codes`, {
+      const res = await fetch(`${API}/api-ielts/admin/access-codes`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) { setCodesError("Failed to load codes"); return; }
@@ -319,7 +319,7 @@ export default function TeacherDashboard() {
     setGenerating(true);
     setCodesError("");
     try {
-      const res = await fetch(`${API}/api/admin/access-codes`, {
+      const res = await fetch(`${API}/api-ielts/admin/access-codes`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({ count: newCodeCount, note: newCodeNote.trim() || null }),
@@ -340,7 +340,7 @@ export default function TeacherDashboard() {
     if (!confirm(`Delete access code ${code}? This cannot be undone.`)) return;
     setDeletingCodeId(id);
     try {
-      const res = await fetch(`${API}/api/admin/access-codes/${id}`, {
+      const res = await fetch(`${API}/api-ielts/admin/access-codes/${id}`, {
         method: "DELETE",
         headers: { "x-admin-password": password },
       });
@@ -351,7 +351,7 @@ export default function TeacherDashboard() {
   async function fetchNotifications() {
     setNotifLoading(true);
     try {
-      const res = await fetch(`${API}/api/admin/notifications`, {
+      const res = await fetch(`${API}/api-ielts/admin/notifications`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) return;
@@ -380,7 +380,7 @@ export default function TeacherDashboard() {
 
     setNotifSending(true);
     try {
-      const res = await fetch(`${API}/api/admin/notifications`, {
+      const res = await fetch(`${API}/api-ielts/admin/notifications`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({
@@ -411,7 +411,7 @@ export default function TeacherDashboard() {
     if (!confirm("Delete this notification? Students will no longer see it.")) return;
     setDeletingNotifId(id);
     try {
-      const res = await fetch(`${API}/api/admin/notifications/${id}`, {
+      const res = await fetch(`${API}/api-ielts/admin/notifications/${id}`, {
         method: "DELETE",
         headers: { "x-admin-password": password },
       });
@@ -428,7 +428,7 @@ export default function TeacherDashboard() {
 
   async function fetchLessonCounts() {
     try {
-      const res = await fetch(`${API}/api/admin/lesson-completion-counts`, {
+      const res = await fetch(`${API}/api-ielts/admin/lesson-completion-counts`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) return;
@@ -443,7 +443,7 @@ export default function TeacherDashboard() {
     setLessonsLoading(true);
     setLessonsError("");
     try {
-      const res = await fetch(`${API}/api/admin/lessons`, {
+      const res = await fetch(`${API}/api-ielts/admin/lessons`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) { setLessonsError("Failed to load lessons"); return; }
@@ -461,7 +461,7 @@ export default function TeacherDashboard() {
     setCreating(true);
     setLessonsError("");
     try {
-      const res = await fetch(`${API}/api/admin/lessons`, {
+      const res = await fetch(`${API}/api-ielts/admin/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({ title: newTitle.trim(), vimeoUrl: newUrl.trim(), course: newCourse }),
@@ -501,7 +501,7 @@ export default function TeacherDashboard() {
     setSavingEditId(id);
     setLessonsError("");
     try {
-      const res = await fetch(`${API}/api/admin/lessons/${id}`, {
+      const res = await fetch(`${API}/api-ielts/admin/lessons/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({
@@ -528,7 +528,7 @@ export default function TeacherDashboard() {
     if (!confirm("Delete this lesson? Students will lose access immediately.")) return;
     setDeletingId(id);
     try {
-      const res = await fetch(`${API}/api/admin/lessons/${id}`, {
+      const res = await fetch(`${API}/api-ielts/admin/lessons/${id}`, {
         method: "DELETE",
         headers: { "x-admin-password": password },
       });
@@ -540,7 +540,7 @@ export default function TeacherDashboard() {
 
   async function fetchAiUsage() {
     try {
-      const res = await fetch(`${API}/api/admin/ai-usage/today`, {
+      const res = await fetch(`${API}/api-ielts/admin/ai-usage/today`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) return;
@@ -553,7 +553,7 @@ export default function TeacherDashboard() {
 
   async function fetchRegVideo() {
     try {
-      const res = await fetch(`${API}/api/registration-video`);
+      const res = await fetch(`${API}/api-ielts/registration-video`);
       if (!res.ok) return;
       const data = await res.json();
       setRegVideoUrl(data.url ?? null);
@@ -565,7 +565,7 @@ export default function TeacherDashboard() {
     setRegVideoSaving(true);
     setRegVideoError("");
     try {
-      const res = await fetch(`${API}/api/admin/registration-video`, {
+      const res = await fetch(`${API}/api-ielts/admin/registration-video`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({ url: regVideoInput.trim() }),
@@ -584,7 +584,7 @@ export default function TeacherDashboard() {
     setRegVideoSaving(true);
     setRegVideoError("");
     try {
-      const res = await fetch(`${API}/api/admin/registration-video`, {
+      const res = await fetch(`${API}/api-ielts/admin/registration-video`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": password },
         body: JSON.stringify({ url: "" }),
@@ -603,7 +603,7 @@ export default function TeacherDashboard() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${API}/api/teacher/students`, {
+      const res = await fetch(`${API}/api-ielts/teacher/students`, {
         headers: { "x-admin-password": password },
       });
       if (!res.ok) {
@@ -1808,8 +1808,8 @@ function AdminWritingHistoryModal({ email, adminPassword, onClose }: {
       try {
         const headers = { "x-admin-password": adminPassword };
         const [hRes, cRes] = await Promise.all([
-          fetch(`${API}/api/admin/students/${encodeURIComponent(email)}/orwell-history`, { headers }),
-          fetch(`${API}/api/admin/students/${encodeURIComponent(email)}/orwell-coach-summary`, { headers }),
+          fetch(`${API}/api-ielts/admin/students/${encodeURIComponent(email)}/orwell-history`, { headers }),
+          fetch(`${API}/api-ielts/admin/students/${encodeURIComponent(email)}/orwell-coach-summary`, { headers }),
         ]);
         if (!hRes.ok) throw new Error("Failed to load history");
         const hData = await hRes.json();
@@ -1832,7 +1832,7 @@ function AdminWritingHistoryModal({ email, adminPassword, onClose }: {
     (async () => {
       setDetailLoading(true);
       try {
-        const res = await fetch(`/api/admin/students/${encodeURIComponent(email)}/orwell-history/${openId}`, {
+        const res = await fetch(`/api-ielts/admin/students/${encodeURIComponent(email)}/orwell-history/${openId}`, {
           headers: { "x-admin-password": adminPassword },
         });
         if (!res.ok) throw new Error("Failed");
@@ -2070,7 +2070,7 @@ function AdminSentenceSessionsModal({
       setLoading(true);
       try {
         const res = await fetch(
-          `${API}/api/teacher/sentence-sessions?email=${encodeURIComponent(email)}`,
+          `${API}/api-ielts/teacher/sentence-sessions?email=${encodeURIComponent(email)}`,
           { headers: { "x-admin-password": adminPassword } }
         );
         if (!res.ok) {

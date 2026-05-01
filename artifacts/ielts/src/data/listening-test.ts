@@ -27,6 +27,8 @@ export interface ListeningTest {
   id: string;
   label: string;
   source: string;
+  /** Optional CEFR level used by tier-aware filtering. Tests without a level are always shown. */
+  level?: "A2" | "B1" | "B2" | "C1";
   parts: ListeningPart[];
 }
 

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/ielts-api-client-react";
 import { useToast } from "@/hooks/use-toast";
+import { getAllowedLevels, isLevelAllowed } from "@/lib/tier";
 
 interface Story {
   id: number;
@@ -22,8 +23,8 @@ interface Story {
   orderIndex: number;
 }
 
-const LEVELS = ["All", "A2", "B1", "B2", "C1"] as const;
-type LevelFilter = typeof LEVELS[number];
+const LEVELS = ["All", ...getAllowedLevels()] as const;
+type LevelFilter = (typeof LEVELS)[number];
 
 const levelColors: Record<string, string> = {
   A2: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
@@ -766,17 +767,18 @@ export default function StoriesPage() {
   const { toast } = useToast();
   const qc = useQueryClient();
 
-  const { data: stories = [], isLoading } = useQuery<Story[]>({
+  const { data: rawStories = [], isLoading } = useQuery<Story[]>({
     queryKey: ["stories", levelFilter],
     queryFn: async () => {
       const url = levelFilter === "All"
         ? "/api-ielts/stories"
-        : `/api/stories?level=${levelFilter}`;
+        : `/api-ielts/stories?level=${levelFilter}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to load stories");
       return res.json();
     },
   });
+  const stories = rawStories.filter((s) => isLevelAllowed(s.level));
 
   const { data: completedKeys = {} } = useQuery<Record<string, string>>({
     queryKey: ["story-completions"],
@@ -794,7 +796,7 @@ export default function StoriesPage() {
 
   const markCompleteMutation = useMutation({
     mutationFn: (storyId: number) =>
-      customFetch(`/api/user-data/story_completed_${storyId}`, {
+      customFetch(`/api-ielts/user-data/story_completed_${storyId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: "1" }),

@@ -91,7 +91,7 @@ async function fetchTtsUrl(text: string): Promise<string> {
   const key = text.trim();
   const cached = ttsCache.get(key);
   if (cached) return cached;
-  const res = await fetch(`${API_BASE}/api/speaking/tts`, {
+  const res = await fetch(`${API_BASE}/api-ielts/speaking/tts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: key, voice: "onyx", model: "tts-1-hd", speed: 0.95 }),
@@ -232,7 +232,7 @@ export default function SentenceBuilder() {
   async function startSession() {
     setLoadingWords(true);
     try {
-      const all = await customFetch<Flashcard[]>(`/api/flashcards?level=${level}`);
+      const all = await customFetch<Flashcard[]>(`/api-ielts/flashcards?level=${level}`);
       const picked = shuffle(all).slice(0, count);
       if (picked.length < count) {
         setErr(`Only ${picked.length} words available for ${level}.`);
@@ -512,7 +512,7 @@ export default function SentenceBuilder() {
                         key={h.id}
                         onClick={async () => {
                           try {
-                            const r = await customFetch<SessionReport>(`/api/sentence-sessions/${h.id}`);
+                            const r = await customFetch<SessionReport>(`/api-ielts/sentence-sessions/${h.id}`);
                             setOpenReport(r);
                           } catch {}
                         }}

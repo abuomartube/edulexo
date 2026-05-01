@@ -131,7 +131,7 @@ export default function Lessons() {
       lessons: prev.lessons.map((l) => l.id === lesson.id ? { ...l, completed: newCompleted } : l),
     } : prev);
     try {
-      const res = await fetch(`/api/lessons/${lesson.id}/complete`, {
+      const res = await fetch(`/api-ielts/lessons/${lesson.id}/complete`, {
         method: newCompleted ? "POST" : "DELETE",
         headers: getStudentAuthHeaders(),
       });

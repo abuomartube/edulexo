@@ -118,7 +118,7 @@ export function NotificationsBell({ variant = "sidebar" }: NotificationsBellProp
     setItems((cur) => cur.map((it) => it.id === n.id ? { ...it, read_at: new Date().toISOString() } : it));
     setUnread((u) => Math.max(0, u - 1));
     try {
-      await customFetch(`/api/notifications/${n.id}/read`, { method: "POST" });
+      await customFetch(`/api-ielts/notifications/${n.id}/read`, { method: "POST" });
     } catch {
       // Revert on failure.
       setItems((cur) => cur.map((it) => it.id === n.id ? { ...it, read_at: null } : it));

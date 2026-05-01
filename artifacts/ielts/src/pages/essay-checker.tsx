@@ -768,7 +768,7 @@ export default function EssayChecker() {
     setError(null);
     let prog: CategoryProgress | null = null;
     try {
-      const res = await fetch(`/api/orwell/next?category=${cat}`, { headers: getStudentAuthHeaders() });
+      const res = await fetch(`/api-ielts/orwell/next?category=${cat}`, { headers: getStudentAuthHeaders() });
       if (res.ok) prog = await res.json();
     } catch {
       // ignore — pick from full list

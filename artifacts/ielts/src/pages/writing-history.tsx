@@ -174,7 +174,7 @@ export default function WritingHistory() {
     setDetailLoading(true);
     setCompareError(null);
     try {
-      const res = await fetch(`/api/orwell/history/${id}`, { headers: getStudentAuthHeaders() });
+      const res = await fetch(`/api-ielts/orwell/history/${id}`, { headers: getStudentAuthHeaders() });
       if (!res.ok) throw new Error("Failed to load submission");
       const data = await res.json();
       setOpenDetail(data);
@@ -190,7 +190,7 @@ export default function WritingHistory() {
     setCompareLoading(true);
     setCompareError(null);
     try {
-      const res = await fetch(`/api/orwell/history/${openDetail.id}/compare${force ? "?force=1" : ""}`, {
+      const res = await fetch(`/api-ielts/orwell/history/${openDetail.id}/compare${force ? "?force=1" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getStudentAuthHeaders() },
       });
@@ -208,7 +208,7 @@ export default function WritingHistory() {
     setCoachLoading(true);
     setCoachError(null);
     try {
-      const res = await fetch(`/api/orwell/coach-summary${force ? "?force=1" : ""}`, {
+      const res = await fetch(`/api-ielts/orwell/coach-summary${force ? "?force=1" : ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getStudentAuthHeaders() },
       });

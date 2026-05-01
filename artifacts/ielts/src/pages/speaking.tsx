@@ -252,7 +252,7 @@ interface SessionState {
 
 async function loadUsedTopicsFromDb(): Promise<string[]> {
   try {
-    const data = await customFetch<{ value: string }>(`/api/user-data/${USED_TOPICS_KEY}`);
+    const data = await customFetch<{ value: string }>(`/api-ielts/user-data/${USED_TOPICS_KEY}`);
     if (data.value) return JSON.parse(data.value);
   } catch {}
   try {
@@ -265,7 +265,7 @@ async function loadUsedTopicsFromDb(): Promise<string[]> {
 async function saveUsedTopicsToDb(used: string[]) {
   const value = JSON.stringify(used);
   localStorage.setItem(USED_TOPICS_KEY, value);
-  customFetch(`/api/user-data/${USED_TOPICS_KEY}`, {
+  customFetch(`/api-ielts/user-data/${USED_TOPICS_KEY}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ value }),

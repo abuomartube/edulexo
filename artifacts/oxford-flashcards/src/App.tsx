@@ -9,6 +9,7 @@ import Login from "@/pages/Login";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
+import AdminDashboard from "@/pages/AdminDashboard";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -53,7 +54,7 @@ export default function App() {
         </Route>
         <Route path="/admin">
           <ProtectedRoute requireAdmin>
-            <ComingSoon titleKey="comingSoon.admin.title" descKey="comingSoon.admin.desc" />
+            <AdminDashboard />
           </ProtectedRoute>
         </Route>
 

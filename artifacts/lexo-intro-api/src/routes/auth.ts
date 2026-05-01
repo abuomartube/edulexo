@@ -134,7 +134,7 @@ async function ensureTablesAndSeed() {
 }
 ensureTablesAndSeed();
 
-function signToken(payload: Record<string, unknown>): string {
+export function signToken(payload: Record<string, unknown>): string {
   const data = Buffer.from(JSON.stringify(payload)).toString("base64url");
   const sig = crypto.createHmac("sha256", SESSION_SECRET).update(data).digest("base64url");
   return `${data}.${sig}`;

@@ -36,8 +36,16 @@ localPort = 8083
 externalPort = 3003
 
 [[ports]]
+localPort = 8084
+externalPort = 5000
+
+[[ports]]
 localPort = 19123
 externalPort = 5173
+
+[[ports]]
+localPort = 22551
+externalPort = 6800
 
 [[ports]]
 localPort = 23227
@@ -50,3 +58,8 @@ externalPort = 3002
 [[ports]]
 localPort = 24600
 externalPort = 4200
+
+[userenv]
+
+[userenv.shared]
+SSO_SHARED_SECRET = "2yQwCIR5ZyajD-nbLDL0Y9UHuAWG2bTwRqoanPjw8lo0bBtT11FfRn4AYRez4Ldw"

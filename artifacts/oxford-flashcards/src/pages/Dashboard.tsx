@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import { BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock } from "lucide-react";
 import Header from "@/components/Header";
+import MyCourses from "@/components/MyCourses";
 import { useAuth } from "@/lib/auth-context";
 import { useT, useLanguage } from "@/lib/i18n";
 
@@ -58,29 +59,10 @@ export default function Dashboard() {
           />
         </section>
 
-        {/* Profile + Enrollments placeholder */}
+        {/* My Courses (real enrollments) + Profile */}
         <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-6 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow">
-            <h2 className="text-lg font-bold mb-4">{t("dashboard.enrollments.title")}</h2>
-            <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-gray-800 p-8 text-center">
-              <p className="text-slate-600 dark:text-slate-300 text-sm">
-                {t("dashboard.enrollments.empty")}
-              </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
-                <Link
-                  href="/ielts"
-                  className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-600 to-indigo-700 text-white shadow"
-                >
-                  {t("dashboard.enrollments.browseIelts")}
-                </Link>
-                <Link
-                  href="/english"
-                  className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow"
-                >
-                  {t("dashboard.enrollments.browseEnglish")}
-                </Link>
-              </div>
-            </div>
+          <div className="lg:col-span-2">
+            <MyCourses />
           </div>
 
           <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-6 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow">

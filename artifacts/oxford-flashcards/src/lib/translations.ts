@@ -78,12 +78,12 @@ export const translations = {
 
   "platform.features.eyebrow": { en: "Why EduLexo", ar: "لماذا EduLexo" },
   "platform.features.title": {
-    en: "What makes our platform different",
-    ar: "ما الذي يميّز منصّتنا",
+    en: "Not just another platform…",
+    ar: "مو مجرد منصة…",
   },
   "platform.features.subtitle": {
-    en: "Real AI tools, real native audio, real bilingual support — all wrapped in a clear path from beginner to fluent.",
-    ar: "أدوات ذكاء اصطناعي حقيقية، وصوت أصلي حقيقي، ودعم ثنائي اللغة حقيقي — كل ذلك ضمن مسار واضح من المبتدئ إلى الطلاقة.",
+    en: "Abu Omar teaches you, and EduLexo trains you — the result: real progress from the start all the way to mastery.",
+    ar: "أبو عمر يعلّمك، وEduLexo يدرّبك — والنتيجة: تقدّم حقيقي من البداية إلى الاحتراف",
   },
   "platform.feat1.title": { en: "AI-Powered Practice", ar: "تدريب بالذكاء الاصطناعي" },
   "platform.feat1.desc": {

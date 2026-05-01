@@ -1,0 +1,31 @@
+kind = "api"
+previewPath = "/api-intro"
+title = "LEXO Intro API Server"
+version = "1.0.0"
+id = "artifacts/lexo-intro-api"
+
+[[services]]
+localPort = 8083
+name = "LEXO Intro API Server"
+paths = ["/api-intro"]
+
+[services.development]
+run = "pnpm --filter @workspace/lexo-intro-api run dev"
+
+[services.production]
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/lexo-intro-api", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+
+[services.production.run]
+args = ["node", "--enable-source-maps", "artifacts/lexo-intro-api/dist/index.mjs"]
+
+[services.production.run.env]
+PORT = "8083"
+NODE_ENV = "production"
+
+[services.production.health.startup]
+path = "/api-intro/healthz"

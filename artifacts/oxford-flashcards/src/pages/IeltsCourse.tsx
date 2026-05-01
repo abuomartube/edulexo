@@ -83,14 +83,14 @@ const tiers: Tier[] = [
   {
     id: "intro",
     icon: Rocket,
-    href: "/ielts-intro",
+    href: "/app-ielts-intro/",
     external: true,
-    comingSoon: true,
+    comingSoon: false,
     highlighted: false,
     ringClasses: "border-slate-200 dark:border-slate-800",
     iconGradient: "from-sky-500 to-blue-600",
     ctaClasses:
-      "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed",
+      "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-[1.02] active:scale-95",
     nameKey: "ielts.tier.intro.name",
     rangeKey: "ielts.tier.intro.range",
     bandKey: "ielts.tier.intro.band",

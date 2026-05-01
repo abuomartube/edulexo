@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/app-ielts-intro/"
+title = "LEXO Intro"
+version = "1.0.0"
+id = "artifacts/lexo-intro"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/app-ielts-intro/" ]
+localPort = 24600
+
+[services.development]
+run = "pnpm --filter @workspace/lexo-intro run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lexo-intro", "run", "build" ]
+publicDir = "artifacts/lexo-intro/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24600"
+BASE_PATH = "/app-ielts-intro/"

@@ -36,7 +36,12 @@ The project is a pnpm workspace monorepo utilizing TypeScript, Node.js 24, and p
 - **IELTS Tiering:** Supports "Complete" (A2→C1) and "Advance" (B1→C1) tiers, controlled by URL parameters and `localStorage`.
 - **Cross-product SSO:** Implemented for seamless navigation between the platform, IELTS, and Intro applications using HMAC-signed, single-use launch URLs. The English app shares the platform's session cookie directly.
 - **Email Verification:** Features a `email_verification_tokens` table, API endpoints for sending and verifying, rate limiting, and a UI component (`UnverifiedEmailBanner`) for user interaction.
-- **Admin Content Management:** CRUD operations for FAQs and courses (intro, English, IELTS) with bilingual fields, display ordering, and publishing status. Admin dashboard is expanded with tabs for Students, Enrollments, FAQ, Courses, and Codes.
+- **Admin Content Management:** CRUD operations for FAQs and courses (intro, English, IELTS) with bilingual fields, display ordering, and publishing status. Admin dashboard uses a 7-section sidebar layout (collapses to a horizontal scroll on mobile) with breadcrumbs: Overview, Students, Enrollments, FAQ, Courses, Communication, Access Codes.
+  - **Overview:** stat cards (total users, active today/week, active enrollments, conversion rate, revenue placeholder), per-tier enrollment breakdown, two recharts line charts (sign-ups + new enrollments over the last 30 days, zero-filled UTC), and a recent sign-ups table. "Active" is a proxy (signup or enrollment activity in window) until last-login tracking is added.
+  - **Enrollments:** unioned across the intro and english enrollment tables (each table keyed by `course`), with course/status/tier filters and Approve/Reject/Edit/Delete row actions.
+  - **Courses:** each course card shows total active enrollments plus per-tier counts.
+  - **Communication:** broadcast email form (audience: all users or by course), with a confirm dialog showing the recipient count before send. Email delivery is currently a stub — the server logs each message via the request logger and reports `stubMode: true` until a provider (e.g., Resend) is wired. Recipients are filtered by `emailVerified=true`.
+  - Server endpoints: `GET /api/admin/stats`, `GET /api/admin/email/recipients`, `POST /api/admin/email/broadcast`, and a new `DELETE /api/admin/enrollments/:id?course=` (existing GET/PATCH on the same path now also accept `?course=intro|english`). `GET /api/admin/courses` now returns `totalActiveEnrollments` and per-tier counts.
 
 ## External Dependencies
 
@@ -57,3 +62,4 @@ The project is a pnpm workspace monorepo utilizing TypeScript, Node.js 24, and p
 - **express-rate-limit**: Rate limiting.
 - **OpenAI TTS API**: Text-to-speech audio generation.
 - **Google Fonts (Cairo)**: Arabic typography.
+- **recharts**: Charting library used for admin Overview line charts.

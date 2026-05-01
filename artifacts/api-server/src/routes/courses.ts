@@ -1,7 +1,12 @@
 import { Router, type IRouter } from "express";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
-import { db, platformCoursesTable } from "@workspace/db";
+import {
+  db,
+  platformCoursesTable,
+  enrollmentsTable,
+  englishEnrollmentsTable,
+} from "@workspace/db";
 import { requireAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
@@ -20,14 +25,51 @@ router.get("/courses", async (_req, res, next) => {
   }
 });
 
-// GET /admin/courses — all courses including unpublished.
+// GET /admin/courses — all courses including unpublished, with active
+// enrollment counts grouped by tier.
 router.get("/admin/courses", requireAdmin, async (_req, res, next) => {
   try {
     const rows = await db
       .select()
       .from(platformCoursesTable)
       .orderBy(asc(platformCoursesTable.displayOrder));
-    res.json({ courses: rows });
+
+    const introByTier = await db
+      .select({
+        tier: enrollmentsTable.tier,
+        count: sql<string>`count(*)::text`,
+      })
+      .from(enrollmentsTable)
+      .where(eq(enrollmentsTable.status, "active"))
+      .groupBy(enrollmentsTable.tier);
+    const englishByTier = await db
+      .select({
+        tier: englishEnrollmentsTable.tier,
+        count: sql<string>`count(*)::text`,
+      })
+      .from(englishEnrollmentsTable)
+      .where(eq(englishEnrollmentsTable.status, "active"))
+      .groupBy(englishEnrollmentsTable.tier);
+
+    const counts: Record<string, { tier: string; count: number }[]> = {
+      intro: introByTier.map((r) => ({
+        tier: r.tier,
+        count: Number(r.count),
+      })),
+      english: englishByTier.map((r) => ({
+        tier: r.tier,
+        count: Number(r.count),
+      })),
+      ielts: [],
+    };
+
+    const enriched = rows.map((c) => {
+      const tiers = counts[c.slug] ?? [];
+      const total = tiers.reduce((acc, t) => acc + t.count, 0);
+      return { ...c, totalActiveEnrollments: total, tiers };
+    });
+
+    res.json({ courses: enriched });
   } catch (err) {
     next(err);
   }

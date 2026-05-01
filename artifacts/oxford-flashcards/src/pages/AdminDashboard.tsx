@@ -18,9 +18,24 @@ import {
   ArrowDown,
   Eye,
   EyeOff,
+  LayoutDashboard,
+  Mail,
+  ChevronRight,
+  Send,
+  AlertCircle,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 import Header from "@/components/Header";
 import { useT, useLanguage } from "@/lib/i18n";
+import type { TranslationKey } from "@/lib/translations";
 import { useAuth } from "@/lib/auth-context";
 import {
   fetchStudents,
@@ -33,6 +48,7 @@ import {
   deleteStudent,
   fetchAllEnrollments,
   patchEnrollment,
+  deleteEnrollment,
   fetchAdminFaqs,
   createFaq,
   patchFaq,
@@ -40,8 +56,13 @@ import {
   reorderFaqs,
   fetchAdminCourses,
   patchCourse,
+  fetchAdminStats,
+  fetchEmailRecipientsCount,
+  broadcastEmail,
   TIER_LABELS,
+  ENGLISH_TIER_LABELS,
   type Tier,
+  type EnglishTier,
   type Student,
   type AccessCodeRow,
   type AdminEnrollmentRow,
@@ -49,50 +70,139 @@ import {
   type CourseRow,
 } from "@/lib/platform-api";
 
-type Tab = "students" | "enrollments" | "faqs" | "courses" | "codes";
+type Tab =
+  | "overview"
+  | "students"
+  | "enrollments"
+  | "faqs"
+  | "courses"
+  | "communication"
+  | "codes";
+
+const TAB_DEFS: {
+  key: Tab;
+  icon: React.ReactNode;
+  labelKey: TranslationKey;
+}[] = [
+  { key: "overview", icon: <LayoutDashboard size={16} />, labelKey: "admin.tab.overview" },
+  { key: "students", icon: <Users size={16} />, labelKey: "admin.tab.students" },
+  { key: "enrollments", icon: <GraduationCap size={16} />, labelKey: "admin.tab.enrollments" },
+  { key: "faqs", icon: <HelpCircle size={16} />, labelKey: "admin.tab.faqs" },
+  { key: "courses", icon: <BookOpen size={16} />, labelKey: "admin.tab.courses" },
+  { key: "communication", icon: <Mail size={16} />, labelKey: "admin.tab.communication" },
+  { key: "codes", icon: <KeyRound size={16} />, labelKey: "admin.tab.codes" },
+];
 
 export default function AdminDashboard() {
   const t = useT();
-  const [tab, setTab] = useState<Tab>("students");
+  const [tab, setTab] = useState<Tab>("overview");
+  const activeDef = TAB_DEFS.find((d) => d.key === tab) ?? TAB_DEFS[0]!;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 dark:from-gray-950 dark:via-indigo-950/40 dark:to-slate-950 text-slate-900 dark:text-slate-100">
       <Header />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <header className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+        {/* Breadcrumbs */}
+        <nav
+          aria-label="breadcrumb"
+          className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mb-3"
+        >
+          <span className="font-semibold text-slate-700 dark:text-slate-200">
             {t("admin.title")}
+          </span>
+          <ChevronRight size={12} className="opacity-60 rtl:rotate-180" />
+          <span>{t(activeDef.labelKey)}</span>
+        </nav>
+
+        <header className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-700 to-purple-600 bg-clip-text text-transparent">
+            {t(activeDef.labelKey)}
           </h1>
           <p className="mt-1 text-slate-600 dark:text-slate-300 text-sm">
             {t("admin.subtitle")}
           </p>
         </header>
 
-        <nav className="flex flex-wrap gap-2 border-b border-slate-200 dark:border-gray-800 mb-6">
-          <TabButton active={tab === "students"} onClick={() => setTab("students")} icon={<Users size={15} />}>
-            {t("admin.tab.students")}
-          </TabButton>
-          <TabButton active={tab === "enrollments"} onClick={() => setTab("enrollments")} icon={<GraduationCap size={15} />}>
-            {t("admin.tab.enrollments")}
-          </TabButton>
-          <TabButton active={tab === "faqs"} onClick={() => setTab("faqs")} icon={<HelpCircle size={15} />}>
-            {t("admin.tab.faqs")}
-          </TabButton>
-          <TabButton active={tab === "courses"} onClick={() => setTab("courses")} icon={<BookOpen size={15} />}>
-            {t("admin.tab.courses")}
-          </TabButton>
-          <TabButton active={tab === "codes"} onClick={() => setTab("codes")} icon={<KeyRound size={15} />}>
-            {t("admin.tab.codes")}
-          </TabButton>
-        </nav>
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Sidebar (desktop) */}
+          <aside className="hidden lg:block w-56 shrink-0">
+            <div className="sticky top-4 rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-2">
+              <nav className="flex flex-col gap-1">
+                {TAB_DEFS.map((d) => (
+                  <SidebarLink
+                    key={d.key}
+                    active={tab === d.key}
+                    onClick={() => setTab(d.key)}
+                    icon={d.icon}
+                  >
+                    {t(d.labelKey)}
+                  </SidebarLink>
+                ))}
+              </nav>
+            </div>
+          </aside>
 
-        {tab === "students" && <StudentsTab />}
-        {tab === "enrollments" && <EnrollmentsTab />}
-        {tab === "faqs" && <FaqsTab />}
-        {tab === "courses" && <CoursesTab />}
-        {tab === "codes" && <CodesTab />}
+          {/* Mobile horizontal scroll tabs */}
+          <nav
+            className="lg:hidden -mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto"
+            data-testid="mobile-tabs"
+          >
+            <div className="flex gap-2 border-b border-slate-200 dark:border-gray-800 pb-px min-w-max">
+              {TAB_DEFS.map((d) => (
+                <TabButton
+                  key={d.key}
+                  active={tab === d.key}
+                  onClick={() => setTab(d.key)}
+                  icon={d.icon}
+                >
+                  {t(d.labelKey)}
+                </TabButton>
+              ))}
+            </div>
+          </nav>
+
+          {/* Content */}
+          <section className="flex-1 min-w-0">
+            {tab === "overview" && <OverviewTab />}
+            {tab === "students" && <StudentsTab />}
+            {tab === "enrollments" && <EnrollmentsTab />}
+            {tab === "faqs" && <FaqsTab />}
+            {tab === "courses" && <CoursesTab />}
+            {tab === "communication" && <CommunicationTab />}
+            {tab === "codes" && <CodesTab />}
+          </section>
+        </div>
       </main>
     </div>
+  );
+}
+
+function SidebarLink({
+  active,
+  onClick,
+  icon,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full inline-flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-semibold transition text-left rtl:text-right ${
+        active
+          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm"
+          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800"
+      }`}
+    >
+      <span className={active ? "text-white" : "text-indigo-600 dark:text-indigo-400"}>
+        {icon}
+      </span>
+      {children}
+    </button>
   );
 }
 
@@ -111,7 +221,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition ${
+      className={`inline-flex items-center gap-2 px-3.5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition whitespace-nowrap ${
         active
           ? "border-indigo-600 text-indigo-700 dark:text-indigo-300"
           : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
@@ -119,6 +229,435 @@ function TabButton({
     >
       {icon}
       {children}
+    </button>
+  );
+}
+
+// ───────────────────────── OVERVIEW TAB ─────────────────────────
+
+function OverviewTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin", "stats"],
+    queryFn: fetchAdminStats,
+  });
+
+  if (isLoading) return <LoadingPanel />;
+  if (error) return <ErrorPanel msg={(error as Error).message} />;
+  if (!data) return null;
+
+  const fmtNumber = (n: number) =>
+    new Intl.NumberFormat(lang === "ar" ? "ar-EG" : "en-US").format(n);
+  const fmtPct = (n: number) =>
+    new Intl.NumberFormat(lang === "ar" ? "ar-EG" : "en-US", {
+      style: "percent",
+      maximumFractionDigits: 1,
+    }).format(n);
+
+  return (
+    <div className="space-y-6">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <StatCard
+          label={t("admin.overview.totalUsers")}
+          value={fmtNumber(data.totalUsers)}
+          accent="indigo"
+        />
+        <StatCard
+          label={t("admin.overview.activeToday")}
+          value={fmtNumber(data.activeToday)}
+          accent="violet"
+        />
+        <StatCard
+          label={t("admin.overview.activeWeek")}
+          value={fmtNumber(data.activeThisWeek)}
+          accent="blue"
+        />
+        <StatCard
+          label={t("admin.overview.totalEnrollments")}
+          value={fmtNumber(data.totalActiveEnrollments)}
+          accent="purple"
+        />
+        <StatCard
+          label={t("admin.overview.conversion")}
+          value={fmtPct(data.conversionRate)}
+          accent="indigo"
+        />
+        <StatCard
+          label={t("admin.overview.revenue")}
+          value="$0"
+          subValue={t("admin.overview.revenueNote")}
+          accent="violet"
+        />
+        <StatCard
+          label={t("admin.overview.totalStudents")}
+          value={fmtNumber(data.totalStudents)}
+          accent="blue"
+        />
+      </div>
+
+      <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">
+        {t("admin.overview.activeProxyNote")}
+      </p>
+
+      {/* Tier breakdown */}
+      <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+        <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3">
+          {t("admin.overview.tierBreakdown")}
+        </h2>
+        {data.enrollmentsByTier.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {t("admin.overview.noEnrollmentsYet")}
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {data.enrollmentsByTier.map((row) => {
+              const label =
+                row.course === "intro"
+                  ? TIER_LABELS[row.tier as Tier]?.[lang] ?? row.tier
+                  : ENGLISH_TIER_LABELS[row.tier as EnglishTier]?.[lang] ??
+                    row.tier;
+              return (
+                <div
+                  key={`${row.course}-${row.tier}`}
+                  className="rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 px-3 py-2"
+                >
+                  <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {row.course === "intro"
+                      ? t("admin.course.intro")
+                      : t("admin.course.english")}
+                  </div>
+                  <div className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                    {label}
+                  </div>
+                  <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                    {fmtNumber(row.count)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <ChartCard
+          title={t("admin.overview.signupTrend")}
+          data={data.signupsDaily30}
+          stroke="#6B2FE6"
+        />
+        <ChartCard
+          title={t("admin.overview.enrollmentTrend")}
+          data={data.enrollmentsDaily30}
+          stroke="#4F7FFF"
+        />
+      </div>
+
+      {/* Recent signups */}
+      <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+        <div className="p-5 border-b border-slate-200 dark:border-gray-800">
+          <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+            {t("admin.overview.recentSignups")}
+          </h2>
+        </div>
+        {data.recentSignups.length === 0 ? (
+          <div className="p-5 text-sm text-slate-500 dark:text-slate-400">
+            {t("admin.overview.noSignupsYet")}
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 dark:bg-gray-950 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <tr>
+                <Th>{t("admin.col.name")}</Th>
+                <Th>{t("admin.col.email")}</Th>
+                <Th>{t("admin.col.role")}</Th>
+                <Th>{t("admin.col.signedUp")}</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-gray-800">
+              {data.recentSignups.map((u) => (
+                <tr key={u.id}>
+                  <Td>{u.name}</Td>
+                  <Td>{u.email}</Td>
+                  <Td>{u.role}</Td>
+                  <Td>{new Date(u.createdAt).toLocaleString(lang === "ar" ? "ar-EG" : "en-US")}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  subValue,
+  accent,
+}: {
+  label: string;
+  value: string;
+  subValue?: string;
+  accent: "indigo" | "violet" | "blue" | "purple";
+}) {
+  const accents: Record<string, string> = {
+    indigo: "from-indigo-500 to-indigo-600",
+    violet: "from-violet-500 to-violet-600",
+    blue: "from-blue-500 to-blue-600",
+    purple: "from-purple-500 to-fuchsia-600",
+  };
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 sm:p-5 relative overflow-hidden">
+      <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accents[accent]}`} />
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        {label}
+      </div>
+      <div className="mt-1.5 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100">
+        {value}
+      </div>
+      {subValue && (
+        <div className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+          {subValue}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChartCard({
+  title,
+  data,
+  stroke,
+}: {
+  title: string;
+  data: { date: string; count: number }[];
+  stroke: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
+      <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-3">
+        {title}
+      </h2>
+      <div style={{ width: "100%", height: 220 }}>
+        <ResponsiveContainer>
+          <LineChart
+            data={data}
+            margin={{ top: 4, right: 8, left: -10, bottom: 0 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.4} />
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 10, fill: "#64748b" }}
+              tickFormatter={(d: string) => d.slice(5)}
+              minTickGap={20}
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: "#64748b" }}
+              allowDecimals={false}
+              width={28}
+            />
+            <Tooltip
+              contentStyle={{
+                background: "rgba(15,23,42,0.92)",
+                border: "none",
+                borderRadius: 8,
+                color: "#f1f5f9",
+                fontSize: 12,
+              }}
+              labelStyle={{ color: "#cbd5e1" }}
+            />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke={stroke}
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+// ───────────────────────── COMMUNICATION TAB ─────────────────────────
+
+function CommunicationTab() {
+  const t = useT();
+  const [audience, setAudience] = useState<"all" | "course">("all");
+  const [courseSlug, setCourseSlug] = useState<"intro" | "english" | "ielts">("intro");
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    msg: string;
+  } | null>(null);
+  const [sending, setSending] = useState(false);
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    setFeedback(null);
+    if (!subject.trim() || !body.trim()) {
+      setFeedback({ type: "error", msg: t("admin.comm.errMissing") });
+      return;
+    }
+    try {
+      const count = await fetchEmailRecipientsCount(
+        audience,
+        audience === "course" ? courseSlug : undefined,
+      );
+      const ok = window.confirm(
+        t("admin.comm.confirm").replace("{n}", String(count)),
+      );
+      if (!ok) return;
+      setSending(true);
+      const result = await broadcastEmail({
+        audience,
+        courseSlug: audience === "course" ? courseSlug : undefined,
+        subject: subject.trim(),
+        body: body.trim(),
+      });
+      setFeedback({
+        type: "success",
+        msg: t("admin.comm.sent")
+          .replace("{sent}", String(result.sentCount))
+          .replace("{total}", String(result.recipientCount))
+          .replace("{failed}", String(result.failedCount)),
+      });
+      setSubject("");
+      setBody("");
+    } catch (err) {
+      setFeedback({
+        type: "error",
+        msg: err instanceof Error ? err.message : "Failed to send",
+      });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/30 p-4 flex items-start gap-3">
+        <AlertCircle size={18} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+        <div className="text-sm text-amber-900 dark:text-amber-200">
+          {t("admin.comm.stubBanner")}
+        </div>
+      </div>
+
+      <form
+        onSubmit={handleSend}
+        className="rounded-2xl border border-slate-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5 sm:p-6 space-y-4"
+      >
+        <h2 className="text-sm font-bold text-slate-700 dark:text-slate-200">
+          {t("admin.comm.title")}
+        </h2>
+
+        <Field label={t("admin.comm.audience")}>
+          <div className="flex flex-wrap gap-2">
+            <RadioPill
+              checked={audience === "all"}
+              onChange={() => setAudience("all")}
+              label={t("admin.comm.audienceAll")}
+            />
+            <RadioPill
+              checked={audience === "course"}
+              onChange={() => setAudience("course")}
+              label={t("admin.comm.audienceCourse")}
+            />
+          </div>
+        </Field>
+
+        {audience === "course" && (
+          <Field label={t("admin.comm.course")}>
+            <select
+              value={courseSlug}
+              onChange={(e) =>
+                setCourseSlug(e.target.value as "intro" | "english" | "ielts")
+              }
+              className="px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm w-full sm:w-64"
+            >
+              <option value="intro">{t("admin.course.intro")}</option>
+              <option value="english">{t("admin.course.english")}</option>
+              <option value="ielts">{t("admin.course.ielts")}</option>
+            </select>
+          </Field>
+        )}
+
+        <Field label={t("admin.comm.subject")}>
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            maxLength={200}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm"
+            placeholder={t("admin.comm.subjectPh")}
+          />
+        </Field>
+
+        <Field label={t("admin.comm.body")}>
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            maxLength={10000}
+            rows={8}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm font-mono"
+            placeholder={t("admin.comm.bodyPh")}
+          />
+        </Field>
+
+        {feedback && (
+          <div
+            className={`text-sm rounded-lg px-3 py-2 ${
+              feedback.type === "success"
+                ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800"
+                : "bg-rose-50 dark:bg-rose-950/40 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-800"
+            }`}
+          >
+            {feedback.msg}
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={sending}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-95 disabled:opacity-60 shadow-sm"
+          >
+            {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+            {t("admin.comm.send")}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function RadioPill({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      className={`px-3.5 py-1.5 rounded-full text-sm font-semibold border transition ${
+        checked
+          ? "bg-indigo-600 border-indigo-600 text-white"
+          : "bg-white dark:bg-gray-950 border-slate-300 dark:border-gray-700 text-slate-700 dark:text-slate-200 hover:border-indigo-400"
+      }`}
+    >
+      {label}
     </button>
   );
 }
@@ -782,25 +1321,75 @@ function EnrollmentsTab() {
   const { lang } = useLanguage();
   const qc = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired" | "revoked">("");
-  const [tierFilter, setTierFilter] = useState<"" | Tier>("");
+  const [courseFilter, setCourseFilter] = useState<"" | "intro" | "english">("");
+  const [tierFilter, setTierFilter] = useState<string>("");
   const [editing, setEditing] = useState<AdminEnrollmentRow | null>(null);
 
   const enrollmentsQuery = useQuery({
-    queryKey: ["admin-enrollments", statusFilter, tierFilter],
+    queryKey: ["admin-enrollments", statusFilter, tierFilter, courseFilter],
     queryFn: () =>
       fetchAllEnrollments({
         status: statusFilter || undefined,
         tier: tierFilter || undefined,
+        course: courseFilter || undefined,
       }),
+  });
+
+  const patchMutation = useMutation({
+    mutationFn: (args: {
+      row: AdminEnrollmentRow;
+      status: "active" | "revoked";
+    }) => patchEnrollment(args.row.id, args.row.course, { status: args.status }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
+      qc.invalidateQueries({ queryKey: ["admin-students"] });
+      qc.invalidateQueries({ queryKey: ["admin-courses"] });
+      qc.invalidateQueries({ queryKey: ["admin", "stats"] });
+    },
+    onError: (err: Error) => alert(err.message),
+  });
+  const deleteMutation = useMutation({
+    mutationFn: (row: AdminEnrollmentRow) =>
+      deleteEnrollment(row.id, row.course),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
+      qc.invalidateQueries({ queryKey: ["admin-students"] });
+      qc.invalidateQueries({ queryKey: ["admin-courses"] });
+      qc.invalidateQueries({ queryKey: ["admin", "stats"] });
+    },
+    onError: (err: Error) => alert(err.message),
   });
 
   if (enrollmentsQuery.isError) return <ErrorPanel msg={t("admin.error.loadFailed")} />;
 
   const rows = enrollmentsQuery.data ?? [];
 
+  // Tier options depend on selected course (or union of both).
+  const tierOptions: { value: string; label: string }[] =
+    courseFilter === "english"
+      ? Object.entries(ENGLISH_TIER_LABELS).map(([v, l]) => ({ value: v, label: l[lang] }))
+      : courseFilter === "intro"
+      ? Object.entries(TIER_LABELS).map(([v, l]) => ({ value: v, label: l[lang] }))
+      : [
+          ...Object.entries(TIER_LABELS).map(([v, l]) => ({ value: v, label: l[lang] })),
+          ...Object.entries(ENGLISH_TIER_LABELS).map(([v, l]) => ({ value: v, label: l[lang] })),
+        ];
+
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2 mb-4">
+        <select
+          value={courseFilter}
+          onChange={(ev) => {
+            setCourseFilter(ev.target.value as typeof courseFilter);
+            setTierFilter("");
+          }}
+          className="rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+        >
+          <option value="">{t("admin.enrollments.filter.allCourses")}</option>
+          <option value="intro">{t("admin.course.intro")}</option>
+          <option value="english">{t("admin.course.english")}</option>
+        </select>
         <select
           value={statusFilter}
           onChange={(ev) => setStatusFilter(ev.target.value as typeof statusFilter)}
@@ -813,12 +1402,12 @@ function EnrollmentsTab() {
         </select>
         <select
           value={tierFilter}
-          onChange={(ev) => setTierFilter(ev.target.value as typeof tierFilter)}
+          onChange={(ev) => setTierFilter(ev.target.value)}
           className="rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
         >
           <option value="">{t("admin.enrollments.filter.allTiers")}</option>
-          {(Object.keys(TIER_LABELS) as Tier[]).map((tk) => (
-            <option key={tk} value={tk}>{TIER_LABELS[tk].en}</option>
+          {tierOptions.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
         <span className="text-xs text-slate-500 ms-auto">
@@ -835,61 +1424,96 @@ function EnrollmentsTab() {
               <thead className="bg-slate-50 dark:bg-gray-800/60 text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <tr>
                   <Th>{t("admin.enrollments.col.student")}</Th>
+                  <Th>{t("admin.enrollments.col.course")}</Th>
                   <Th>{t("admin.enrollments.col.tier")}</Th>
                   <Th>{t("admin.enrollments.col.status")}</Th>
-                  <Th>{t("admin.enrollments.col.source")}</Th>
                   <Th>{t("admin.enrollments.col.granted")}</Th>
-                  <Th>{t("admin.enrollments.col.expires")}</Th>
-                  <Th align="right"></Th>
+                  <Th align="right">{t("admin.enrollments.col.actions")}</Th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((e) => (
-                  <tr key={e.id} className="border-t border-slate-100 dark:border-gray-800 hover:bg-slate-50/60 dark:hover:bg-gray-800/40">
-                    <Td>
-                      <div className="font-medium">{e.studentName ?? "—"}</div>
-                      <div className="text-xs text-slate-500" dir="ltr">{e.studentEmail ?? ""}</div>
-                    </Td>
-                    <Td>
-                      <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
-                        {e.tier}
-                      </span>
-                    </Td>
-                    <Td>
-                      <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${STATUS_LABELS[e.status].color}`}>
-                        {STATUS_LABELS[e.status][lang === "ar" ? "ar" : "en"]}
-                      </span>
-                    </Td>
-                    <Td className="text-xs text-slate-600 dark:text-slate-300">{e.source}</Td>
-                    <Td className="text-xs text-slate-500 dark:text-slate-400">
-                      {new Date(e.grantedAt).toLocaleDateString(
-                        lang === "ar" ? "ar-EG" : "en-US",
-                        { day: "numeric", month: "short", year: "numeric" },
-                      )}
-                    </Td>
-                    <Td className="text-xs text-slate-500 dark:text-slate-400">
-                      {e.expiresAt
-                        ? new Date(e.expiresAt).toLocaleDateString(
-                            lang === "ar" ? "ar-EG" : "en-US",
-                            { day: "numeric", month: "short", year: "numeric" },
-                          )
-                        : "—"}
-                    </Td>
-                    <Td align="right">
-                      <button
-                        type="button"
-                        onClick={() => setEditing(e)}
-                        className="text-slate-400 hover:text-indigo-600 transition"
-                        title={t("admin.enrollments.edit")}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                    </Td>
-                  </tr>
-                ))}
+                {rows.map((e) => {
+                  const tierLabel =
+                    e.course === "intro"
+                      ? TIER_LABELS[e.tier as Tier]?.[lang] ?? e.tier
+                      : ENGLISH_TIER_LABELS[e.tier as EnglishTier]?.[lang] ?? e.tier;
+                  return (
+                    <tr key={`${e.course}-${e.id}`} className="border-t border-slate-100 dark:border-gray-800 hover:bg-slate-50/60 dark:hover:bg-gray-800/40">
+                      <Td>
+                        <div className="font-medium">{e.studentName ?? "—"}</div>
+                        <div className="text-xs text-slate-500" dir="ltr">{e.studentEmail ?? ""}</div>
+                      </Td>
+                      <Td>
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">
+                          {e.course === "intro" ? t("admin.course.intro") : t("admin.course.english")}
+                        </span>
+                      </Td>
+                      <Td>
+                        <span className="inline-flex px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-200">
+                          {tierLabel}
+                        </span>
+                      </Td>
+                      <Td>
+                        <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${STATUS_LABELS[e.status].color}`}>
+                          {STATUS_LABELS[e.status][lang === "ar" ? "ar" : "en"]}
+                        </span>
+                      </Td>
+                      <Td className="text-xs text-slate-500 dark:text-slate-400">
+                        {new Date(e.grantedAt).toLocaleDateString(
+                          lang === "ar" ? "ar-EG" : "en-US",
+                          { day: "numeric", month: "short", year: "numeric" },
+                        )}
+                      </Td>
+                      <Td align="right">
+                        <div className="inline-flex gap-1">
+                          {e.status !== "active" && (
+                            <button
+                              type="button"
+                              onClick={() => patchMutation.mutate({ row: e, status: "active" })}
+                              className="px-2 py-1 text-[11px] font-semibold rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200"
+                              title={t("admin.enrollments.approve")}
+                            >
+                              {t("admin.enrollments.approve")}
+                            </button>
+                          )}
+                          {e.status === "active" && (
+                            <button
+                              type="button"
+                              onClick={() => patchMutation.mutate({ row: e, status: "revoked" })}
+                              className="px-2 py-1 text-[11px] font-semibold rounded-md bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-900/40 dark:text-rose-200"
+                              title={t("admin.enrollments.reject")}
+                            >
+                              {t("admin.enrollments.reject")}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setEditing(e)}
+                            className="p-1.5 text-slate-400 hover:text-indigo-600 transition"
+                            title={t("admin.enrollments.edit")}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(t("admin.enrollments.confirmDelete"))) {
+                                deleteMutation.mutate(e);
+                              }
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 transition"
+                            title={t("admin.enrollments.delete")}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </Td>
+                    </tr>
+                  );
+                })}
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-10 text-slate-500 text-sm">—</td>
+                    <td colSpan={6} className="text-center py-10 text-slate-500 text-sm">—</td>
                   </tr>
                 )}
               </tbody>
@@ -906,6 +1530,7 @@ function EnrollmentsTab() {
             setEditing(null);
             qc.invalidateQueries({ queryKey: ["admin-enrollments"] });
             qc.invalidateQueries({ queryKey: ["admin-students"] });
+            qc.invalidateQueries({ queryKey: ["admin", "stats"] });
           }}
         />
       )}
@@ -931,7 +1556,7 @@ function EnrollmentEditModal({
 
   const saveMutation = useMutation({
     mutationFn: () =>
-      patchEnrollment(enrollment.id, {
+      patchEnrollment(enrollment.id, enrollment.course, {
         status,
         expiresAt: expiresAt ? new Date(expiresAt + "T23:59:59Z").toISOString() : null,
         note: note.trim() || null,
@@ -1424,16 +2049,54 @@ function CoursesTab() {
                 {lang === "ar" ? c.subtitleAr : c.subtitleEn}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-4 text-xs text-slate-500">
-              <span>{t("admin.courses.order")}: {c.displayOrder}</span>
+            <div className="mt-4 rounded-xl bg-slate-50 dark:bg-gray-950 border border-slate-200 dark:border-gray-800 px-3 py-2.5">
+              <div className="flex items-baseline justify-between">
+                <span className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">
+                  {t("admin.courses.totalEnrollments")}
+                </span>
+                <span className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                  {c.totalActiveEnrollments ?? 0}
+                </span>
+              </div>
+              {c.tiers && c.tiers.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {c.tiers.map((tr) => {
+                    const label =
+                      c.slug === "intro"
+                        ? TIER_LABELS[tr.tier as Tier]?.[lang] ?? tr.tier
+                        : c.slug === "english"
+                        ? ENGLISH_TIER_LABELS[tr.tier as EnglishTier]?.[lang] ?? tr.tier
+                        : tr.tier;
+                    return (
+                      <span
+                        key={tr.tier}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-slate-200"
+                      >
+                        {label}
+                        <span className="text-indigo-600 dark:text-indigo-400">
+                          {tr.count}
+                        </span>
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+              {(!c.tiers || c.tiers.length === 0) && (
+                <div className="mt-1 text-[11px] text-slate-400">
+                  {t("admin.courses.noEnrollments")}
+                </div>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={() => setEditing(c)}
-              className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300"
-            >
-              <Pencil size={13} /> {t("admin.courses.edit")}
-            </button>
+            <div className="flex items-center justify-between gap-2 mt-3 text-xs text-slate-500">
+              <span>{t("admin.courses.order")}: {c.displayOrder}</span>
+              <button
+                type="button"
+                onClick={() => setEditing(c)}
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-300"
+              >
+                <Pencil size={13} /> {t("admin.courses.edit")}
+              </button>
+            </div>
           </div>
         ))}
       </div>

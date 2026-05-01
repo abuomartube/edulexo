@@ -109,11 +109,18 @@ export async function grantTier(
   return data.enrollment;
 }
 
+// Soft-revokes an INTRO enrollment (sets status to 'revoked'). Used from the
+// inline X chip in the StudentsTab, which only lists intro enrollments.
+// English enrollments are revoked from EnrollmentsTab via patchEnrollment.
 export async function revokeEnrollment(enrollmentId: string): Promise<void> {
-  const res = await fetch(`/api/admin/enrollments/${enrollmentId}`, {
-    ...init,
-    method: "DELETE",
-  });
+  const res = await fetch(
+    `/api/admin/enrollments/${enrollmentId}?course=intro`,
+    {
+      ...init,
+      method: "PATCH",
+      body: JSON.stringify({ status: "revoked" }),
+    },
+  );
   await jsonOrThrow<{ enrollment: Enrollment }>(res);
 }
 
@@ -154,12 +161,14 @@ export interface AdminEnrollmentRow {
   userId: string;
   studentName: string | null;
   studentEmail: string | null;
-  tier: Tier;
+  /** Tier name; values depend on `course` (intro: intro/advance/complete; english: beginner/intermediate/advanced). */
+  tier: string;
   status: "active" | "expired" | "revoked";
   source: "admin" | "code" | "stripe";
   grantedAt: string;
   expiresAt: string | null;
   note: string | null;
+  course: "intro" | "english";
 }
 
 export interface FaqRow {
@@ -185,6 +194,9 @@ export interface CourseRow {
   displayOrder: number;
   createdAt: string;
   updatedAt: string;
+  /** Present on /admin/courses; absent on the public /courses endpoint. */
+  totalActiveEnrollments?: number;
+  tiers?: { tier: string; count: number }[];
 }
 
 export async function patchStudent(
@@ -210,11 +222,13 @@ export async function deleteStudent(id: string): Promise<void> {
 
 export async function fetchAllEnrollments(filters?: {
   status?: "active" | "expired" | "revoked";
-  tier?: Tier;
+  tier?: string;
+  course?: "intro" | "english";
 }): Promise<AdminEnrollmentRow[]> {
   const params = new URLSearchParams();
   if (filters?.status) params.set("status", filters.status);
   if (filters?.tier) params.set("tier", filters.tier);
+  if (filters?.course) params.set("course", filters.course);
   const qs = params.toString();
   const res = await fetch(
     `/api/admin/enrollments${qs ? `?${qs}` : ""}`,
@@ -226,19 +240,85 @@ export async function fetchAllEnrollments(filters?: {
 
 export async function patchEnrollment(
   id: string,
+  course: "intro" | "english",
   body: {
     status?: "active" | "expired" | "revoked";
     expiresAt?: string | null;
     note?: string | null;
   },
 ): Promise<AdminEnrollmentRow> {
-  const res = await fetch(`/api/admin/enrollments/${id}`, {
+  const res = await fetch(`/api/admin/enrollments/${id}?course=${course}`, {
     ...init,
     method: "PATCH",
     body: JSON.stringify(body),
   });
   const data = await jsonOrThrow<{ enrollment: AdminEnrollmentRow }>(res);
   return data.enrollment;
+}
+
+export async function deleteEnrollment(
+  id: string,
+  course: "intro" | "english",
+): Promise<void> {
+  const res = await fetch(`/api/admin/enrollments/${id}?course=${course}`, {
+    ...init,
+    method: "DELETE",
+  });
+  await jsonOrThrow<{ message: string }>(res);
+}
+
+export interface AdminStats {
+  totalUsers: number;
+  totalStudents: number;
+  activeToday: number;
+  activeThisWeek: number;
+  totalActiveEnrollments: number;
+  enrollmentsByTier: { course: "intro" | "english"; tier: string; count: number }[];
+  conversionRate: number;
+  revenueAllTime: number;
+  revenueDaily30: { date: string; amount: number }[];
+  signupsDaily30: { date: string; count: number }[];
+  enrollmentsDaily30: { date: string; count: number }[];
+  recentSignups: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    createdAt: string;
+  }[];
+}
+
+export async function fetchAdminStats(): Promise<AdminStats> {
+  const res = await fetch("/api/admin/stats", { ...init, method: "GET" });
+  return jsonOrThrow<AdminStats>(res);
+}
+
+export async function fetchEmailRecipientsCount(
+  audience: "all" | "course",
+  courseSlug?: "intro" | "english" | "ielts",
+): Promise<number> {
+  const params = new URLSearchParams({ audience });
+  if (courseSlug) params.set("courseSlug", courseSlug);
+  const res = await fetch(`/api/admin/email/recipients?${params.toString()}`, {
+    ...init,
+    method: "GET",
+  });
+  const data = await jsonOrThrow<{ count: number }>(res);
+  return data.count;
+}
+
+export async function broadcastEmail(body: {
+  audience: "all" | "course";
+  courseSlug?: "intro" | "english" | "ielts";
+  subject: string;
+  body: string;
+}): Promise<{ recipientCount: number; sentCount: number; failedCount: number; stubMode: boolean }> {
+  const res = await fetch("/api/admin/email/broadcast", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+  return jsonOrThrow(res);
 }
 
 export async function fetchAdminFaqs(): Promise<FaqRow[]> {

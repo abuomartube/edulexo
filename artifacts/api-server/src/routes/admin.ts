@@ -6,8 +6,10 @@ import {
   db,
   usersTable,
   enrollmentsTable,
+  englishEnrollmentsTable,
   accessCodesTable,
   TIER_VALUES,
+  ENGLISH_TIER_VALUES,
   ENROLLMENT_STATUS_VALUES,
 } from "@workspace/db";
 import { requireAdmin } from "../lib/auth";
@@ -15,8 +17,10 @@ import { requireAdmin } from "../lib/auth";
 const router: IRouter = Router();
 
 const TierSchema = z.enum(TIER_VALUES);
+const EnglishTierSchema = z.enum(ENGLISH_TIER_VALUES);
 const EnrollmentStatusSchema = z.enum(ENROLLMENT_STATUS_VALUES);
 const RoleSchema = z.enum(["student", "admin"]);
+const CourseSchema = z.enum(["intro", "english"]);
 
 function generateCode(): string {
   // 12-char human-friendly code: ABCD-EFGH-JKLM (no I/O/0/1 confusion)
@@ -141,27 +145,6 @@ router.post(
   },
 );
 
-router.delete(
-  "/admin/enrollments/:id",
-  requireAdmin,
-  async (req, res, next) => {
-    try {
-      const [updated] = await db
-        .update(enrollmentsTable)
-        .set({ status: "revoked" })
-        .where(eq(enrollmentsTable.id, String(req.params.id)))
-        .returning();
-      if (!updated) {
-        res.status(404).json({ error: "Enrollment not found" });
-        return;
-      }
-      res.json({ enrollment: updated });
-    } catch (err) {
-      next(err);
-    }
-  },
-);
-
 // PATCH /admin/students/:id — edit name and/or role.
 // Email is intentionally NOT editable (it's the auth identity).
 // Password changes flow through the password-reset endpoint.
@@ -245,38 +228,94 @@ router.delete("/admin/students/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-// GET /admin/enrollments — list all enrollments with student info.
-// Optional ?status= and ?tier= filters.
+// GET /admin/enrollments — list all enrollments across intro AND english.
+// Optional ?status=, ?course=intro|english, ?tier= filters.
+// Each row includes a `course` field so the UI can disambiguate.
 router.get("/admin/enrollments", requireAdmin, async (req, res, next) => {
   try {
     const statusFilter = EnrollmentStatusSchema.safeParse(req.query.status);
-    const tierFilter = TierSchema.safeParse(req.query.tier);
+    const courseFilter = CourseSchema.safeParse(req.query.course);
+    const tierFilterRaw =
+      typeof req.query.tier === "string" ? req.query.tier : undefined;
 
-    const conditions = [];
-    if (statusFilter.success) conditions.push(eq(enrollmentsTable.status, statusFilter.data));
-    if (tierFilter.success) conditions.push(eq(enrollmentsTable.tier, tierFilter.data));
+    const introRows =
+      courseFilter.success && courseFilter.data !== "intro"
+        ? []
+        : await (async () => {
+            const conds = [];
+            if (statusFilter.success)
+              conds.push(eq(enrollmentsTable.status, statusFilter.data));
+            if (tierFilterRaw && TierSchema.safeParse(tierFilterRaw).success) {
+              conds.push(eq(enrollmentsTable.tier, tierFilterRaw));
+            }
+            const q = db
+              .select({
+                id: enrollmentsTable.id,
+                userId: enrollmentsTable.userId,
+                studentName: usersTable.name,
+                studentEmail: usersTable.email,
+                tier: enrollmentsTable.tier,
+                status: enrollmentsTable.status,
+                source: enrollmentsTable.source,
+                grantedAt: enrollmentsTable.grantedAt,
+                expiresAt: enrollmentsTable.expiresAt,
+                note: enrollmentsTable.note,
+              })
+              .from(enrollmentsTable)
+              .leftJoin(
+                usersTable,
+                eq(enrollmentsTable.userId, usersTable.id),
+              );
+            const rows = conds.length
+              ? await q.where(and(...conds))
+              : await q;
+            return rows.map((r) => ({ ...r, course: "intro" as const }));
+          })();
 
-    const baseQuery = db
-      .select({
-        id: enrollmentsTable.id,
-        userId: enrollmentsTable.userId,
-        studentName: usersTable.name,
-        studentEmail: usersTable.email,
-        tier: enrollmentsTable.tier,
-        status: enrollmentsTable.status,
-        source: enrollmentsTable.source,
-        grantedAt: enrollmentsTable.grantedAt,
-        expiresAt: enrollmentsTable.expiresAt,
-        note: enrollmentsTable.note,
-      })
-      .from(enrollmentsTable)
-      .leftJoin(usersTable, eq(enrollmentsTable.userId, usersTable.id));
+    const englishRows =
+      courseFilter.success && courseFilter.data !== "english"
+        ? []
+        : await (async () => {
+            const conds = [];
+            if (statusFilter.success)
+              conds.push(
+                eq(englishEnrollmentsTable.status, statusFilter.data),
+              );
+            if (
+              tierFilterRaw &&
+              EnglishTierSchema.safeParse(tierFilterRaw).success
+            ) {
+              conds.push(eq(englishEnrollmentsTable.tier, tierFilterRaw));
+            }
+            const q = db
+              .select({
+                id: englishEnrollmentsTable.id,
+                userId: englishEnrollmentsTable.userId,
+                studentName: usersTable.name,
+                studentEmail: usersTable.email,
+                tier: englishEnrollmentsTable.tier,
+                status: englishEnrollmentsTable.status,
+                source: englishEnrollmentsTable.source,
+                grantedAt: englishEnrollmentsTable.grantedAt,
+                expiresAt: englishEnrollmentsTable.expiresAt,
+                note: englishEnrollmentsTable.note,
+              })
+              .from(englishEnrollmentsTable)
+              .leftJoin(
+                usersTable,
+                eq(englishEnrollmentsTable.userId, usersTable.id),
+              );
+            const rows = conds.length
+              ? await q.where(and(...conds))
+              : await q;
+            return rows.map((r) => ({ ...r, course: "english" as const }));
+          })();
 
-    const rows = conditions.length
-      ? await baseQuery.where(and(...conditions)).orderBy(desc(enrollmentsTable.grantedAt))
-      : await baseQuery.orderBy(desc(enrollmentsTable.grantedAt));
-
-    res.json({ enrollments: rows });
+    const all = [...introRows, ...englishRows].sort(
+      (a, b) =>
+        new Date(b.grantedAt).getTime() - new Date(a.grantedAt).getTime(),
+    );
+    res.json({ enrollments: all });
   } catch (err) {
     next(err);
   }
@@ -306,6 +345,16 @@ router.patch(
   async (req, res, next) => {
     try {
       const enrollmentId = String(req.params.id);
+      const courseQ = CourseSchema.safeParse(req.query.course);
+      if (!courseQ.success) {
+        res.status(400).json({
+          error: "Query param 'course' must be 'intro' or 'english'.",
+        });
+        return;
+      }
+      const course = courseQ.data;
+      const table =
+        course === "english" ? englishEnrollmentsTable : enrollmentsTable;
       const parsed = PatchEnrollmentBody.safeParse(req.body);
       if (!parsed.success) {
         res
@@ -318,8 +367,8 @@ router.patch(
 
       const [existing] = await db
         .select()
-        .from(enrollmentsTable)
-        .where(eq(enrollmentsTable.id, enrollmentId))
+        .from(table)
+        .where(eq(table.id, enrollmentId))
         .limit(1);
       if (!existing) {
         res.status(404).json({ error: "Enrollment not found" });
@@ -332,14 +381,14 @@ router.patch(
         existing.status !== "active"
       ) {
         const [conflict] = await db
-          .select({ id: enrollmentsTable.id })
-          .from(enrollmentsTable)
+          .select({ id: table.id })
+          .from(table)
           .where(
             and(
-              eq(enrollmentsTable.userId, existing.userId),
-              eq(enrollmentsTable.tier, existing.tier),
-              eq(enrollmentsTable.status, "active"),
-              ne(enrollmentsTable.id, enrollmentId),
+              eq(table.userId, existing.userId),
+              eq(table.tier, existing.tier),
+              eq(table.status, "active"),
+              ne(table.id, enrollmentId),
             ),
           )
           .limit(1);
@@ -352,7 +401,7 @@ router.patch(
         }
       }
 
-      const updates: Partial<typeof enrollmentsTable.$inferInsert> = {};
+      const updates: Record<string, unknown> = {};
       if (parsed.data.status !== undefined) updates.status = parsed.data.status;
       if (parsed.data.expiresAt !== undefined)
         updates.expiresAt = parsed.data.expiresAt
@@ -361,12 +410,43 @@ router.patch(
       if (parsed.data.note !== undefined) updates.note = parsed.data.note;
 
       const [updated] = await db
-        .update(enrollmentsTable)
+        .update(table)
         .set(updates)
-        .where(eq(enrollmentsTable.id, enrollmentId))
+        .where(eq(table.id, enrollmentId))
         .returning();
 
-      res.json({ enrollment: updated });
+      res.json({ enrollment: { ...updated, course } });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.delete(
+  "/admin/enrollments/:id",
+  requireAdmin,
+  async (req, res, next) => {
+    try {
+      const enrollmentId = String(req.params.id);
+      const courseQ = CourseSchema.safeParse(req.query.course);
+      if (!courseQ.success) {
+        res.status(400).json({
+          error: "Query param 'course' must be 'intro' or 'english'.",
+        });
+        return;
+      }
+      const course = courseQ.data;
+      const table =
+        course === "english" ? englishEnrollmentsTable : enrollmentsTable;
+      const result = await db
+        .delete(table)
+        .where(eq(table.id, enrollmentId))
+        .returning({ id: table.id });
+      if (result.length === 0) {
+        res.status(404).json({ error: "Enrollment not found" });
+        return;
+      }
+      res.json({ message: "Enrollment deleted." });
     } catch (err) {
       next(err);
     }

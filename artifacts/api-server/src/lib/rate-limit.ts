@@ -44,6 +44,28 @@ export const sendVerificationLimiter = rateLimit({
   message: { error: "Too many verification email requests. Please try again later." },
 });
 
+// Throttles admin broadcast email so a compromised admin session can't blast
+// every recipient repeatedly. Per-admin (session userId) bucket; conservative
+// in production, generous in dev for testing.
+export const broadcastEmailLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: isProd ? 5 : 1000,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    const ip = ipKeyGenerator(req.ip ?? "");
+    const userId =
+      typeof (req as { session?: { userId?: string } }).session?.userId ===
+      "string"
+        ? (req as { session: { userId: string } }).session.userId
+        : "";
+    return userId ? `broadcast|${userId}` : `broadcast|${ip}`;
+  },
+  message: {
+    error: "Too many broadcast attempts. Please wait an hour and try again.",
+  },
+});
+
 export const forgotPasswordLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   limit: isProd ? 5 : 1000,

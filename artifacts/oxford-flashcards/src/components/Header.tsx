@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Moon, Sun, LogOut, LayoutDashboard, Shield, ChevronDown, Languages } from "lucide-react";
+import { Menu, X, Moon, Sun, LogOut, LayoutDashboard, Shield, ChevronDown } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/lib/auth-context";
@@ -32,26 +32,65 @@ function Avatar({ name }: { name: string }) {
 }
 
 function LangToggle({ compact = true, onToggle }: { compact?: boolean; onToggle?: () => void }) {
-  const { lang, toggle, t } = useLanguage();
-  const target = lang === "ar" ? "en" : "ar";
-  const label = lang === "ar" ? t("header.langSwitchToEn") : t("header.langSwitchToAr");
+  const { lang, setLang, t } = useLanguage();
+
+  const options: { code: "en" | "ar"; flag: string; label: string; ariaLabel: string }[] = [
+    { code: "en", flag: "🇬🇧", label: "EN", ariaLabel: t("header.langSwitchToEn") },
+    { code: "ar", flag: "🇸🇦", label: "العربية", ariaLabel: t("header.langSwitchToAr") },
+  ];
+
+  const handleClick = (code: "en" | "ar") => {
+    if (code !== lang) setLang(code);
+    onToggle?.();
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => {
-        toggle();
-        onToggle?.();
-      }}
-      aria-label={label}
-      title={label}
+    <div
       data-testid="lang-toggle"
+      role="group"
+      aria-label="Language switcher"
       className={`${
-        compact ? "h-10 px-3" : "w-full px-4 py-2.5"
-      } inline-flex items-center justify-center gap-2 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/60 transition-all hover:scale-105 active:scale-95 shadow-sm font-bold text-xs uppercase tracking-wider`}
+        compact ? "h-10" : "w-full h-11"
+      } inline-flex items-center justify-center rounded-xl border border-slate-200 dark:border-gray-700 bg-white/70 dark:bg-gray-900/70 backdrop-blur shadow-sm overflow-hidden`}
     >
-      <Languages size={14} />
-      <span>{target.toUpperCase()}</span>
-    </button>
+      {options.map((opt, i) => {
+        const active = lang === opt.code;
+        return (
+          <div key={opt.code} className="flex items-center h-full">
+            {i > 0 && (
+              <span
+                aria-hidden="true"
+                className="h-5 w-px bg-slate-200 dark:bg-gray-700"
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => handleClick(opt.code)}
+              aria-label={opt.ariaLabel}
+              aria-pressed={active}
+              title={opt.ariaLabel}
+              data-testid={`lang-option-${opt.code}`}
+              className={`${
+                compact ? "h-full px-3" : "h-full px-4 flex-1"
+              } inline-flex items-center justify-center gap-1.5 text-sm font-bold transition-all duration-300 ease-out ${
+                active
+                  ? "bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white shadow-inner scale-100"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800 hover:text-indigo-700 dark:hover:text-indigo-300"
+              }`}
+            >
+              <span className="text-base leading-none" aria-hidden="true">
+                {opt.flag}
+              </span>
+              <span
+                className={`${opt.code === "ar" ? "text-[13px]" : "text-xs uppercase tracking-wider"}`}
+              >
+                {opt.label}
+              </span>
+            </button>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

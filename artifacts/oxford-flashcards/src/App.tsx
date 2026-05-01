@@ -10,7 +10,6 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import Dashboard from "@/pages/Dashboard";
 import ComingSoon from "@/pages/ComingSoon";
-import FontSamples from "@/pages/FontSamples";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -52,7 +51,6 @@ export default function App() {
         <Route path="/affiliate">
           <ComingSoon titleKey="comingSoon.affiliate.title" descKey="comingSoon.affiliate.desc" />
         </Route>
-        <Route path="/font-samples" component={FontSamples} />
         <Route path="/admin">
           <ProtectedRoute requireAdmin>
             <ComingSoon titleKey="comingSoon.admin.title" descKey="comingSoon.admin.desc" />

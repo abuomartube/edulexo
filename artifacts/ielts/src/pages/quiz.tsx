@@ -55,7 +55,7 @@ export default function Quiz() {
 
   const loadHistory = useCallback(async () => {
     try {
-      const data = await customFetch<QuizScore[]>("/api/quiz-scores");
+      const data = await customFetch<QuizScore[]>("/api-ielts/quiz-scores");
       setHistory(data);
     } catch {}
   }, []);
@@ -137,7 +137,7 @@ export default function Quiz() {
   useEffect(() => {
     if (done && !scoreSaved && results.total > 0) {
       setScoreSaved(true);
-      customFetch("/api/quiz-scores", {
+      customFetch("/api-ielts/quiz-scores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mode, level, total: results.total, correct: results.correct, wrong: results.wrong }),

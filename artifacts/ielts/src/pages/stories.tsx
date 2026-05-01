@@ -272,7 +272,7 @@ function VoiceReader({ content }: { content: string }) {
     ctx: AudioContext,
     myGen: number,
   ): Promise<AudioBuffer | null> => {
-    const res = await fetch("/api/speaking/tts", {
+    const res = await fetch("/api-ielts/speaking/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, speed: spd, model: "tts-1" }),
@@ -315,7 +315,7 @@ function VoiceReader({ content }: { content: string }) {
     others.forEach(async (s) => {
       if (audioCacheRef.current.has(s)) return;
       try {
-        const res = await fetch("/api/speaking/tts", {
+        const res = await fetch("/api-ielts/speaking/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ text: content, speed: s, model: "tts-1" }),
@@ -770,7 +770,7 @@ export default function StoriesPage() {
     queryKey: ["stories", levelFilter],
     queryFn: async () => {
       const url = levelFilter === "All"
-        ? "/api/stories"
+        ? "/api-ielts/stories"
         : `/api/stories?level=${levelFilter}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to load stories");
@@ -781,7 +781,7 @@ export default function StoriesPage() {
   const { data: completedKeys = {} } = useQuery<Record<string, string>>({
     queryKey: ["story-completions"],
     queryFn: async () => {
-      const res = await customFetch<{ keys: Record<string, string> }>("/api/user-data-prefix/story_completed_");
+      const res = await customFetch<{ keys: Record<string, string> }>("/api-ielts/user-data-prefix/story_completed_");
       return res.keys;
     },
   });

@@ -221,7 +221,7 @@ export default function FlipIt() {
       setPhase("flipped");
       setCardsSeen((n) => n + 1);
       // Record a progress event so the day counts toward the daily streak.
-      customFetch("/api/progress", {
+      customFetch("/api-ielts/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ flashcardId: nextCard.id, known: false }),
@@ -297,7 +297,7 @@ export default function FlipIt() {
     }
     // Save a quiz-score entry so it counts in Teacher Dashboard.
     if (cardsSeen > 0) {
-      customFetch("/api/quiz-scores", {
+      customFetch("/api-ielts/quiz-scores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

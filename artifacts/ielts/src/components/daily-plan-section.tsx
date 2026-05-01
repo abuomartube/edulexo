@@ -32,9 +32,9 @@ export function DailyPlanSection() {
     (async () => {
       try {
         const [lvlRes, dateRes, startRes] = await Promise.all([
-          customFetch<{ value: string }>("/api/user-data/current_level").catch(() => null),
-          customFetch<{ value: string }>("/api/user-data/exam_date").catch(() => null),
-          customFetch<{ value: string }>("/api/user-data/plan_start_date").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/current_level").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/exam_date").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/plan_start_date").catch(() => null),
         ]);
         if (cancelled) return;
         setLevel(lvlRes?.value ?? null);

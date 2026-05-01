@@ -131,12 +131,12 @@ export async function downloadPlanPdf(opts: DownloadPlanPdfOptions = {}): Promis
   let durVal = opts.duration ?? null;
   let nameVal = opts.name ?? null;
 
-  if (levelVal === null) tasks.push(customFetch<{ value: string }>("/api/user-data/current_level").then((r) => { levelVal = r.value; }).catch(() => undefined));
-  if (bandVal === null) tasks.push(customFetch<{ value: string }>("/api/user-data/target_band").then((r) => { bandVal = r.value; }).catch(() => undefined));
-  if (examVal === null) tasks.push(customFetch<{ value: string }>("/api/user-data/exam_date").then((r) => { examVal = r.value; }).catch(() => undefined));
-  if (startVal === null) tasks.push(customFetch<{ value: string }>("/api/user-data/plan_start_date").then((r) => { startVal = r.value; }).catch(() => undefined));
-  if (durVal === null) tasks.push(customFetch<{ value: string }>("/api/user-data/plan_duration_days").then((r) => { durVal = Number(r.value); }).catch(() => undefined));
-  if (nameVal === null) tasks.push(customFetch<{ value: string }>("/api/user-data/name").then((r) => { nameVal = r.value; }).catch(() => undefined));
+  if (levelVal === null) tasks.push(customFetch<{ value: string }>("/api-ielts/user-data/current_level").then((r) => { levelVal = r.value; }).catch(() => undefined));
+  if (bandVal === null) tasks.push(customFetch<{ value: string }>("/api-ielts/user-data/target_band").then((r) => { bandVal = r.value; }).catch(() => undefined));
+  if (examVal === null) tasks.push(customFetch<{ value: string }>("/api-ielts/user-data/exam_date").then((r) => { examVal = r.value; }).catch(() => undefined));
+  if (startVal === null) tasks.push(customFetch<{ value: string }>("/api-ielts/user-data/plan_start_date").then((r) => { startVal = r.value; }).catch(() => undefined));
+  if (durVal === null) tasks.push(customFetch<{ value: string }>("/api-ielts/user-data/plan_duration_days").then((r) => { durVal = Number(r.value); }).catch(() => undefined));
+  if (nameVal === null) tasks.push(customFetch<{ value: string }>("/api-ielts/user-data/name").then((r) => { nameVal = r.value; }).catch(() => undefined));
   if (tasks.length) await Promise.all(tasks);
 
   if (!levelVal) throw new Error("Your study level isn't set yet. Finish onboarding first.");
@@ -187,7 +187,7 @@ export async function downloadPlanPdf(opts: DownloadPlanPdfOptions = {}): Promis
   // 4. POST via customFetch so the student auth headers are attached.
   let blob: Blob;
   try {
-    blob = await customFetch<Blob>("/api/plan-pdf", {
+    blob = await customFetch<Blob>("/api-ielts/plan-pdf", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

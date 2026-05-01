@@ -322,7 +322,7 @@ export default function SpellIt() {
       // Step 1: clue + example sentence (with offline fallback).
       let theClue: Clue;
       try {
-        theClue = await customFetch<Clue>("/api/spell-it/clue", {
+        theClue = await customFetch<Clue>("/api-ielts/spell-it/clue", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ word: target.english, level: lvl }),
@@ -369,7 +369,7 @@ export default function SpellIt() {
     } else {
       playWrong();
     }
-    customFetch("/api/progress", {
+    customFetch("/api-ielts/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ flashcardId: currentCard.id, known: correct }),
@@ -620,7 +620,7 @@ export default function SpellIt() {
       awardXp({ activity: "spell_it", amount: earned });
     }
     if (wordsAttempted > 0) {
-      customFetch("/api/quiz-scores", {
+      customFetch("/api-ielts/quiz-scores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

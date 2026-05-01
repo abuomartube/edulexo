@@ -5,7 +5,7 @@ version = "1.0.0"
 id = "artifacts/ielts-api"
 
 [[services]]
-localPort = 8081
+localPort = 8082
 name = "IELTS API Server"
 paths = ["/api-ielts"]
 
@@ -24,7 +24,7 @@ NODE_ENV = "production"
 args = ["node", "--enable-source-maps", "artifacts/ielts-api/dist/index.mjs"]
 
 [services.production.run.env]
-PORT = "8081"
+PORT = "8082"
 NODE_ENV = "production"
 
 [services.production.health.startup]

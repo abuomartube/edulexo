@@ -84,7 +84,7 @@ export function useGuidedTour() {
       setChecked(true);
       return;
     }
-    customFetch<{ value: string }>("/api/user-data/tour_completed")
+    customFetch<{ value: string }>("/api-ielts/user-data/tour_completed")
       .then((d) => {
         if (d?.value === "1") {
           localStorage.setItem(TOUR_KEY, "1");
@@ -101,7 +101,7 @@ export function useGuidedTour() {
   const completeTour = useCallback(() => {
     setShowTour(false);
     localStorage.setItem(TOUR_KEY, "1");
-    customFetch("/api/user-data/tour_completed", {
+    customFetch("/api-ielts/user-data/tour_completed", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ value: "1" }),

@@ -669,7 +669,7 @@ export default function EssayChecker() {
     try {
       const fd = new FormData();
       fd.append("image", photoFile);
-      const res = await fetch("/api/orwell/ocr", {
+      const res = await fetch("/api-ielts/orwell/ocr", {
         method: "POST",
         headers: { ...getStudentAuthHeaders() },
         body: fd,
@@ -753,7 +753,7 @@ export default function EssayChecker() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/orwell/progress", { headers: getStudentAuthHeaders() });
+        const res = await fetch("/api-ielts/orwell/progress", { headers: getStudentAuthHeaders() });
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) setProgress(data);
@@ -804,7 +804,7 @@ export default function EssayChecker() {
   const handleSkip = useCallback(async () => {
     if (!assignment) return;
     try {
-      await fetch("/api/orwell/skip", {
+      await fetch("/api-ielts/orwell/skip", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getStudentAuthHeaders() },
         body: JSON.stringify({ assignmentId: assignment.id, category: assignment.category }),
@@ -834,7 +834,7 @@ export default function EssayChecker() {
     setParagraphResult(null);
 
     try {
-      const res = await fetch("/api/orwell/submit", {
+      const res = await fetch("/api-ielts/orwell/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -939,7 +939,7 @@ export default function EssayChecker() {
     const submittedMode = freeMode;
 
     try {
-      const res = await fetch("/api/orwell/submit", {
+      const res = await fetch("/api-ielts/orwell/submit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

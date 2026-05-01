@@ -220,7 +220,7 @@ export default function SentenceBuilder() {
   async function loadHistory() {
     setLoadingHistory(true);
     try {
-      const data = await customFetch<HistoryRow[]>("/api/sentence-sessions");
+      const data = await customFetch<HistoryRow[]>("/api-ielts/sentence-sessions");
       setHistory(data);
     } catch {
       setHistory([]);
@@ -258,7 +258,7 @@ export default function SentenceBuilder() {
     setAnalyzing(true);
     setErr(null);
     try {
-      const data = await customFetch<CheckResult | { error: string }>("/api/sentence-check", {
+      const data = await customFetch<CheckResult | { error: string }>("/api-ielts/sentence-check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -307,7 +307,7 @@ export default function SentenceBuilder() {
     if (allItems.length === 0) return null;
     setSavingReport(true);
     try {
-      const saved = await customFetch<SessionReport>("/api/sentence-sessions", {
+      const saved = await customFetch<SessionReport>("/api-ielts/sentence-sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ level, items: allItems, endedEarly }),
@@ -317,7 +317,7 @@ export default function SentenceBuilder() {
       markTaskDone("sentenceBuilder");
       // Quiz-score entry so it counts in Teacher Dashboard quizzesTaken
       const correct = allItems.filter((i) => i.firstAttemptCorrect).length;
-      customFetch("/api/quiz-scores", {
+      customFetch("/api-ielts/quiz-scores", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

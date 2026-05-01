@@ -17,9 +17,9 @@ function handleLogout() {
         const body = JSON.stringify({ email, token });
         if (navigator.sendBeacon) {
           const blob = new Blob([body], { type: "application/json" });
-          navigator.sendBeacon("/api/session/clear", blob);
+          navigator.sendBeacon("/api-ielts/session/clear", blob);
         } else {
-          fetch("/api/session/clear", {
+          fetch("/api-ielts/session/clear", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body,
@@ -46,8 +46,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     async function refreshProfile() {
       try {
         const [a, n] = await Promise.all([
-          customFetch<{ value: string }>("/api/user-data/avatar").catch(() => ({ value: "" })),
-          customFetch<{ value: string }>("/api/user-data/name").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/avatar").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/name").catch(() => ({ value: "" })),
         ]);
         if (cancelled) return;
         setAvatar(a.value || "");

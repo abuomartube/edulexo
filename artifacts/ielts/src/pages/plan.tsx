@@ -55,11 +55,11 @@ function useUserPlan() {
     (async () => {
       try {
         const [lvl, band, exam, dur, start] = await Promise.all([
-          customFetch<{ value: string }>("/api/user-data/current_level").catch(() => null),
-          customFetch<{ value: string }>("/api/user-data/target_band").catch(() => null),
-          customFetch<{ value: string }>("/api/user-data/exam_date").catch(() => null),
-          customFetch<{ value: string }>("/api/user-data/plan_duration_days").catch(() => null),
-          customFetch<{ value: string }>("/api/user-data/plan_start_date").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/current_level").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/target_band").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/exam_date").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/plan_duration_days").catch(() => null),
+          customFetch<{ value: string }>("/api-ielts/user-data/plan_start_date").catch(() => null),
         ]);
         if (cancelled) return;
         const rawStart = start?.value;
@@ -74,7 +74,7 @@ function useUserPlan() {
           const writes: Promise<unknown>[] = [];
           if (!hasStoredStart) {
             writes.push(
-              customFetch("/api/user-data/plan_start_date", {
+              customFetch("/api-ielts/user-data/plan_start_date", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ value: startISO }),
@@ -83,7 +83,7 @@ function useUserPlan() {
           }
           if (!hasStoredDur) {
             writes.push(
-              customFetch("/api/user-data/plan_duration_days", {
+              customFetch("/api-ielts/user-data/plan_duration_days", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ value: String(duration) }),

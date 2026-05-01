@@ -18,6 +18,9 @@ import {
   Target,
   Globe2,
   Layers,
+  Rocket,
+  GraduationCap,
+  Crown,
 } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
 import lexoIeltsLogo from "@/assets/lexo-ielts.png";
@@ -57,6 +60,93 @@ const valueProps: ValueProp[] = [
   { icon: Brain, labelKey: "ielts.value.coaches" },
   { icon: Trophy, labelKey: "ielts.value.tests" },
   { icon: Globe2, labelKey: "ielts.value.bilingual" },
+];
+
+type Tier = {
+  id: "intro" | "mid" | "complete";
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  href: string;
+  external: boolean;
+  comingSoon: boolean;
+  highlighted: boolean;
+  ringClasses: string;
+  iconGradient: string;
+  ctaClasses: string;
+  nameKey: TranslationKey;
+  rangeKey: TranslationKey;
+  bandKey: TranslationKey;
+  blurbKey: TranslationKey;
+  features: TranslationKey[];
+};
+
+const tiers: Tier[] = [
+  {
+    id: "intro",
+    icon: Rocket,
+    href: "/ielts-intro",
+    external: true,
+    comingSoon: true,
+    highlighted: false,
+    ringClasses: "border-slate-200 dark:border-slate-800",
+    iconGradient: "from-sky-500 to-blue-600",
+    ctaClasses:
+      "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed",
+    nameKey: "ielts.tier.intro.name",
+    rangeKey: "ielts.tier.intro.range",
+    bandKey: "ielts.tier.intro.band",
+    blurbKey: "ielts.tier.intro.blurb",
+    features: [
+      "ielts.tier.intro.f1",
+      "ielts.tier.intro.f2",
+      "ielts.tier.intro.f3",
+      "ielts.tier.intro.f4",
+    ],
+  },
+  {
+    id: "mid",
+    icon: GraduationCap,
+    href: "/app-ielts/",
+    external: true,
+    comingSoon: false,
+    highlighted: false,
+    ringClasses: "border-slate-200 dark:border-slate-800",
+    iconGradient: "from-violet-500 to-purple-600",
+    ctaClasses:
+      "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-[1.02] active:scale-95",
+    nameKey: "ielts.tier.mid.name",
+    rangeKey: "ielts.tier.mid.range",
+    bandKey: "ielts.tier.mid.band",
+    blurbKey: "ielts.tier.mid.blurb",
+    features: [
+      "ielts.tier.mid.f1",
+      "ielts.tier.mid.f2",
+      "ielts.tier.mid.f3",
+      "ielts.tier.mid.f4",
+    ],
+  },
+  {
+    id: "complete",
+    icon: Crown,
+    href: "/app-ielts/",
+    external: true,
+    comingSoon: false,
+    highlighted: true,
+    ringClasses:
+      "border-emerald-400 dark:border-emerald-500 ring-2 ring-emerald-400/40 dark:ring-emerald-500/40",
+    iconGradient: "from-emerald-500 to-teal-600",
+    ctaClasses:
+      "bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:scale-[1.02] active:scale-95 shadow-lg shadow-emerald-500/30",
+    nameKey: "ielts.tier.complete.name",
+    rangeKey: "ielts.tier.complete.range",
+    bandKey: "ielts.tier.complete.band",
+    blurbKey: "ielts.tier.complete.blurb",
+    features: [
+      "ielts.tier.complete.f1",
+      "ielts.tier.complete.f2",
+      "ielts.tier.complete.f3",
+      "ielts.tier.complete.f4",
+    ],
+  },
 ];
 
 export default function IeltsCourse() {
@@ -99,7 +189,7 @@ export default function IeltsCourse() {
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                 <a
-                  href="#enroll"
+                  href="#tiers"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-[1.03] active:scale-95 transition"
                 >
                   {t("ielts.hero.cta1")}
@@ -161,6 +251,115 @@ export default function IeltsCourse() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* TIERS — CHOOSE YOUR TRACK */}
+      <section
+        id="tiers"
+        className="max-w-6xl mx-auto px-4 sm:px-6 pt-2 sm:pt-6 pb-10 sm:pb-14 scroll-mt-20"
+      >
+        <div className="text-center mb-10 sm:mb-12">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
+            {t("ielts.tiers.eyebrow")}
+          </span>
+          <h3 className="mt-4 text-3xl sm:text-4xl font-extrabold tracking-tight">
+            {t("ielts.tiers.title")}
+          </h3>
+          <p className="mt-2 text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+            {t("ielts.tiers.subtitle")}
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-5 sm:gap-6 items-stretch">
+          {tiers.map((tier) => {
+            const TierIcon = tier.icon;
+            const ctaLabel = tier.comingSoon
+              ? t("ielts.tiers.cta.notify")
+              : t("ielts.tiers.cta.open");
+            const CtaArrow = dir === "rtl" ? ArrowLeft : ArrowRight;
+            const ctaInner = (
+              <span className="inline-flex w-full items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition">
+                {ctaLabel}
+                {!tier.comingSoon && <CtaArrow size={16} />}
+              </span>
+            );
+
+            return (
+              <div
+                key={tier.id}
+                className={`relative flex flex-col rounded-2xl bg-white dark:bg-slate-900/60 border ${tier.ringClasses} p-6 shadow-sm hover:shadow-xl transition-all ${tier.highlighted ? "md:-translate-y-2" : "hover:-translate-y-0.5"}`}
+              >
+                {tier.highlighted && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-md">
+                    <Sparkles size={11} />
+                    {t("ielts.tiers.popular")}
+                  </span>
+                )}
+                {tier.comingSoon && (
+                  <span className="absolute top-4 end-4 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px] font-bold uppercase tracking-wider">
+                    {t("ielts.tiers.comingSoon")}
+                  </span>
+                )}
+
+                <div
+                  className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${tier.iconGradient} flex items-center justify-center text-white shadow-md mb-4`}
+                >
+                  <TierIcon size={26} />
+                </div>
+
+                <h4 className="text-xl font-extrabold text-slate-900 dark:text-white">
+                  {t(tier.nameKey)}
+                </h4>
+                <p className="mt-1 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                  {t(tier.rangeKey)}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  <span className="font-semibold">{t("ielts.tiers.bandLabel")}:</span>{" "}
+                  {t(tier.bandKey)}
+                </p>
+
+                <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {t(tier.blurbKey)}
+                </p>
+
+                <ul className="mt-5 space-y-2.5 flex-1">
+                  {tier.features.map((fKey) => (
+                    <li
+                      key={fKey}
+                      className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300"
+                    >
+                      <CheckCircle2
+                        size={16}
+                        className="text-emerald-500 dark:text-emerald-400 mt-0.5 flex-shrink-0"
+                      />
+                      <span>{t(fKey)}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-6">
+                  {tier.comingSoon ? (
+                    <button
+                      type="button"
+                      disabled
+                      className={`w-full ${tier.ctaClasses} rounded-xl`}
+                      aria-disabled="true"
+                    >
+                      {ctaInner}
+                    </button>
+                  ) : (
+                    <a
+                      href={tier.href}
+                      className={`block w-full ${tier.ctaClasses} rounded-xl`}
+                    >
+                      {ctaInner}
+                    </a>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

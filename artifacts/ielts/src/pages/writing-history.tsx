@@ -146,9 +146,9 @@ export default function WritingHistory() {
     try {
       const headers = getStudentAuthHeaders();
       const [listRes, chartRes, coachRes] = await Promise.all([
-        fetch("/api/orwell/history", { headers }),
-        fetch("/api/orwell/history/chart", { headers }),
-        fetch("/api/orwell/coach-summary", { headers }),
+        fetch("/api-ielts/orwell/history", { headers }),
+        fetch("/api-ielts/orwell/history/chart", { headers }),
+        fetch("/api-ielts/orwell/coach-summary", { headers }),
       ]);
       if (!listRes.ok) throw new Error("Failed to load history");
       if (!chartRes.ok) throw new Error("Failed to load chart");

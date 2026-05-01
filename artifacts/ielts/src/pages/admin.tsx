@@ -142,18 +142,18 @@ export default function AdminPage() {
   const fetchRequests = useCallback(async (ap: string) => {
     setRefreshing(true);
     try {
-      const res = await fetch("/api/admin/requests", { headers: { "x-admin-password": ap } });
+      const res = await fetch("/api-ielts/admin/requests", { headers: { "x-admin-password": ap } });
       if (res.ok) setRequests(await res.json());
     } finally { setRefreshing(false); }
   }, []);
 
   const fetchReviews = useCallback(async (ap: string) => {
-    const res = await fetch("/api/admin/reviews", { headers: { "x-admin-password": ap } });
+    const res = await fetch("/api-ielts/admin/reviews", { headers: { "x-admin-password": ap } });
     if (res.ok) setReviews(await res.json());
   }, []);
 
   const fetchAccessCode = useCallback(async (ap: string) => {
-    const res = await fetch("/api/admin/access-code", { headers: { "x-admin-password": ap } });
+    const res = await fetch("/api-ielts/admin/access-code", { headers: { "x-admin-password": ap } });
     if (res.ok) { const d = await res.json(); setAccessCode(d.code); }
   }, []);
 
@@ -162,7 +162,7 @@ export default function AdminPage() {
     setLoginLoading(true);
     setLoginError("");
     try {
-      const res = await fetch("/api/admin/requests", { headers: { "x-admin-password": adminPassword } });
+      const res = await fetch("/api-ielts/admin/requests", { headers: { "x-admin-password": adminPassword } });
       if (res.ok) {
         setLoggedIn(true);
         setRequests(await res.json());
@@ -221,7 +221,7 @@ export default function AdminPage() {
     setCodeLoading(true);
     setCodeMsg(null);
     try {
-      const res = await fetch("/api/admin/change-access-code", {
+      const res = await fetch("/api-ielts/admin/change-access-code", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ adminPassword, newCode: newCode.trim() }),
@@ -242,7 +242,7 @@ export default function AdminPage() {
     setPwdLoading(true);
     setPwdMsg(null);
     try {
-      const res = await fetch("/api/admin/change-password", {
+      const res = await fetch("/api-ielts/admin/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ adminPassword, newPassword: newPassword.trim() }),
@@ -325,7 +325,7 @@ export default function AdminPage() {
 
   const fetchAvatar = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/avatar");
+      const res = await fetch("/api-ielts/admin/avatar");
       if (res.ok) { const d = await res.json(); setAdminAvatar(d.dataUrl ?? null); }
     } catch { /* ignore */ }
   }, []);
@@ -369,7 +369,7 @@ export default function AdminPage() {
 
     setAvatarUploading(true);
     try {
-      const res = await fetch("/api/admin/avatar", {
+      const res = await fetch("/api-ielts/admin/avatar", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ dataUrl }),
@@ -390,7 +390,7 @@ export default function AdminPage() {
     setAvatarUploading(true);
     setAvatarMsg(null);
     try {
-      const res = await fetch("/api/admin/avatar", {
+      const res = await fetch("/api-ielts/admin/avatar", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
         body: JSON.stringify({ dataUrl: null }),

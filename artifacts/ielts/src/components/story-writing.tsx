@@ -72,7 +72,7 @@ export function StoryWriting({ storyId, onComplete }: StoryWritingProps) {
       new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     audioCtxRef.current = ctx;
 
-    const fetchPromise = fetch("/api/speaking/tts", {
+    const fetchPromise = fetch("/api-ielts/speaking/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

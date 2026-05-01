@@ -40,7 +40,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
-  return `/api/healthz`;
+  return `/api-ielts/healthz`;
 };
 
 export const healthCheck = async (
@@ -53,7 +53,7 @@ export const healthCheck = async (
 };
 
 export const getHealthCheckQueryKey = () => {
-  return [`/api/healthz`] as const;
+  return [`/api-ielts/healthz`] as const;
 };
 
 export const getHealthCheckQueryOptions = <
@@ -126,8 +126,8 @@ export const getListFlashcardsUrl = (params?: ListFlashcardsParams) => {
   const stringifiedParams = normalizedParams.toString();
 
   return stringifiedParams.length > 0
-    ? `/api/flashcards?${stringifiedParams}`
-    : `/api/flashcards`;
+    ? `/api-ielts/flashcards?${stringifiedParams}`
+    : `/api-ielts/flashcards`;
 };
 
 export const listFlashcards = async (
@@ -141,7 +141,7 @@ export const listFlashcards = async (
 };
 
 export const getListFlashcardsQueryKey = (params?: ListFlashcardsParams) => {
-  return [`/api/flashcards`, ...(params ? [params] : [])] as const;
+  return [`/api-ielts/flashcards`, ...(params ? [params] : [])] as const;
 };
 
 export const getListFlashcardsQueryOptions = <
@@ -209,7 +209,7 @@ export function useListFlashcards<
  * @summary Get stats per level
  */
 export const getGetFlashcardLevelStatsUrl = () => {
-  return `/api/flashcards/levels`;
+  return `/api-ielts/flashcards/levels`;
 };
 
 export const getFlashcardLevelStats = async (
@@ -222,7 +222,7 @@ export const getFlashcardLevelStats = async (
 };
 
 export const getGetFlashcardLevelStatsQueryKey = () => {
-  return [`/api/flashcards/levels`] as const;
+  return [`/api-ielts/flashcards/levels`] as const;
 };
 
 export const getGetFlashcardLevelStatsQueryOptions = <
@@ -285,7 +285,7 @@ export function useGetFlashcardLevelStats<
  * @summary List all categories
  */
 export const getListCategoriesUrl = () => {
-  return `/api/flashcards/categories`;
+  return `/api-ielts/flashcards/categories`;
 };
 
 export const listCategories = async (
@@ -298,7 +298,7 @@ export const listCategories = async (
 };
 
 export const getListCategoriesQueryKey = () => {
-  return [`/api/flashcards/categories`] as const;
+  return [`/api-ielts/flashcards/categories`] as const;
 };
 
 export const getListCategoriesQueryOptions = <
@@ -360,7 +360,7 @@ export function useListCategories<
  * @summary Get a flashcard by ID
  */
 export const getGetFlashcardUrl = (id: number) => {
-  return `/api/flashcards/${id}`;
+  return `/api-ielts/flashcards/${id}`;
 };
 
 export const getFlashcard = async (
@@ -374,7 +374,7 @@ export const getFlashcard = async (
 };
 
 export const getGetFlashcardQueryKey = (id: number) => {
-  return [`/api/flashcards/${id}`] as const;
+  return [`/api-ielts/flashcards/${id}`] as const;
 };
 
 export const getGetFlashcardQueryOptions = <
@@ -447,7 +447,7 @@ export function useGetFlashcard<
  * @summary Get user progress
  */
 export const getGetProgressUrl = () => {
-  return `/api/progress`;
+  return `/api-ielts/progress`;
 };
 
 export const getProgress = async (
@@ -460,7 +460,7 @@ export const getProgress = async (
 };
 
 export const getGetProgressQueryKey = () => {
-  return [`/api/progress`] as const;
+  return [`/api-ielts/progress`] as const;
 };
 
 export const getGetProgressQueryOptions = <
@@ -522,7 +522,7 @@ export function useGetProgress<
  * @summary Record card result (known/unknown)
  */
 export const getUpsertProgressUrl = () => {
-  return `/api/progress`;
+  return `/api-ielts/progress`;
 };
 
 export const upsertProgress = async (
@@ -608,7 +608,7 @@ export const useUpsertProgress = <
  * @summary Get progress summary (totals per level)
  */
 export const getGetProgressSummaryUrl = () => {
-  return `/api/progress/summary`;
+  return `/api-ielts/progress/summary`;
 };
 
 export const getProgressSummary = async (
@@ -621,7 +621,7 @@ export const getProgressSummary = async (
 };
 
 export const getGetProgressSummaryQueryKey = () => {
-  return [`/api/progress/summary`] as const;
+  return [`/api-ielts/progress/summary`] as const;
 };
 
 export const getGetProgressSummaryQueryOptions = <

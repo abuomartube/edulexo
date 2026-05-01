@@ -50,7 +50,7 @@ export function NotificationPrompt() {
   const handleEnable = useCallback(async () => {
     setEnabling(true);
     try {
-      const { publicKey } = await customFetch<{ publicKey: string }>("/api/notifications/vapid-key");
+      const { publicKey } = await customFetch<{ publicKey: string }>("/api-ielts/notifications/vapid-key");
       if (!publicKey) { setShow(false); return; }
 
       const reg = await registerSW();
@@ -66,7 +66,7 @@ export function NotificationPrompt() {
       const sub = await subscribeToPush(reg, publicKey);
       const subJson = sub.toJSON();
 
-      await customFetch("/api/notifications/subscribe", {
+      await customFetch("/api-ielts/notifications/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -188,7 +188,7 @@ export function LexoAiChat() {
         .filter((m) => !m.isWelcome)
         .slice(-MAX_OUTBOUND)
         .map((m) => ({ role: m.role, content: m.content }));
-      const res = await fetch("/api/lexo-ai/chat", {
+      const res = await fetch("/api-ielts/lexo-ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ messages: payload }),

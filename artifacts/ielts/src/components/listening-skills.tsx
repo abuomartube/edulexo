@@ -402,7 +402,7 @@ function AudioPlayer({ testId, lines, onFirstPlay }:{ testId: string; lines: Aud
 
     // 2) Fallback: live TTS via the API (e.g. for new tests not yet pre-generated)
     const voice = line.voice === "f" ? "nova" : "alloy";
-    const res = await fetch("/api/speaking/tts", {
+    const res = await fetch("/api-ielts/speaking/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text: line.text, voice, model: "tts-1", speed: 0.92 }),

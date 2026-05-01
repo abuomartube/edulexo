@@ -69,12 +69,12 @@ async function postJson<T = AuthResponse>(path: string, body: unknown): Promise<
 }
 
 async function checkStatus(email: string): Promise<AuthResponse> {
-  return postJson("/api/access/check", { email });
+  return postJson("/api-ielts/access/check", { email });
 }
 
 async function saveSessionToDb(email: string, token: string) {
   try {
-    await fetch("/api/session/save", {
+    await fetch("/api-ielts/session/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, token }),
@@ -84,7 +84,7 @@ async function saveSessionToDb(email: string, token: string) {
 
 async function checkDbSession(email: string): Promise<{ status: string; token?: string }> {
   try {
-    const res = await fetch("/api/session/check", {
+    const res = await fetch("/api-ielts/session/check", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email }),
@@ -116,11 +116,11 @@ function LandingReviews() {
   const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/reviews/public")
+    fetch("/api-ielts/reviews/public")
       .then(r => r.json())
       .then(data => { if (Array.isArray(data)) setReviews(data); })
       .catch(() => {});
-    fetch("/api/admin/avatar")
+    fetch("/api-ielts/admin/avatar")
       .then(r => r.json())
       .then(d => { if (d?.dataUrl) setAdminAvatar(d.dataUrl); })
       .catch(() => {});
@@ -428,7 +428,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
   // Registration page video (set by admin in Teacher Dashboard)
   const [regVideoEmbedUrl, setRegVideoEmbedUrl] = useState<string | null>(null);
   useEffect(() => {
-    fetch("/api/registration-video")
+    fetch("/api-ielts/registration-video")
       .then((r) => r.json())
       .then((d) => {
         if (d.url) {
@@ -561,7 +561,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setLoading(true); setError(""); setInfo("");
     const normalizedEmail = email.trim().toLowerCase();
-    const result = await postJson("/api/access/request", {
+    const result = await postJson("/api-ielts/access/request", {
       email: normalizedEmail,
       password,
       accessCode: accessCode.trim().toUpperCase(),
@@ -584,7 +584,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
     if (!email.trim() || !password) return;
     setLoading(true); setError(""); setInfo("");
     const normalizedEmail = email.trim().toLowerCase();
-    const result = await postJson("/api/access/login", { email: normalizedEmail, password });
+    const result = await postJson("/api-ielts/access/login", { email: normalizedEmail, password });
     setLoading(false);
     if (result.status === "approved" && result.token) {
       setPassword("");
@@ -611,7 +611,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setLoading(true); setError("");
     const normalizedEmail = email.trim().toLowerCase();
-    const result = await postJson("/api/access/setup-password", {
+    const result = await postJson("/api-ielts/access/setup-password", {
       email: normalizedEmail, setupToken, password,
     });
     setLoading(false);

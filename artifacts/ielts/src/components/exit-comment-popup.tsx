@@ -41,7 +41,7 @@ export function ExitCommentPopup() {
     if (!comment.trim() || submitting) { close(); return; }
     setSubmitting(true);
     try {
-      await fetch("/api/feedback", {
+      await fetch("/api-ielts/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ comment: comment.trim() }),

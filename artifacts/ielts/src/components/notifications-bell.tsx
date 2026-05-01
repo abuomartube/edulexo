@@ -48,7 +48,7 @@ export function NotificationsBell({ variant = "sidebar" }: NotificationsBellProp
 
   const fetchUnread = useCallback(async () => {
     try {
-      const res = await customFetch<{ unread: number }>("/api/notifications/unread-count");
+      const res = await customFetch<{ unread: number }>("/api-ielts/notifications/unread-count");
       setUnread(res?.unread ?? 0);
     } catch {
       // Stay quiet; bell simply won't show a dot.
@@ -58,7 +58,7 @@ export function NotificationsBell({ variant = "sidebar" }: NotificationsBellProp
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await customFetch<{ notifications: StudentNotification[] }>("/api/notifications");
+      const res = await customFetch<{ notifications: StudentNotification[] }>("/api-ielts/notifications");
       setItems(res?.notifications ?? []);
     } catch {
       setItems([]);

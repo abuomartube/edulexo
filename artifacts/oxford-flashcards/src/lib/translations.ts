@@ -491,6 +491,61 @@ export const translations = {
     en: "Full admin tools — students, enrollments, FAQs, free lessons, affiliates, analytics — are coming in Iteration 4.",
     ar: "أدوات الإدارة الكاملة — الطلاب، التسجيلات، الأسئلة الشائعة، الدروس المجانية، الشركاء، التحليلات — قادمة في المرحلة الرابعة.",
   },
+
+  // ───────────────────────── IELTS — 3 TIERS ─────────────────────────
+  "ielts.tiers.eyebrow": { en: "Choose Your Track", ar: "اختر مسارك" },
+  "ielts.tiers.title": {
+    en: "Three IELTS programs — one for every level",
+    ar: "ثلاثة برامج للأيلتس — لكل مستوى ما يناسبه",
+  },
+  "ielts.tiers.subtitle": {
+    en: "Start where you are. Same coaches, same AI, same path to your target band.",
+    ar: "ابدأ من حيث أنت. نفس المدرّبين، نفس الذكاء الاصطناعي، ونفس المسار نحو هدفك.",
+  },
+  "ielts.tiers.popular": { en: "Most Popular", ar: "الأكثر طلباً" },
+  "ielts.tiers.comingSoon": { en: "Coming Soon", ar: "قريباً" },
+  "ielts.tiers.cta.open": { en: "Open Course", ar: "افتح الدورة" },
+  "ielts.tiers.cta.notify": { en: "Notify Me", ar: "أخطِرني" },
+  "ielts.tiers.bandLabel": { en: "Target Band", ar: "النطاق المستهدف" },
+
+  // Intro tier (A2 → B1)
+  "ielts.tier.intro.name": { en: "IELTS Intro", ar: "مقدّمة الأيلتس" },
+  "ielts.tier.intro.range": { en: "A2 → B1", ar: "A2 → B1" },
+  "ielts.tier.intro.band": { en: "Band 4.0 – 5.5", ar: "النطاق 4.0 – 5.5" },
+  "ielts.tier.intro.blurb": {
+    en: "For beginners building IELTS-ready vocabulary and core skills before the full prep journey.",
+    ar: "للمبتدئين الذين يبنون مفردات الأيلتس ومهاراتها الأساسية قبل الانطلاق في الإعداد الكامل.",
+  },
+  "ielts.tier.intro.f1": { en: "A2 + B1 vocabulary (~1,400 words)", ar: "مفردات A2 + B1 (~1,400 كلمة)" },
+  "ielts.tier.intro.f2": { en: "Lessons, study, quiz, browse modes", ar: "دروس، دراسة، اختبارات، تصفّح" },
+  "ielts.tier.intro.f3": { en: "Stories · Listening · Reading practice", ar: "قصص · تدريب استماع وقراءة" },
+  "ielts.tier.intro.f4": { en: "Churchill (Speaking) + Orwell (Writing)", ar: "تشرشل (محادثة) + أورويل (كتابة)" },
+
+  // Mid tier (B1 → C1)
+  "ielts.tier.mid.name": { en: "IELTS Advance", ar: "أيلتس المتقدّم" },
+  "ielts.tier.mid.range": { en: "B1 → C1", ar: "B1 → C1" },
+  "ielts.tier.mid.band": { en: "Band 5.5 – 7.5", ar: "النطاق 5.5 – 7.5" },
+  "ielts.tier.mid.blurb": {
+    en: "For students with a working command of English aiming for a strong band score.",
+    ar: "للطلاب ذوي الإلمام العملي بالإنجليزية الذين يستهدفون درجة قوية في الأيلتس.",
+  },
+  "ielts.tier.mid.f1": { en: "B1 + B2 + C1 vocabulary (~1,800 words)", ar: "مفردات B1 + B2 + C1 (~1,800 كلمة)" },
+  "ielts.tier.mid.f2": { en: "Synonyms, antonyms, phrasal verbs, grammar", ar: "مرادفات، أضداد، أفعال مركّبة، قواعد" },
+  "ielts.tier.mid.f3": { en: "Full Listening + Reading mock tests", ar: "اختبارات استماع وقراءة تجريبيّة كاملة" },
+  "ielts.tier.mid.f4": { en: "Churchill + Orwell + Writing Templates", ar: "تشرشل + أورويل + قوالب الكتابة" },
+
+  // Complete tier (A2 → C1)
+  "ielts.tier.complete.name": { en: "IELTS Complete", ar: "أيلتس الشامل" },
+  "ielts.tier.complete.range": { en: "A2 → C1", ar: "A2 → C1" },
+  "ielts.tier.complete.band": { en: "Band 4.0 – 8.0", ar: "النطاق 4.0 – 8.0" },
+  "ielts.tier.complete.blurb": {
+    en: "The full journey — every level, every module, every coach. Best value for total prep.",
+    ar: "الرحلة الكاملة — جميع المستويات، جميع الوحدات، جميع المدرّبين. أفضل قيمة للإعداد الشامل.",
+  },
+  "ielts.tier.complete.f1": { en: "Full A2 → C1 vocabulary (3,000+ words)", ar: "مفردات كاملة A2 → C1 (3,000+ كلمة)" },
+  "ielts.tier.complete.f2": { en: "Every page: vocab, grammar, synonyms, phrasals", ar: "كل الصفحات: مفردات، قواعد، مرادفات، أفعال مركّبة" },
+  "ielts.tier.complete.f3": { en: "All mock tests + Spell-it + Stories", ar: "كل الاختبارات التجريبيّة + Spell-it + القصص" },
+  "ielts.tier.complete.f4": { en: "Priority access to new modules", ar: "وصول مبكر للوحدات الجديدة" },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

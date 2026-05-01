@@ -19,7 +19,7 @@ export async function fetchRaw(text: string): Promise<ArrayBuffer> {
   if (rawCache.has(key)) return rawCache.get(key)!;
   if (inflight.has(key)) return inflight.get(key)!;
 
-  const p = fetch("/api/speaking/tts", {
+  const p = fetch("/api-ielts/speaking/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text, speed: TTS_SPEED, model: TTS_MODEL, voice: TTS_VOICE }),

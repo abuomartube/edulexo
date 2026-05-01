@@ -349,7 +349,7 @@ async function callSpeakingAPIStream(
 ): Promise<string> {
   let res: Response;
   try {
-    res = await fetch("/api/speaking/message", {
+    res = await fetch("/api-ielts/speaking/message", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages, topic, part, questionNum, isStart }),
@@ -397,7 +397,7 @@ async function callSpeakingAPIStream(
 async function callReportAPI(messages: Message[], topic: string): Promise<ReportData> {
   let res: Response;
   try {
-    res = await fetch("/api/speaking/report", {
+    res = await fetch("/api-ielts/speaking/report", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ messages, topic }),
@@ -1024,7 +1024,7 @@ export default function SpeakingPage() {
     const myId = ++ttsRequestIdRef.current;
 
     try {
-      const res = await fetch("/api/speaking/tts", {
+      const res = await fetch("/api-ielts/speaking/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: clean, speed: ttsSpeedRef.current }),
@@ -1404,7 +1404,7 @@ export default function SpeakingPage() {
         try {
           const formData = new FormData();
           formData.append("audio", blob, "recording.webm");
-          const res = await fetch("/api/speaking/transcribe", { method: "POST", body: formData });
+          const res = await fetch("/api-ielts/speaking/transcribe", { method: "POST", body: formData });
           const data = await res.json();
           if (!res.ok) {
             if (data.error === "quota_exceeded") {

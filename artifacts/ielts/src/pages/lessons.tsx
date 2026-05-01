@@ -104,7 +104,7 @@ export default function Lessons() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/lessons", { headers: getStudentAuthHeaders() });
+      const res = await fetch("/api-ielts/lessons", { headers: getStudentAuthHeaders() });
       if (res.status === 401) {
         setError("Please log in to view your lessons.");
         setLoading(false);

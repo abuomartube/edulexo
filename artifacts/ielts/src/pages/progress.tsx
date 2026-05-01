@@ -34,7 +34,7 @@ function useStoryCompletions() {
   return useQuery<Set<number>>({
     queryKey: ["story-completions-progress"],
     queryFn: async () => {
-      const res = await customFetch<{ keys: Record<string, string> }>("/api/user-data-prefix/story_completed_");
+      const res = await customFetch<{ keys: Record<string, string> }>("/api-ielts/user-data-prefix/story_completed_");
       const ids = new Set<number>();
       for (const [k, v] of Object.entries(res.keys)) {
         if (v === "1") ids.add(Number(k.replace("story_completed_", "")));
@@ -48,7 +48,7 @@ function useStoryCount() {
   return useQuery<number>({
     queryKey: ["story-count"],
     queryFn: async () => {
-      const res = await fetch("/api/stories");
+      const res = await fetch("/api-ielts/stories");
       if (!res.ok) return 0;
       const stories = await res.json();
       return stories.length;
@@ -126,7 +126,7 @@ export default function ProgressPage() {
   const { data: totalStories } = useStoryCount();
 
   const resetMutation = useMutation({
-    mutationFn: () => customFetch("/api/progress/reset", { method: "DELETE" }),
+    mutationFn: () => customFetch("/api-ielts/progress/reset", { method: "DELETE" }),
     onSuccess: () => {
       qc.invalidateQueries();
       setShowResetConfirm(false);

@@ -72,11 +72,11 @@ export default function ProfilePage() {
     (async () => {
       try {
         const [n, l, b, d, a] = await Promise.all([
-          customFetch<{ value: string }>("/api/user-data/name").catch(() => ({ value: "" })),
-          customFetch<{ value: string }>("/api/user-data/current_level").catch(() => ({ value: "" })),
-          customFetch<{ value: string }>("/api/user-data/target_band").catch(() => ({ value: "" })),
-          customFetch<{ value: string }>("/api/user-data/exam_date").catch(() => ({ value: "" })),
-          customFetch<{ value: string }>("/api/user-data/avatar").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/name").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/current_level").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/target_band").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/exam_date").catch(() => ({ value: "" })),
+          customFetch<{ value: string }>("/api-ielts/user-data/avatar").catch(() => ({ value: "" })),
         ]);
         if (cancelled) return;
         const bundle: ProfileBundle = {
@@ -104,7 +104,7 @@ export default function ProfilePage() {
     setSavingProfile(true);
     setProfileMsg(null);
     try {
-      await customFetch("/api/user-data/name", {
+      await customFetch("/api-ielts/user-data/name", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: trimmedName }),
@@ -131,7 +131,7 @@ export default function ProfilePage() {
     setProfileMsg(null);
     try {
       const dataUrl = await resizeImageToDataUrl(file);
-      await customFetch("/api/user-data/avatar", {
+      await customFetch("/api-ielts/user-data/avatar", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: dataUrl }),
@@ -151,7 +151,7 @@ export default function ProfilePage() {
     setAvatarBusy(true);
     setProfileMsg(null);
     try {
-      await customFetch("/api/user-data/avatar", {
+      await customFetch("/api-ielts/user-data/avatar", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: "" }),
@@ -176,7 +176,7 @@ export default function ProfilePage() {
 
     setPwBusy(true);
     try {
-      const res = await fetch("/api/access/change-password", {
+      const res = await fetch("/api-ielts/access/change-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

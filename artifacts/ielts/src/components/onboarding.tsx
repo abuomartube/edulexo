@@ -128,32 +128,32 @@ export function Onboarding({ onComplete }: { onComplete: () => void }) {
     setSaveError(false);
     try {
       await Promise.all([
-        customFetch("/api/user-data/name", {
+        customFetch("/api-ielts/user-data/name", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: trimmedName }),
         }),
-        customFetch("/api/user-data/current_level", {
+        customFetch("/api-ielts/user-data/current_level", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: currentLevel }),
         }),
-        customFetch("/api/user-data/target_band", {
+        customFetch("/api-ielts/user-data/target_band", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: String(targetBand) }),
         }),
-        customFetch("/api/user-data/exam_date", {
+        customFetch("/api-ielts/user-data/exam_date", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: noExamDate ? "not_set" : examDate }),
         }),
-        customFetch("/api/user-data/plan_duration_days", {
+        customFetch("/api-ielts/user-data/plan_duration_days", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: String(planDuration) }),
         }),
-        customFetch("/api/user-data/plan_start_date", {
+        customFetch("/api-ielts/user-data/plan_start_date", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ value: todayISO() }),
@@ -632,7 +632,7 @@ export function NamePromptModal({ onSaved }: { onSaved: () => void }) {
     setSaving(true);
     setError("");
     try {
-      await customFetch("/api/user-data/name", {
+      await customFetch("/api-ielts/user-data/name", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ value: trimmed }),
@@ -710,10 +710,10 @@ export function useOnboardingCheck() {
     async function check() {
       try {
         const [levelRes, bandRes, dateRes, nameRes] = await Promise.all([
-          customFetch<{ value: string }>("/api/user-data/current_level"),
-          customFetch<{ value: string }>("/api/user-data/target_band"),
-          customFetch<{ value: string }>("/api/user-data/exam_date"),
-          customFetch<{ value: string }>("/api/user-data/name"),
+          customFetch<{ value: string }>("/api-ielts/user-data/current_level"),
+          customFetch<{ value: string }>("/api-ielts/user-data/target_band"),
+          customFetch<{ value: string }>("/api-ielts/user-data/exam_date"),
+          customFetch<{ value: string }>("/api-ielts/user-data/name"),
         ]);
         const hasOnboarding = !!(bandRes.value && dateRes.value && levelRes.value);
         if (!hasOnboarding) {

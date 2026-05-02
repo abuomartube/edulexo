@@ -12,6 +12,7 @@ import VerifyEmail from "@/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import Checkout from "@/pages/Checkout";
 import CourseDetail from "@/pages/CourseDetail";
+import EnglishCourseDetail from "@/pages/EnglishCourseDetail";
 import MyPayments from "@/pages/MyPayments";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ComingSoon from "@/pages/ComingSoon";
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/english" component={LandingPage} />
         <Route path="/ielts" component={IeltsCourse} />
         <Route path="/course/ielts/:tier" component={CourseDetail} />
+        <Route path="/course/english/:tier" component={EnglishCourseDetail} />
         <Route path="/demo" component={DemoFlashcards} />
         <Route path="/app" component={FlashcardApp} />
 

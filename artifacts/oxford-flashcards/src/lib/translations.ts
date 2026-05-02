@@ -1292,6 +1292,157 @@ export const translations = {
   "course.detail.cta.includes": { en: "1 year of full access", ar: "سنة كاملة من الوصول الشامل" },
   "course.detail.invalid": { en: "Course not found.", ar: "الدورة غير موجودة." },
 
+  // ───────── ENGLISH COURSE DETAIL (separate from IELTS) ─────────
+  "english.course.tier.foundations.name": { en: "English Foundations", ar: "أساسيّات الإنجليزيّة" },
+  "english.course.tier.foundations.range": { en: "A1 → B1", ar: "A1 → B1" },
+  "english.course.tier.foundations.level": { en: "Beginner → Intermediate", ar: "مبتدئ → متوسط" },
+  "english.course.tier.foundations.blurb": {
+    en: "Build your English from zero — everyday vocabulary, simple grammar, and clear British pronunciation, all explained in Arabic.",
+    ar: "ابنِ إنجليزيّتك من الصفر — مفردات يوميّة وقواعد بسيطة ونطق بريطاني واضح، كل ذلك مشروحاً بالعربيّة.",
+  },
+  "english.course.tier.foundations.f1": {
+    en: "Core 2,000 everyday words (CEFR A1–B1)",
+    ar: "أهم 2,000 كلمة يوميّة (CEFR A1–B1)",
+  },
+  "english.course.tier.foundations.f2": {
+    en: "Bilingual flashcards with native British audio",
+    ar: "بطاقات ثنائيّة اللغة بصوت بريطاني أصلي",
+  },
+  "english.course.tier.foundations.f3": {
+    en: "Phonics, basic grammar & pronunciation drills",
+    ar: "الفونيكس وأساسيّات القواعد وتمارين النطق",
+  },
+  "english.course.tier.foundations.f4": {
+    en: "Guided 10-minute daily practice plan",
+    ar: "خطة تدريب يوميّة موجّهة في 10 دقائق",
+  },
+
+  "english.course.tier.advanced.name": { en: "English Advanced", ar: "الإنجليزيّة المتقدّمة" },
+  "english.course.tier.advanced.range": { en: "B1 → C1", ar: "B1 → C1" },
+  "english.course.tier.advanced.level": { en: "Intermediate → Advanced", ar: "متوسط → متقدّم" },
+  "english.course.tier.advanced.blurb": {
+    en: "Reach near-native fluency with academic vocabulary, idioms, complex grammar, and natural-sounding writing.",
+    ar: "اقترب من طلاقة المتحدّث الأصلي عبر مفردات أكاديميّة وتعابير اصطلاحيّة وقواعد متقدّمة وكتابة طبيعيّة.",
+  },
+  "english.course.tier.advanced.f1": {
+    en: "Advanced vocabulary 2,500+ (B2 / C1 academic)",
+    ar: "مفردات متقدّمة +2,500 (أكاديمي B2 / C1)",
+  },
+  "english.course.tier.advanced.f2": {
+    en: "Idioms, collocations & phrasal verbs",
+    ar: "التعابير، المتلازمات اللفظيّة والأفعال المركّبة",
+  },
+  "english.course.tier.advanced.f3": {
+    en: "Complex grammar, writing style & register",
+    ar: "قواعد متقدّمة وأسلوب كتابة ومستوى لغويّ مناسب",
+  },
+  "english.course.tier.advanced.f4": {
+    en: "Speaking practice with AI feedback",
+    ar: "تدريب محادثة مع تغذية راجعة من الذكاء الاصطناعي",
+  },
+
+  "english.course.heroTagline": {
+    en: "Bilingual EN ↔ AR · Built for Arabic speakers who want real, lasting fluency.",
+    ar: "ثنائي اللغة EN ↔ AR · مصمَّم للناطقين بالعربيّة الذين يريدون طلاقة حقيقيّة دائمة.",
+  },
+  "english.course.levelEyebrow": { en: "CEFR Path", ar: "مسار CEFR" },
+
+  "english.course.about.body1": {
+    en: "LEXO for English is a complete, structured journey from your first English word to near-native fluency. Every definition, example, and grammar tip is presented in both English and Arabic — so you always understand exactly what you're learning.",
+    ar: "LEXO للإنجليزيّة رحلة متكاملة ومنظّمة من أول كلمة إنجليزيّة حتى الطلاقة شبه الأصليّة. كل تعريف ومثال وقاعدة معروضة بالإنجليزيّة والعربيّة — لتفهم بالضبط ما تتعلّمه.",
+  },
+  "english.course.about.body2": {
+    en: "Each tier is mapped to the international CEFR framework, so you always know your level and what comes next. Track your progress, practice with bite-sized daily sessions, and unlock units as you grow.",
+    ar: "كل مستوى مرتبط بإطار CEFR العالمي، لتعرف دائماً مستواك وما يأتي بعده. تابع تقدّمك ودرّب نفسك بجلسات يوميّة قصيرة وافتح وحدات جديدة كلما تطوّرت.",
+  },
+
+  "english.course.goals.subtitle": {
+    en: "Real outcomes you can measure — from your first sentence to confident conversations.",
+    ar: "نتائج حقيقيّة قابلة للقياس — من أول جملة حتى محادثات بثقة.",
+  },
+  "english.course.goal1.title": { en: "Speak naturally", ar: "تحدّث بطلاقة" },
+  "english.course.goal1.desc": {
+    en: "Pronounce words like a native, hold confident conversations, and lose the fear of speaking.",
+    ar: "انطق الكلمات كالناطقين الأصليّين، وتحدّث بثقة، وتخلّص من رهبة المحادثة.",
+  },
+  "english.course.goal2.title": { en: "Build a powerful vocabulary", ar: "ابنِ مفردات قويّة" },
+  "english.course.goal2.desc": {
+    en: "Master the Oxford word families with audio, examples, and spaced-repetition that makes vocabulary stick.",
+    ar: "أتقن مجموعات كلمات أكسفورد مع الصوت والأمثلة والمراجعة المتباعدة التي تثبّت المفردات.",
+  },
+  "english.course.goal3.title": { en: "Write clearly", ar: "اكتب بوضوح" },
+  "english.course.goal3.desc": {
+    en: "Construct grammatically correct sentences and well-structured paragraphs in any context.",
+    ar: "اكتب جملاً صحيحة قواعديّاً وفقرات منظّمة جيّداً في أي سياق.",
+  },
+  "english.course.goal4.title": { en: "Understand any English", ar: "افهم أي إنجليزيّة" },
+  "english.course.goal4.desc": {
+    en: "Train your ear with British and American audio so movies, podcasts, and meetings click.",
+    ar: "درّب أذنك بالصوت البريطاني والأمريكي لتفهم الأفلام والبودكاست والاجتماعات بسهولة.",
+  },
+
+  "english.course.images.subtitle": {
+    en: "A quick look inside the LEXO for English experience.",
+    ar: "نظرة سريعة داخل تجربة LEXO للإنجليزيّة.",
+  },
+  "english.course.image1.label": { en: "Vocabulary trainer", ar: "مدرّب المفردات" },
+  "english.course.image2.label": { en: "Listening lab", ar: "مختبر الاستماع" },
+  "english.course.image3.label": { en: "Pronunciation drills", ar: "تمارين النطق" },
+  "english.course.image4.label": { en: "AI Writing coach", ar: "مدرّب الكتابة الذكي" },
+
+  "english.course.preview.subtitle": {
+    en: "Try a sample lesson and download a free vocabulary PDF.",
+    ar: "جرّب درساً عيّنة وحمّل ملف مفردات PDF مجّاناً.",
+  },
+
+  "english.course.faq.q1": { en: "How long do I have access?", ar: "ما مدّة الوصول؟" },
+  "english.course.faq.a1": {
+    en: "1 full year of unlimited access to all lessons, audio, and updates from your purchase date.",
+    ar: "سنة كاملة من الوصول غير المحدود لكل الدروس والصوتيّات والتحديثات من تاريخ الشراء.",
+  },
+  "english.course.faq.q2": { en: "Is the course bilingual?", ar: "هل الدورة ثنائيّة اللغة؟" },
+  "english.course.faq.a2": {
+    en: "Yes — every word, example, and explanation is presented in both English and Arabic.",
+    ar: "نعم — كل كلمة ومثال وشرح معروض بالإنجليزيّة والعربيّة معاً.",
+  },
+  "english.course.faq.q3": { en: "Do I need a starting level?", ar: "هل أحتاج مستوى ابتدائي؟" },
+  "english.course.faq.a3": {
+    en: "No — Foundations starts from absolute beginner (A1). Pick the tier that matches your current goal.",
+    ar: "لا — تبدأ Foundations من المبتدئ المطلق (A1). اختر المستوى الذي يناسب هدفك الحالي.",
+  },
+  "english.course.faq.q4": { en: "Are the audio recordings native?", ar: "هل الصوتيّات بأصوات أصليّة؟" },
+  "english.course.faq.a4": {
+    en: "Yes — all audio is recorded by native British speakers, with American variants for select lessons.",
+    ar: "نعم — كل الصوتيّات مسجّلة بأصوات بريطانيّة أصليّة، مع نسخة أمريكيّة لبعض الدروس.",
+  },
+  "english.course.faq.q5": { en: "Can I upgrade from Foundations to Advanced?", ar: "هل يمكنني الترقية من Foundations إلى Advanced؟" },
+  "english.course.faq.a5": {
+    en: "Yes — upgrade anytime and only pay the price difference.",
+    ar: "نعم — ارفع مستواك في أي وقت وادفع الفرق فقط.",
+  },
+
+  "english.course.t1.name": { en: "Noor S.", ar: "نور س." },
+  "english.course.t1.level": { en: "Reached B2", ar: "وصلت إلى B2" },
+  "english.course.t1.quote": {
+    en: "I went from struggling with simple sentences to writing work emails confidently in 4 months.",
+    ar: "انتقلت من صعوبة الجمل البسيطة إلى كتابة إيميلات العمل بثقة خلال 4 أشهر.",
+  },
+  "english.course.t2.name": { en: "Ahmad R.", ar: "أحمد ر." },
+  "english.course.t2.level": { en: "Reached C1", ar: "وصل إلى C1" },
+  "english.course.t2.quote": {
+    en: "The AI Writing coach completely changed my essays — my work emails now sound natural and confident.",
+    ar: "غيّر مدرّب الكتابة الذكي مقالاتي تماماً — أصبحت إيميلات العمل لديّ طبيعيّة وواثقة.",
+  },
+  "english.course.t3.name": { en: "Lina M.", ar: "لينا م." },
+  "english.course.t3.level": { en: "Reached B1", ar: "وصلت إلى B1" },
+  "english.course.t3.quote": {
+    en: "The bilingual flashcards finally made vocabulary stick. Best investment I made for my English.",
+    ar: "البطاقات ثنائيّة اللغة جعلت المفردات تثبت أخيراً. أفضل استثمار قمت به لإنجليزيّتي.",
+  },
+
+  "english.course.cta.priceFull": { en: "150 SAR · One-time", ar: "150 ر.س · دفعة واحدة" },
+  "english.course.invalid": { en: "English course not found.", ar: "دورة الإنجليزيّة غير موجودة." },
+
 } as const;
 
 export type TranslationKey = keyof typeof translations;

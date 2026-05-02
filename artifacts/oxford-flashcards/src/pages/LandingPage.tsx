@@ -41,6 +41,7 @@ const modules: Module[] = [
 ];
 
 type Pkg = {
+  tier: "foundations" | "advanced";
   nameKey: TranslationKey;
   labelKey: TranslationKey;
   descKey: TranslationKey;
@@ -51,8 +52,8 @@ type Pkg = {
 };
 
 const packages: Pkg[] = [
-  { nameKey: "english.pkg1.name", labelKey: "english.pkg1.label", descKey: "english.pkg1.desc", levels: "A1 → B1", gradient: "from-emerald-400 via-teal-500 to-sky-600", icon: GraduationCap, badge: null },
-  { nameKey: "english.pkg2.name", labelKey: "english.pkg2.label", descKey: "english.pkg2.desc", levels: "B1 → C1", gradient: "from-violet-600 via-purple-600 to-fuchsia-600", icon: Trophy, badge: "english.packages.bestValue" },
+  { tier: "foundations", nameKey: "english.pkg1.name", labelKey: "english.pkg1.label", descKey: "english.pkg1.desc", levels: "A1 → B1", gradient: "from-emerald-400 via-teal-500 to-sky-600", icon: GraduationCap, badge: null },
+  { tier: "advanced", nameKey: "english.pkg2.name", labelKey: "english.pkg2.label", descKey: "english.pkg2.desc", levels: "B1 → C1", gradient: "from-violet-600 via-purple-600 to-fuchsia-600", icon: Trophy, badge: "english.packages.bestValue" },
 ];
 
 type Highlight = {
@@ -260,14 +261,14 @@ export default function LandingPage() {
                     {t(pkg.descKey)}
                   </p>
 
-                  <a
-                    href="/lexo-english/"
-                    data-testid={`link-pkg-${pkg.nameKey}`}
-                    className={`mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition bg-gradient-to-r ${pkg.gradient}`}
+                  <Link
+                    href={`/course/english/${pkg.tier}`}
+                    data-testid={`link-pkg-${pkg.tier}`}
+                    className={`glow-button mt-6 w-full inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-white font-bold text-sm shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition bg-gradient-to-r ${pkg.gradient}`}
                   >
                     {t("english.tier.openCourse")}
                     <ArrowRight size={16} />
-                  </a>
+                  </Link>
                 </div>
               </div>
             );

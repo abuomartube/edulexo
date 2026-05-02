@@ -314,7 +314,7 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Words you got wrong — review and master them.</p>
             </div>
           </Link>
-          {canAccessIntroFeatures ? (
+          {isIntroTier ? (
             <div className="flex flex-col gap-3 h-full">
               <Link href="/free-conversation" data-tour="ai-tools" className="block flex-1">
                 <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-5 hover:border-teal-400/60 transition-colors h-full">

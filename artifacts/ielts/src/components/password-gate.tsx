@@ -516,7 +516,14 @@ export function PasswordGate({ children }: PasswordGateProps) {
         setError("Your access request was not approved. Please contact your instructor.");
         setIsIntroStudent(false);
         setPhase("login");
+      } else if (result.status === "expired") {
+        localStorage.removeItem("lexo-ielts:intro_pending_email");
+        expiredEmailRef.current = em;
+        setIsIntroStudent(false);
+        setPhase("expired");
+        // Don't restart polling — intro expired accounts don't get auto-renewed.
       } else {
+        // Still pending (or transient error) — keep polling.
         pollTimer.current = setTimeout(poll, 8000);
       }
     };
@@ -765,7 +772,9 @@ export function PasswordGate({ children }: PasswordGateProps) {
     // Regular login didn't find the account — try the intro tier as a fallback.
     // Intro students self-registered through the intro product and may not appear
     // in the advance/complete accessRequests table.
-    if (!result.status || result.error?.toLowerCase().includes("no account found")) {
+    // Only fall through on an explicit "no account found" 404 — not on network or
+    // server errors (which would also lack a `status` field but are unrelated).
+    if (result.error?.toLowerCase().includes("no account found")) {
       const introResult = await postJson("/api-ielts/auth/intro/login", { email: normalizedEmail, password });
       setLoading(false);
       if (introResult.status === "approved" && introResult.token) {

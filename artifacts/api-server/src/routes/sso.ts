@@ -12,15 +12,9 @@ import { signSsoToken, newJti } from "../lib/sso";
 const router: IRouter = Router();
 
 // Routing table from tier → downstream LEXO app + its SSO redeem endpoint.
-//
-// `intro` still points at the legacy `lexo-intro` artifact (`/app-ielts-intro`)
-// because that app has not yet been merged into the unified `/lexo-ielts/` app.
-// The merge is tracked as a separate piece of work; once the intro features
-// (VAD, OpenAI voice, listening/reading admin, etc.) are ported into the IELTS
-// artifact, this row will move to `/lexo-ielts` and the lexo-intro artifact
-// can be retired.
+// All three tiers now go through the unified IELTS app at /lexo-ielts.
 const TIER_ROUTES: Record<Tier, { basePath: string; redeemPath: string } | null> = {
-  intro: { basePath: "/app-ielts-intro", redeemPath: "/api-intro/sso/redeem" },
+  intro: { basePath: "/lexo-ielts", redeemPath: "/api-ielts/sso/redeem" },
   advance: { basePath: "/lexo-ielts", redeemPath: "/api-ielts/sso/redeem" },
   complete: { basePath: "/lexo-ielts", redeemPath: "/api-ielts/sso/redeem" },
 };

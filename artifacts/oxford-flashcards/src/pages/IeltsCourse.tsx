@@ -90,7 +90,7 @@ const tiers: Tier[] = [
     icon: Rocket,
     logoSrc: tierIntroLogo,
     logoBg: "bg-gradient-to-br from-[#0a1230] via-[#0d1a45] to-[#0a1230]",
-    href: "/app-ielts-intro/",
+    href: "/lexo-ielts/?tier=intro",
     external: true,
     comingSoon: false,
     highlighted: false,

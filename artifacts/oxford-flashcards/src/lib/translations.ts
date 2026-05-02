@@ -1155,6 +1155,143 @@ export const translations = {
   },
   "payments.my.viewProof": { en: "View current proof", ar: "عرض الإثبات الحالي" },
 
+  // ───────────────────────── COURSE DETAIL PAGE (public) ─────────────────────────
+  "course.detail.back": { en: "Back to courses", ar: "العودة إلى الدورات" },
+  "course.detail.heroTagline": {
+    en: "Master IELTS with your AI companion. Bilingual lessons, real exam practice, and 24/7 coaches built for your level.",
+    ar: "أتقن الأيلتس مع رفيقك الذكي. دروس ثنائية اللغة، تدريب فعلي على الامتحان، ومدرّبون 24/7 مصمَّمون لمستواك.",
+  },
+  "course.detail.playPreview": { en: "Play preview", ar: "شاهد المعاينة" },
+  "course.detail.previewToast": {
+    en: "Preview video coming soon — enroll today for full access.",
+    ar: "مقطع المعاينة قريباً — سجّل اليوم للحصول على الوصول الكامل.",
+  },
+  "course.detail.about.title": { en: "About this course", ar: "عن هذه الدورة" },
+  "course.detail.about.body1": {
+    en: "Built end-to-end for IELTS, this course combines structured vocabulary, smart spaced repetition, and AI coaches for Speaking and Writing — so every minute you study moves you closer to your target band.",
+    ar: "صُمّمت هذه الدورة بالكامل للأيلتس، وتجمع بين مفردات منظَّمة، وتكرار متباعد ذكي، ومدرّبين بالذكاء الاصطناعي للمحادثة والكتابة — لتقرّبك كل دقيقة دراسة من النطاق المستهدف.",
+  },
+  "course.detail.about.body2": {
+    en: "Practice with full Listening and Reading mock tests, get instant feedback on your essays, and rehearse Speaking with Churchill, our AI examiner. Everything works in both English and Arabic.",
+    ar: "تدرّب على اختبارات استماع وقراءة كاملة، واحصل على تقييم فوري لمقالاتك، وتمرَّن على المحادثة مع تشرشل ممتحننا الذكي. كل شيء يعمل بالعربية والإنجليزية.",
+  },
+  "course.detail.goals.title": { en: "What you'll achieve", ar: "ما الذي ستحققه" },
+  "course.detail.goals.subtitle": {
+    en: "Clear, measurable outcomes — not just lessons.",
+    ar: "نتائج واضحة وقابلة للقياس — لا مجرد دروس.",
+  },
+  "course.detail.goal1.title": { en: "Hit your target band", ar: "اوصل إلى النطاق المستهدف" },
+  "course.detail.goal1.desc": {
+    en: "Move from your current level to a stronger band with weekly structured milestones.",
+    ar: "انتقل من مستواك الحالي إلى نطاق أعلى عبر أهداف أسبوعية منظَّمة.",
+  },
+  "course.detail.goal2.title": { en: "Master IELTS vocabulary", ar: "أتقن مفردات الأيلتس" },
+  "course.detail.goal2.desc": {
+    en: "Learn 1,400+ exam-relevant words with spaced repetition that locks them into long-term memory.",
+    ar: "تعلّم أكثر من 1,400 كلمة مرتبطة بالامتحان مع تكرار متباعد يثبتها في الذاكرة بعيدة المدى.",
+  },
+  "course.detail.goal3.title": { en: "Pass Speaking & Writing", ar: "اجتز المحادثة والكتابة" },
+  "course.detail.goal3.desc": {
+    en: "Practice with Churchill (AI examiner) and Orwell (AI writing coach) until your output matches band 6.5+.",
+    ar: "تدرّب مع تشرشل (الممتحن الذكي) وأورويل (مدرّب الكتابة الذكي) حتى تطابق مخرجاتك نطاق 6.5 وما فوق.",
+  },
+  "course.detail.goal4.title": { en: "Time the test perfectly", ar: "اضبط توقيت الامتحان" },
+  "course.detail.goal4.desc": {
+    en: "Build exam stamina with full-length Listening and Reading mocks scored automatically.",
+    ar: "اكتسب لياقة الامتحان عبر اختبارات استماع وقراءة كاملة بتصحيح تلقائي.",
+  },
+  "course.detail.images.title": { en: "Inside the course", ar: "داخل الدورة" },
+  "course.detail.images.subtitle": {
+    en: "A glimpse of the modules, coaches, and tools you'll use every day.",
+    ar: "لمحة عن الوحدات والمدرّبين والأدوات التي ستستخدمها يومياً.",
+  },
+  "course.detail.image1.label": { en: "Vocabulary trainer", ar: "مدرّب المفردات" },
+  "course.detail.image2.label": { en: "Listening lab", ar: "مختبر الاستماع" },
+  "course.detail.image3.label": { en: "Mock test results", ar: "نتائج الاختبارات" },
+  "course.detail.image4.label": { en: "AI Speaking coach", ar: "مدرّب المحادثة الذكي" },
+  "course.detail.preview.title": { en: "Free preview", ar: "معاينة مجّانيّة" },
+  "course.detail.preview.subtitle": {
+    en: "Watch a sample lesson and download a study sheet — no login required.",
+    ar: "شاهد درساً عيّنة وحمّل ورقة دراسة — بدون تسجيل دخول.",
+  },
+  "course.detail.preview.video": { en: "Sample lesson", ar: "درس عيّنة" },
+  "course.detail.preview.pdf": { en: "Download sample PDF", ar: "حمّل عيّنة PDF" },
+  "course.detail.preview.pdfToast": {
+    en: "Sample PDF will be available soon. Enroll now for the full library.",
+    ar: "ملف PDF العيّنة سيتوفّر قريباً. سجّل الآن للوصول إلى المكتبة الكاملة.",
+  },
+  "course.detail.faq.title": { en: "Frequently asked questions", ar: "الأسئلة الشائعة" },
+  "course.detail.faq.q1": { en: "How long do I have access?", ar: "ما مدة الوصول؟" },
+  "course.detail.faq.a1": {
+    en: "Each enrollment includes 1 full year of access from the day you pay. Study at your own pace.",
+    ar: "كل اشتراك يشمل سنة كاملة من الوصول من تاريخ الدفع. ادرس بالوتيرة التي تناسبك.",
+  },
+  "course.detail.faq.q2": { en: "Is the course in Arabic and English?", ar: "هل الدورة بالعربية والإنجليزية؟" },
+  "course.detail.faq.a2": {
+    en: "Yes — every page, lesson, and AI coach response is fully bilingual. Switch the language anytime from the top bar.",
+    ar: "نعم — كل صفحة ودرس واستجابة من المدرّب الذكي ثنائية اللغة بالكامل. بدّل اللغة في أي وقت من الشريط العلوي.",
+  },
+  "course.detail.faq.q3": { en: "Can I get a refund?", ar: "هل يمكن استرداد المبلغ؟" },
+  "course.detail.faq.a3": {
+    en: "Contact us within 7 days of purchase if the course isn't a fit and we'll refund your payment.",
+    ar: "تواصل معنا خلال 7 أيام من الشراء إن لم تكن الدورة مناسبة وسنُعيد لك المبلغ.",
+  },
+  "course.detail.faq.q4": { en: "Do I need a high level to start?", ar: "هل أحتاج مستوى عالياً للبدء؟" },
+  "course.detail.faq.a4": {
+    en: "No — Intro starts from A2 and Complete covers A2 → C1. Pick the tier that matches your level.",
+    ar: "لا — تمهيدي يبدأ من A2 والشامل يغطي A2 → C1. اختر المستوى الذي يطابق وضعك.",
+  },
+  "course.detail.faq.q5": { en: "What payment methods do you accept?", ar: "ما طرق الدفع المتاحة؟" },
+  "course.detail.faq.a5": {
+    en: "Tabby, Tamara, and bank transfer (Al Rajhi). Pay in installments or all at once — your choice.",
+    ar: "تابي، تمارا، والتحويل البنكي (الراجحي). ادفع بالتقسيط أو دفعة واحدة — الخيار لك.",
+  },
+  "course.detail.testimonials.title": { en: "What students say", ar: "آراء الطلاب" },
+  "course.detail.t1.name": { en: "Sara A.", ar: "سارة أ." },
+  "course.detail.t1.score": { en: "Band 7.5", ar: "نطاق 7.5" },
+  "course.detail.t1.quote": {
+    en: "I went from band 5.5 to 7.5 in three months. The Speaking coach was a game-changer for my fluency.",
+    ar: "ارتفعت من 5.5 إلى 7.5 في ثلاثة أشهر. مدرّب المحادثة غيّر طلاقتي تماماً.",
+  },
+  "course.detail.t2.name": { en: "Mohammed K.", ar: "محمد ك." },
+  "course.detail.t2.score": { en: "Band 7.0", ar: "نطاق 7.0" },
+  "course.detail.t2.quote": {
+    en: "The vocabulary system actually sticks. After two months I was reading academic articles without a dictionary.",
+    ar: "نظام المفردات يثبت فعلاً في الذهن. بعد شهرين صرت أقرأ المقالات الأكاديمية دون قاموس.",
+  },
+  "course.detail.t3.name": { en: "Layla H.", ar: "ليلى ح." },
+  "course.detail.t3.score": { en: "Band 8.0", ar: "نطاق 8.0" },
+  "course.detail.t3.quote": {
+    en: "Bilingual explanations made every grammar rule click. I aced Reading on my first attempt.",
+    ar: "الشروحات ثنائية اللغة جعلت كل قاعدة واضحة. أحرزت نتيجة عالية في القراءة من أول محاولة.",
+  },
+  "course.detail.reviews.title": { en: "Reviews & ratings", ar: "التقييمات والمراجعات" },
+  "course.detail.reviews.subtitle": {
+    en: "Share your experience and help other students choose.",
+    ar: "شارك تجربتك وساعد الطلاب على الاختيار.",
+  },
+  "course.detail.reviews.empty": {
+    en: "No reviews yet — be the first to write one!",
+    ar: "لا توجد مراجعات بعد — كن أول من يكتب واحدة!",
+  },
+  "course.detail.reviews.rateLabel": { en: "Your rating", ar: "تقييمك" },
+  "course.detail.reviews.nameLabel": { en: "Your name", ar: "اسمك" },
+  "course.detail.reviews.namePlaceholder": { en: "e.g. Ahmed M.", ar: "مثال: أحمد م." },
+  "course.detail.reviews.commentLabel": { en: "Your review", ar: "مراجعتك" },
+  "course.detail.reviews.commentPlaceholder": {
+    en: "Tell us what you liked or what could be better…",
+    ar: "أخبرنا ما الذي أعجبك أو ما يمكن تحسينه…",
+  },
+  "course.detail.reviews.submit": { en: "Submit review", ar: "أرسل المراجعة" },
+  "course.detail.reviews.thanks": { en: "Thanks for your review!", ar: "شكراً على مراجعتك!" },
+  "course.detail.cta.buyNow": { en: "Buy now", ar: "اشترِ الآن" },
+  "course.detail.cta.addToCart": { en: "Add to cart", ar: "أضف إلى السلة" },
+  "course.detail.cta.added": { en: "Added to cart!", ar: "تمت الإضافة إلى السلة!" },
+  "course.detail.cta.price": { en: "150 SAR", ar: "150 ر.س" },
+  "course.detail.cta.priceFull": { en: "150 SAR · One-time", ar: "150 ر.س · دفعة واحدة" },
+  "course.detail.cta.includes": { en: "1 year of full access", ar: "سنة كاملة من الوصول الشامل" },
+  "course.detail.invalid": { en: "Course not found.", ar: "الدورة غير موجودة." },
+
 } as const;
 
 export type TranslationKey = keyof typeof translations;

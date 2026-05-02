@@ -11,11 +11,13 @@ import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import Checkout from "@/pages/Checkout";
+import CourseDetail from "@/pages/CourseDetail";
 import MyPayments from "@/pages/MyPayments";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Toaster } from "@/components/ui/toaster";
 
 const baseRaw = import.meta.env.BASE_URL || "/";
 const base =
@@ -32,6 +34,7 @@ export default function App() {
         <Route path="/" component={PlatformLanding} />
         <Route path="/english" component={LandingPage} />
         <Route path="/ielts" component={IeltsCourse} />
+        <Route path="/course/ielts/:tier" component={CourseDetail} />
         <Route path="/demo" component={DemoFlashcards} />
         <Route path="/app" component={FlashcardApp} />
 
@@ -76,6 +79,7 @@ export default function App() {
 
         <Route component={NotFound} />
       </Switch>
+      <Toaster />
     </Router>
   );
 }

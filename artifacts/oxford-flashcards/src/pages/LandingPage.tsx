@@ -51,9 +51,8 @@ type Pkg = {
 };
 
 const packages: Pkg[] = [
-  { nameKey: "english.pkg1.name", labelKey: "english.pkg1.label", descKey: "english.pkg1.desc", levels: "A1 → A2", gradient: "from-emerald-400 via-teal-500 to-sky-600", icon: GraduationCap, badge: null },
-  { nameKey: "english.pkg2.name", labelKey: "english.pkg2.label", descKey: "english.pkg2.desc", levels: "A2 → B1", gradient: "from-violet-600 via-fuchsia-500 to-orange-500", icon: Trophy, badge: "english.packages.bestValue" },
-  { nameKey: "english.pkg3.name", labelKey: "english.pkg3.label", descKey: "english.pkg3.desc", levels: "B1 → C1", gradient: "from-violet-500 via-purple-600 to-fuchsia-600", icon: Sparkles, badge: null },
+  { nameKey: "english.pkg1.name", labelKey: "english.pkg1.label", descKey: "english.pkg1.desc", levels: "A1 → B1", gradient: "from-emerald-400 via-teal-500 to-sky-600", icon: GraduationCap, badge: null },
+  { nameKey: "english.pkg2.name", labelKey: "english.pkg2.label", descKey: "english.pkg2.desc", levels: "B1 → C1", gradient: "from-violet-600 via-purple-600 to-fuchsia-600", icon: Trophy, badge: "english.packages.bestValue" },
 ];
 
 type Highlight = {
@@ -217,7 +216,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {packages.map((pkg) => {
             const featured = pkg.badge !== null;
             return (

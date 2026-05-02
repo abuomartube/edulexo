@@ -166,3 +166,90 @@ test.describe("Complete tier", () => {
     ).not.toBeVisible({ timeout: 8000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Nav visibility by tier
+//
+// layout.tsx wires `showIntroFeatures = canAccess("churchill")` which is true
+// only for "intro" and "complete".  When true, three extra items are prepended
+// to navItems:
+//   • Churchill Free Conv.  → /free-conversation
+//   • Attenborough Listening → /intro-listening
+//   • Hemingway Reading      → /intro-reading
+//
+// Advance tier skips these items entirely; it gets Churchill AI (/speaking),
+// Orwell AI, Listening Practice, Reading Practice instead.
+// ---------------------------------------------------------------------------
+test.describe("Nav link visibility by tier", () => {
+  test("intro tier: Churchill Free Conv. / Attenborough Listening / Hemingway Reading appear in nav", async ({
+    page,
+  }) => {
+    await loginAsIntro(page, "navintro@test.invalid", "intro");
+    await page.goto(appUrl("/"));
+    await expect(page.getByText("Your Tools")).toBeVisible({ timeout: 10_000 });
+
+    // Intro-only nav items (added when showIntroFeatures = true)
+    await expect(
+      page.getByRole("link", { name: /Churchill Free Conv\./i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+    await expect(
+      page.getByRole("link", { name: /Attenborough Listening/i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+    await expect(
+      page.getByRole("link", { name: /Hemingway Reading/i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+  });
+
+  test("advance tier: Churchill Free Conv. / Attenborough Listening / Hemingway Reading are absent from nav", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "navadvance@test.invalid", "advance");
+    await page.goto(appUrl("/"));
+    // Wait for the app to finish rendering before asserting absence
+    await expect(
+      page.getByRole("link", { name: /Churchill AI/i }).first(),
+    ).toBeVisible({ timeout: 10_000 });
+
+    // Intro-only items must NOT appear for advance tier
+    await expect(
+      page.getByRole("link", { name: /Churchill Free Conv\./i }),
+    ).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Attenborough Listening/i }),
+    ).not.toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Hemingway Reading/i }),
+    ).not.toBeVisible();
+
+    // But advance-tier nav items ARE present
+    await expect(
+      page.getByRole("link", { name: /Orwell AI/i }).first(),
+    ).toBeVisible();
+  });
+
+  test("complete tier: has both intro features AND advance features in nav", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "navcomplete@test.invalid", "complete");
+    await page.goto(appUrl("/"));
+
+    // Intro-only items (showIntroFeatures = true for complete tier)
+    await expect(
+      page.getByRole("link", { name: /Churchill Free Conv\./i }).first(),
+    ).toBeVisible({ timeout: 10_000 });
+    await expect(
+      page.getByRole("link", { name: /Attenborough Listening/i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+    await expect(
+      page.getByRole("link", { name: /Hemingway Reading/i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+
+    // Advance-tier items also present
+    await expect(
+      page.getByRole("link", { name: /Churchill AI/i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+    await expect(
+      page.getByRole("link", { name: /Orwell AI/i }).first(),
+    ).toBeVisible({ timeout: 6_000 });
+  });
+});

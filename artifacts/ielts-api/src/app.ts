@@ -10,6 +10,11 @@ app.set("etag", false);
 
 app.use((_, res, next) => {
   res.setHeader("Cache-Control", "no-store");
+  // Required for SharedArrayBuffer (used by @ricky0123/vad-web + onnxruntime-web)
+  // in cross-origin-isolated browsing contexts. Must be set on all responses
+  // so the browser enforces COEP on sub-resources fetched via this API.
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
   next();
 });
 

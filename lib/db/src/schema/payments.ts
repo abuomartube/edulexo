@@ -6,9 +6,11 @@ import {
   varchar,
   integer,
   index,
+  uniqueIndex,
   jsonb,
   primaryKey,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { usersTable } from "./users";
 
 export const PAYMENT_COURSE_VALUES = ["intro", "english"] as const;
@@ -114,6 +116,16 @@ export const paymentsTable = pgTable(
     index("payments_status_idx").on(t.status),
     index("payments_provider_status_idx").on(t.provider, t.status),
     index("payments_created_at_idx").on(t.createdAt.desc()),
+    // Phase-7 race-safety: prevent duplicate pending bank transfers for
+    // the same buyer + course + tier at the database layer. The route
+    // also has an app-level guard for a friendly early response, but a
+    // race between two parallel requests can slip past the SELECT/INSERT
+    // pair — this partial unique index closes that window. Constraint
+    // violations surface to the route handler as PG error 23505 and are
+    // mapped to `409 duplicate_pending_bank_transfer`.
+    uniqueIndex("payments_unique_pending_bank_transfer")
+      .on(t.userId, t.course, t.tier)
+      .where(sql`provider = 'bank_transfer' AND status = 'pending'`),
   ],
 );
 

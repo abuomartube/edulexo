@@ -199,16 +199,36 @@ async function upsertEnrollmentIntro(
   }
 }
 
-function isUniqueViolation(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const code = (err as { code?: string }).code;
-  if (code === "23505") return true;
+/**
+ * Drizzle (>= 0.36) wraps node-postgres errors as `DrizzleQueryError` whose
+ * `cause` is the underlying pg `DatabaseError`. The Postgres SQLSTATE
+ * (`code`) and the violated constraint name therefore live on `cause`,
+ * not on the outer error. This helper normalises both shapes so callers
+ * can branch on `code === "23505"` and `constraint === "<name>"` without
+ * caring which layer surfaced the error.
+ *
+ * Exported so route handlers (e.g. the bank-transfer create handler that
+ * maps a `payments_unique_pending_bank_transfer` race to `409`) and the
+ * activation module's enrollment upsert path stay in lockstep.
+ */
+export function pgErrorInfo(
+  err: unknown,
+): { code?: string; constraint?: string } {
+  if (!err || typeof err !== "object") return {};
+  const direct = err as { code?: string; constraint?: string };
+  if (direct.code || direct.constraint) {
+    return { code: direct.code, constraint: direct.constraint };
+  }
   const cause = (err as { cause?: unknown }).cause;
   if (cause && typeof cause === "object") {
-    const ccode = (cause as { code?: string }).code;
-    if (ccode === "23505") return true;
+    const c = cause as { code?: string; constraint?: string };
+    return { code: c.code, constraint: c.constraint };
   }
-  return false;
+  return {};
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  return pgErrorInfo(err).code === "23505";
 }
 
 async function upsertEnrollmentEnglish(

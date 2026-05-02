@@ -43,6 +43,7 @@ import {
   activateEnrollmentForPayment,
   fireActivationEmail,
   markPaymentTerminal,
+  pgErrorInfo,
 } from "../lib/payments/activation";
 
 const router: IRouter = Router();
@@ -1066,26 +1067,77 @@ router.post("/checkout/bank-transfer", requireAuth, async (req, res, next) => {
       return;
     }
 
-    const [payment] = await db
-      .insert(paymentsTable)
-      .values({
-        userId: ctx.userId,
-        course: ctx.course,
-        tier: ctx.tier,
-        amountMinor: ctx.amountMinor,
-        currency: ctx.currency,
-        provider: "bank_transfer",
-        // Bank transfer has no sandbox/live distinction — it's always real
-        // money to a real IBAN. We store "live" so admin filtering works.
-        mode: "live",
-        status: "pending",
-        bankSenderName: body.senderName,
-        bankProofObjectPath: normalizedProofPath,
-        // Trust the actual stored content-type, not the client's claim.
-        bankProofContentType: actualProofContentType,
-        bankProofFilename: body.proofFilename,
-      })
-      .returning();
+    let payment: typeof paymentsTable.$inferSelect;
+    try {
+      const inserted = await db
+        .insert(paymentsTable)
+        .values({
+          userId: ctx.userId,
+          course: ctx.course,
+          tier: ctx.tier,
+          amountMinor: ctx.amountMinor,
+          currency: ctx.currency,
+          provider: "bank_transfer",
+          // Bank transfer has no sandbox/live distinction — it's always real
+          // money to a real IBAN. We store "live" so admin filtering works.
+          mode: "live",
+          status: "pending",
+          bankSenderName: body.senderName,
+          bankProofObjectPath: normalizedProofPath,
+          // Trust the actual stored content-type, not the client's claim.
+          bankProofContentType: actualProofContentType,
+          bankProofFilename: body.proofFilename,
+        })
+        .returning();
+      payment = inserted[0]!;
+    } catch (err) {
+      // The partial unique index `payments_unique_pending_bank_transfer`
+      // catches the race where two parallel requests both pass the
+      // app-level pre-flight SELECT and try to INSERT a second pending
+      // bank-transfer for the same buyer + course + tier. Surface the
+      // race-loser to the client with the same 409 contract as the
+      // pre-flight guard so the UI doesn't need a separate code path.
+      //
+      // Drizzle wraps the underlying pg error inside `DrizzleQueryError`,
+      // so we have to look through `.cause` — `pgErrorInfo` does that
+      // for us. Without this unwrap the route would return 500 on the
+      // race, defeating the entire purpose of the constraint.
+      const pgErr = pgErrorInfo(err);
+      if (
+        pgErr.code === "23505" &&
+        pgErr.constraint === "payments_unique_pending_bank_transfer"
+      ) {
+        // Best-effort: surface the existing pending row id for the UI.
+        const [existing] = await db
+          .select({ id: paymentsTable.id })
+          .from(paymentsTable)
+          .where(
+            and(
+              eq(paymentsTable.userId, ctx.userId),
+              eq(paymentsTable.course, ctx.course),
+              eq(paymentsTable.tier, ctx.tier),
+              eq(paymentsTable.provider, "bank_transfer"),
+              eq(paymentsTable.status, "pending"),
+            ),
+          )
+          .limit(1);
+        req.log.warn(
+          {
+            userId: ctx.userId,
+            course: ctx.course,
+            tier: ctx.tier,
+            existingPaymentId: existing?.id,
+          },
+          "bank-transfer dup-pending caught at DB constraint (race)",
+        );
+        res.status(409).json({
+          error: "duplicate_pending_bank_transfer",
+          paymentId: existing?.id,
+        });
+        return;
+      }
+      throw err;
+    }
 
     // Stamp a deterministic provider_session_id so admins have a stable
     // reference handle and the unique index is exercised.

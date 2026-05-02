@@ -14,9 +14,6 @@ import {
   PenLine,
   Headphones,
   Star,
-  Rocket,
-  Sparkle,
-  Languages,
 } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
 import edulexoMaster from "@/assets/edulexo-master-transparent.png";
@@ -57,13 +54,6 @@ const ieltsHighlights: Highlight[] = [
   { icon: PenLine, textKey: "platform.ielts.h2" },
   { icon: Headphones, textKey: "platform.ielts.h3" },
   { icon: ClipboardCheck, textKey: "platform.ielts.h4" },
-];
-
-const introHighlights: Highlight[] = [
-  { icon: Languages, textKey: "platform.intro.h1" },
-  { icon: GraduationCap, textKey: "platform.intro.h2" },
-  { icon: Headphones, textKey: "platform.intro.h3" },
-  { icon: Mic, textKey: "platform.intro.h4" },
 ];
 
 export default function PlatformLanding() {
@@ -134,8 +124,8 @@ export default function PlatformLanding() {
         </div>
       </section>
 
-      {/* PRODUCTS — THREE COURSE CARDS */}
-      <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 py-14 sm:py-20 scroll-mt-20">
+      {/* PRODUCTS — TWO COURSE CARDS */}
+      <section id="products" className="max-w-6xl mx-auto px-4 sm:px-6 py-14 sm:py-20 scroll-mt-20">
         <div className="text-center mb-10 sm:mb-12">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold uppercase tracking-wider">
             {t("platform.products.eyebrow")}
@@ -148,66 +138,7 @@ export default function PlatformLanding() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* LEXO INTRO CARD */}
-          <div className="group relative rounded-3xl overflow-hidden border-2 border-sky-200/60 dark:border-sky-800/60 bg-gradient-to-br from-sky-50 via-white to-blue-50 dark:from-sky-950/40 dark:via-slate-900 dark:to-blue-950/40 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1">
-            <div className="h-2 bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600" />
-            <div className="absolute top-5 end-5 z-10">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-600 to-blue-600 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-md">
-                <Sparkle size={10} />
-                {t("platform.products.startHere")}
-              </span>
-            </div>
-            <div className="p-7 sm:p-8">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-widest text-sky-600 dark:text-sky-400">
-                    {t("platform.products.courseOne")}
-                  </p>
-                  <h4 className="mt-1 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
-                    {t("platform.products.introName")}
-                  </h4>
-                </div>
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-lg shrink-0">
-                  <Rocket size={28} />
-                </div>
-              </div>
-
-              <p className="mt-5 text-slate-700 dark:text-slate-300 leading-relaxed">
-                {t("platform.products.introDesc")}
-              </p>
-
-              <ul className="mt-5 space-y-2.5">
-                {introHighlights.map((h) => (
-                  <li key={h.textKey} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-200">
-                    <span className="w-7 h-7 rounded-lg bg-sky-100 dark:bg-sky-900/40 text-sky-600 dark:text-sky-300 flex items-center justify-center shrink-0">
-                      <h.icon size={15} />
-                    </span>
-                    <span className="font-medium">{t(h.textKey)}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <a
-                  href="/app-ielts-intro/"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-blue-700 text-white font-semibold shadow hover:shadow-lg hover:scale-[1.03] active:scale-95 transition"
-                  data-testid="link-platform-card-intro-details"
-                >
-                  {t("common.viewDetails")}
-                  <ArrowRight size={16} />
-                </a>
-                <a
-                  href="/app-ielts-intro/"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-sky-200 dark:border-sky-800/60 text-sky-700 dark:text-sky-300 font-semibold hover:bg-sky-50 dark:hover:bg-sky-900/40 hover:scale-[1.03] active:scale-95 transition"
-                  data-testid="link-platform-card-intro-enroll"
-                >
-                  {t("common.enrollNow")}
-                </a>
-              </div>
-            </div>
-          </div>
-
+        <div className="grid md:grid-cols-2 gap-6">
           {/* LEXO FOR ENGLISH CARD */}
           <div className="group relative rounded-3xl overflow-hidden border-2 border-violet-200/60 dark:border-violet-800/60 bg-gradient-to-br from-violet-50 via-white to-purple-50 dark:from-violet-950/40 dark:via-slate-900 dark:to-purple-950/40 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1">
             <div className="h-2 bg-gradient-to-r from-violet-500 via-purple-600 to-fuchsia-500" />
@@ -215,7 +146,7 @@ export default function PlatformLanding() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-violet-600 dark:text-violet-400">
-                    {t("platform.products.courseTwo")}
+                    {t("platform.products.courseOne")}
                   </p>
                   <h4 className="mt-1 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
                     {t("platform.products.englishName")}
@@ -272,7 +203,7 @@ export default function PlatformLanding() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-                    {t("platform.products.courseThree")}
+                    {t("platform.products.courseTwo")}
                   </p>
                   <h4 className="mt-1 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">
                     {t("platform.products.ieltsName")}

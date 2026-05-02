@@ -42,7 +42,7 @@ export const translations = {
     en: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by EduLexo AI",
     ar: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by EduLexo AI",
   },
-  "platform.hero.headline1": { en: "Three powerful courses.", ar: "ثلاث دورات قويّة." },
+  "platform.hero.headline1": { en: "Two powerful courses.", ar: "مساران قويان…" },
   "platform.hero.headline2": { en: "One smart platform.", ar: "منصة ذكية واحدة." },
   "platform.hero.subtitle": {
     en: "Whether you're starting your journey from your first English words or aiming for an IELTS band 8 — Abu Omar EduLexo gives you AI-powered practice, native audio, bilingual support, and a real teacher beside you.",
@@ -51,8 +51,8 @@ export const translations = {
   "platform.products.eyebrow": { en: "Our Courses", ar: "دوراتنا" },
   "platform.products.title": { en: "Choose the right path for you", ar: "اختر المسار المناسب لك" },
   "platform.products.subtitle": {
-    en: "Three complete courses, all built with the same AI-powered platform.",
-    ar: "ثلاث دورات متكاملة، جميعها مبنيّة على المنصّة نفسها المدعومة بالذكاء الاصطناعي.",
+    en: "Two complete courses, both built with the same AI-powered platform.",
+    ar: "دورتان متكاملتان، كلتاهما مبنيّتان على المنصّة نفسها المدعومة بالذكاء الاصطناعي.",
   },
   "platform.products.courseOne": { en: "Course One", ar: "الدورة الأولى" },
   "platform.products.courseTwo": { en: "Course Two", ar: "الدورة الثانية" },

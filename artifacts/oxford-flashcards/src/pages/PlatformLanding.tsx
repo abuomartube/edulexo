@@ -109,7 +109,7 @@ export default function PlatformLanding() {
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <a
               href="#products"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white font-bold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.03] active:scale-95 transition"
+              className="glow-button inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-700 via-purple-600 to-blue-600 text-white font-bold shadow-lg shadow-indigo-500/30 hover:shadow-xl hover:shadow-indigo-500/40 hover:scale-[1.03] active:scale-95 transition"
             >
               {t("common.exploreCourses")}
               <ArrowRight size={18} />
@@ -140,7 +140,7 @@ export default function PlatformLanding() {
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* LEXO FOR ENGLISH CARD */}
-          <div className="group relative rounded-3xl overflow-hidden border-2 border-violet-200/60 dark:border-violet-800/60 bg-gradient-to-br from-violet-50 via-white to-purple-50 dark:from-violet-950/40 dark:via-slate-900 dark:to-purple-950/40 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1">
+          <div className="glow-card neon-border group relative rounded-3xl overflow-hidden border-2 border-violet-200/60 dark:border-violet-800/60 bg-gradient-to-br from-violet-50 via-white to-purple-50 dark:from-violet-950/40 dark:via-slate-900 dark:to-purple-950/40 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1">
             <div className="h-2 bg-gradient-to-r from-violet-500 via-purple-600 to-fuchsia-500" />
             <div className="p-7 sm:p-8">
               <div className="flex items-start justify-between gap-4">
@@ -191,7 +191,7 @@ export default function PlatformLanding() {
           </div>
 
           {/* LEXO FOR IELTS CARD */}
-          <div className="group relative rounded-3xl overflow-hidden border-2 border-emerald-200/60 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/40 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1">
+          <div className="glow-card neon-border group relative rounded-3xl overflow-hidden border-2 border-emerald-200/60 dark:border-emerald-800/60 bg-gradient-to-br from-emerald-50 via-white to-teal-50 dark:from-emerald-950/40 dark:via-slate-900 dark:to-teal-950/40 shadow-md hover:shadow-2xl transition-all hover:-translate-y-1">
             <div className="h-2 bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600" />
             <div className="absolute top-5 end-5 z-10">
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-md">
@@ -270,7 +270,7 @@ export default function PlatformLanding() {
           {platformFeatures.map((f) => (
             <div
               key={f.titleKey}
-              className="group relative rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-0.5"
+              className="glow-card group relative rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 p-6 shadow-sm hover:shadow-lg transition-all hover:-translate-y-0.5"
             >
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center text-white shadow-md group-hover:scale-110 transition-transform mb-4`}>
                 <f.icon size={22} />

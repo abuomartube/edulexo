@@ -14,8 +14,15 @@ const upload = multer({
   limits: { fileSize: MAX_AUDIO_BYTES },
 });
 
-// Estimate Whisper cost: $0.006 / minute. Typical short utterance ≈ 20–30 s → ~$0.003.
-const WHISPER_COST_USD = 0.003;
+// Whisper pricing: $0.006 / minute.
+// Estimate audio duration from file size assuming ~20 kbps (WebM/Opus, browser
+// default). Conservative: real bitrates vary 10–40 kbps; this tends to round up.
+const ASSUMED_BITRATE_KBPS = 20;
+function estimateWhisperCost(bytes: number): number {
+  const estimatedSeconds = bytes / ((ASSUMED_BITRATE_KBPS * 1000) / 8);
+  const estimatedMinutes = estimatedSeconds / 60;
+  return Math.max(0.001, parseFloat((estimatedMinutes * 0.006).toFixed(5)));
+}
 
 // Wrap multer so that LIMIT_FILE_SIZE (and any other MulterError) is always
 // converted to a structured JSON response before reaching the route handler.
@@ -55,7 +62,7 @@ function getOpenAiClient(): OpenAI {
  * This works for both SSO-provisioned advance/complete students and intro
  * students, since both produce tokens with the same makeToken() formula.
  *
- * All error responses follow the structured JSON schema { error: string }.
+ * All error responses follow the strict schema { error: string }.
  */
 router.post("/whisper", uploadAudio, async (req, res): Promise<void> => {
   const studentEmail = verifyStudentEmail(req);
@@ -103,19 +110,19 @@ router.post("/whisper", uploadAudio, async (req, res): Promise<void> => {
       email: studentEmail,
       route: "churchill",
       endpoint: "/whisper",
-      costUsdOverride: WHISPER_COST_USD,
+      costUsdOverride: estimateWhisperCost(req.file.size),
     });
   } catch (err: unknown) {
     const status = (err as { status?: number })?.status;
     if (status === 429) {
       req.log.warn({ email: studentEmail }, "Whisper: OpenAI quota exceeded");
-      res.status(402).json({ error: "quota_exceeded", message: "Speech recognition quota exceeded. Please try again later." });
+      res.status(402).json({ error: "Speech recognition quota exceeded. Please try again later." });
     } else if (status === 401) {
       req.log.error("Whisper: OpenAI API key rejected");
-      res.status(500).json({ error: "invalid_key", message: "Speech-to-text service is misconfigured." });
+      res.status(500).json({ error: "Speech-to-text service is misconfigured." });
     } else {
       req.log.error({ err, email: studentEmail }, "Whisper transcription failed");
-      res.status(500).json({ error: "transcription_failed", message: "Failed to transcribe audio. Please try again." });
+      res.status(500).json({ error: "Failed to transcribe audio. Please try again." });
     }
   }
 });

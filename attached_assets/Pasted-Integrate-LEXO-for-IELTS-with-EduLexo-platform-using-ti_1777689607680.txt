@@ -1,0 +1,79 @@
+Integrate LEXO for IELTS with EduLexo platform using tier-based content filtering.
+
+## INTEGRATION POINTS
+
+1. STUDENT DASHBOARD (edulexo.com/dashboard)
+   - Add "LEXO for IELTS" card after enrollment
+   - Show tier (Advanced / Complete / Comprehensive)
+   - Button: "Launch LEXO" → /lexo-ielts/dashboard
+
+2. LEXO DASHBOARD (/lexo-ielts/dashboard)
+   - Pull student data from edulexo auth
+   - Auto-populate name, exam date
+   - Show "My Plan" sidebar
+   - Display onboarding (name, plan, exam date)
+
+## TIER-BASED CONTENT FILTERING (UI LEVEL)
+
+All tiers load full content. Apply filtering:
+
+TIER 1: ADVANCED (B1-C1)
+├─ Delete A2/B1 content → DISABLED
+├─ When student clicks A2/B1:
+│  └─ Show message: "هذا مخصص للمتقدم والشاملة"
+│     (This is for Advanced and Comprehensive tiers)
+└─ B1-C1 content: ENABLED
+
+TIER 2: COMPLETE (B1-C1)
+├─ Delete A2/B1 content → DISABLED
+├─ When student clicks A2/B1:
+│  └─ Show message: "هذا مخصص للمتقدم والشاملة"
+└─ B1-C1 content: ENABLED
+
+TIER 3: COMPREHENSIVE (A2-C1)
+├─ All content: ENABLED
+└─ No restrictions
+
+## AFFECTED FEATURES
+
+For all tiers, apply filtering to:
+- Study Mode (flashcards by level)
+- Quiz Mode (by level)
+- Listening Test (by level)
+- Reading Test (by level)
+- Short Stories (by level)
+- Browse Cards (by level)
+
+Keep enabled for all tiers:
+- Grammar
+- Churchill AI
+- Orwell AI
+- Writing Templates
+- Topic Bank
+- Mock Test
+- Progress tracking
+- My Plan
+
+## DATABASE/STORAGE
+
+- Store tier info on user record (from edulexo enrollment)
+- When student enters LEXO, fetch tier from edulexo DB
+- Apply tier filtering on frontend
+
+## AUTHENTICATION
+
+- Use edulexo auth token (already logged in)
+- No separate login for LEXO
+- Same user session across both platforms
+
+## USER EXPERIENCE
+
+1. Student completes payment on edulexo.com
+2. Redirects to /lexo-ielts/dashboard
+3. LEXO loads with student's name, tier, plan
+4. Student sees restricted content as disabled + message
+5. All navigation smooth and seamless
+
+Build complete integration with tier-based filtering now.
+
+GitHub repo: https://github.com/abuomartube/LEXO-4IELTS

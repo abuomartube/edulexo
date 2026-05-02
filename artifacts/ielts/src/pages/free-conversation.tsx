@@ -1485,15 +1485,18 @@ export default function FreeConversationPage() {
   // auth key (lexo-ielts:intro_email) and no conflicting tier set.
   // Do NOT use "4ielts_email" — that key is present for advance/complete tier users too.
   const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-  const isIntroTier = tier === "intro" || (!tier && !!introEmail);
+  // Entitled tiers: intro (by tier key or intro_email presence) + complete.
+  // Advance students do not have access to Churchill features.
+  const isEntitled = tier === "intro" || tier === "complete" || (!tier && !!introEmail);
 
-  if (!isIntroTier) {
+  if (!isEntitled) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: `linear-gradient(160deg, #071422 0%, ${NAVY} 40%, #0C2040 100%)` }}>
         <div className="text-center space-y-4 max-w-sm">
           <MessageCircle className="w-12 h-12 mx-auto" style={{ color: GREEN }} />
-          <h2 className="text-xl font-bold text-white">Intro Tier Feature</h2>
-          <p className="text-white/60 text-sm">Free Conversation with Churchill is available for intro-tier students.</p>
+          <h2 className="text-xl font-bold text-white">Not Included in Your Plan</h2>
+          <p className="text-white/60 text-sm">Free Conversation with Churchill is available in the Intro and Comprehensive plans.</p>
+          <p className="text-white/40 text-xs" dir="rtl" lang="ar">هذه الميزة متاحة في باقة المقدّمة أو الشاملة</p>
           <button
             onClick={onBack}
             className="w-full py-3 rounded-2xl font-bold text-sm"

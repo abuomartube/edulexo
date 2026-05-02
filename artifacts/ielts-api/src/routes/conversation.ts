@@ -1,7 +1,7 @@
 import { Router } from "express";
 import OpenAI from "openai";
 import { eq } from "drizzle-orm";
-import { verifyStudentEmail } from "../lib/tier-auth";
+import { verifyStudentEmail, getStudentTier } from "../lib/tier-auth";
 import { recordAiUsage } from "../lib/ai-usage";
 import { db, introConversations, introMessages, introStudents } from "@workspace/ielts-db";
 
@@ -10,16 +10,22 @@ const router = Router();
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 /**
- * Confirms the authenticated email belongs to an approved intro-tier student.
- * Returns true only if a matching row exists in introStudents.
+ * Confirms the authenticated email is entitled to Churchill features.
+ * Returns true for intro-tier students (in introStudents) and for
+ * complete-tier students (tier = "complete" in user_data).
+ * Advance-tier students are explicitly denied.
  */
-async function verifyIntroTier(email: string): Promise<boolean> {
-  const [row] = await db
+async function verifyChurchillAccess(email: string): Promise<boolean> {
+  // Intro-tier gate: check the introStudents table first.
+  const [introRow] = await db
     .select({ id: introStudents.id })
     .from(introStudents)
     .where(eq(introStudents.email, email))
     .limit(1);
-  return !!row;
+  if (introRow) return true;
+  // Fall back to the standard tier stored in user_data.
+  const tier = await getStudentTier(email);
+  return tier === "complete";
 }
 
 function getOpenAiClient(): OpenAI {
@@ -98,8 +104,8 @@ router.post("/conversation/chat", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Authentication required." });
     return;
   }
-  if (!(await verifyIntroTier(studentEmail))) {
-    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
+  if (!(await verifyChurchillAccess(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for Intro and Comprehensive plan students only." });
     return;
   }
 
@@ -179,8 +185,8 @@ router.post("/conversation/feedback", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Authentication required." });
     return;
   }
-  if (!(await verifyIntroTier(studentEmail))) {
-    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
+  if (!(await verifyChurchillAccess(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for Intro and Comprehensive plan students only." });
     return;
   }
 
@@ -254,8 +260,8 @@ router.post("/conversation/sessions", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Authentication required." });
     return;
   }
-  if (!(await verifyIntroTier(studentEmail))) {
-    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
+  if (!(await verifyChurchillAccess(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for Intro and Comprehensive plan students only." });
     return;
   }
 
@@ -310,8 +316,8 @@ router.get("/conversation/sessions", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Authentication required." });
     return;
   }
-  if (!(await verifyIntroTier(studentEmail))) {
-    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
+  if (!(await verifyChurchillAccess(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for Intro and Comprehensive plan students only." });
     return;
   }
   res.json({ sessions: [] });

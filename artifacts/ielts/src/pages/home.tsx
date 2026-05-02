@@ -117,11 +117,18 @@ export default function Home() {
   const { data: streakInfo } = useStreak();
   const { data: xpInfo } = useXp();
 
-  const isIntroTier = (() => {
+  const currentTier = (() => {
     const tier = localStorage.getItem("lexo-ielts:tier");
     const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-    return tier === "intro" || (!tier && !!introEmail);
+    if (tier === "intro" || (!tier && !!introEmail)) return "intro" as const;
+    if (tier === "advance") return "advance" as const;
+    return "complete" as const;
   })();
+  // Churchill, Listening, and Reading are available to intro + complete tiers.
+  const canAccessIntroFeatures = currentTier === "intro" || currentTier === "complete";
+  // Preserved alias for the home screen layout switch (intro gets the dedicated
+  // intro-tool-picker layout; complete gets both layouts merged).
+  const isIntroTier = currentTier === "intro";
 
   const speak = (text: string) => {
     if ("speechSynthesis" in window) {
@@ -312,7 +319,7 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Words you got wrong — review and master them.</p>
             </div>
           </Link>
-          {isIntroTier ? (
+          {canAccessIntroFeatures ? (
             <div className="flex flex-col gap-3 h-full">
               <Link href="/free-conversation" data-tour="ai-tools" className="block flex-1">
                 <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-5 hover:border-teal-400/60 transition-colors h-full">

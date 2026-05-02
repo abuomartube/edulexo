@@ -62,10 +62,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const initial = (displayName || "?").trim().charAt(0).toUpperCase() || "?";
 
+  // Detect which tier the current student is on so we can show tier-relevant
+  // nav items. We mirror the same localStorage logic used in each page.
+  const studentTier = (() => {
+    try {
+      const t = localStorage.getItem("lexo-ielts:tier");
+      const introEmail = localStorage.getItem("lexo-ielts:intro_email");
+      if (t === "intro" || (!t && !!introEmail)) return "intro";
+      if (t === "advance") return "advance";
+    } catch { /* ignore */ }
+    return "complete";
+  })();
+
+  // Items available to intro + complete tiers (Churchill/Listening/Reading).
+  const introFeatureItems =
+    studentTier === "intro" || studentTier === "complete"
+      ? [
+          { href: "/free-conversation", label: "Churchill Free Conv.", icon: Mic },
+          { href: "/intro-listening", label: "Attenborough Listening", icon: Headphones },
+          { href: "/intro-reading", label: "Hemingway Reading", icon: BookOpen },
+        ]
+      : [];
+
   const navItems = [
     { href: "/", label: "Dashboard", icon: Home },
     { href: "/profile", label: "Profile", icon: User },
     { href: "/lessons", label: "Lessons", icon: PlayCircle },
+    ...introFeatureItems,
     { href: "/study", label: "Study Mode", icon: BookOpen },
     { href: "/quiz", label: "Quiz Mode", icon: HelpCircle },
     { href: "/weak-words", label: "Weak Words", icon: AlertTriangle },

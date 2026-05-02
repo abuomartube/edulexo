@@ -66,16 +66,17 @@ export default function IntroListening() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const cachedDataRef = useRef<{ sections: Section[]; tests: TestSummary[] } | null>(null);
 
-  const isIntroTier = (() => {
+  // Entitled tiers: intro (by tier key or intro_email presence) + complete.
+  const isEntitled = (() => {
     const tier = localStorage.getItem("lexo-ielts:tier");
     const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-    return tier === "intro" || (!tier && !!introEmail);
+    return tier === "intro" || tier === "complete" || (!tier && !!introEmail);
   })();
 
   useEffect(() => {
-    if (!isIntroTier) return;
+    if (!isEntitled) return;
     void loadSections();
-  }, [isIntroTier]);
+  }, [isEntitled]);
 
   async function loadSections() {
     setLoadError(null);
@@ -90,16 +91,19 @@ export default function IntroListening() {
     }
   }
 
-  if (!isIntroTier) {
+  if (!isEntitled) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex flex-col items-center justify-center text-center gap-4 px-4">
           <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
             <Lock className="w-8 h-8 text-amber-500" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">Intro Tier Only</h2>
+          <h2 className="text-2xl font-bold text-foreground">Not Included in Your Plan</h2>
           <p className="text-muted-foreground max-w-sm">
-            Attenborough AI listening tests are available exclusively for intro-tier students.
+            Attenborough AI Listening is available in the Intro and Comprehensive plans.
+          </p>
+          <p className="text-muted-foreground/60 text-sm max-w-sm" dir="rtl" lang="ar">
+            هذه الميزة متاحة في باقة المقدّمة أو الشاملة
           </p>
           <button
             onClick={() => navigate("/")}

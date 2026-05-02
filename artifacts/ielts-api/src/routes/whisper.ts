@@ -1,7 +1,7 @@
 import { Router, type Request, type Response, type NextFunction } from "express";
 import OpenAI, { toFile } from "openai";
 import multer from "multer";
-import { verifyStudentEmail } from "../lib/tier-auth";
+import { verifyStudentEmail, getStudentTier } from "../lib/tier-auth";
 import { recordAiUsage } from "../lib/ai-usage";
 
 const router = Router();
@@ -68,6 +68,13 @@ router.post("/whisper", uploadAudio, async (req, res): Promise<void> => {
   const studentEmail = verifyStudentEmail(req);
   if (!studentEmail) {
     res.status(401).json({ error: "Authentication required. Please log in and try again." });
+    return;
+  }
+
+  // Churchill voice/VAD is available for intro + complete tiers only.
+  const tier = await getStudentTier(studentEmail);
+  if (tier === "advance") {
+    res.status(403).json({ error: "Speech recognition is not included in the Advance plan. Upgrade to the Comprehensive plan to access Churchill voice features." });
     return;
   }
 

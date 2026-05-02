@@ -19,6 +19,11 @@ export function getTier(): Tier {
     // client-side gating UI by simply navigating to `?tier=complete`.
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (isValidTier(stored)) return stored;
+
+    // Intro students may not have the tier key written yet — detect them by
+    // the presence of the intro_email auth key set during intro login.
+    const introEmail = window.localStorage.getItem("lexo-ielts:intro_email");
+    if (introEmail) return "intro";
   } catch {
     // localStorage may throw in some contexts; fall through to default.
   }
@@ -127,3 +132,66 @@ export const restrictedMessage = {
   en: "Available in Advance and Comprehensive tiers.",
   ar: "هذا مخصص للمتقدم والشاملة",
 } as const;
+
+// ── Feature-access map ────────────────────────────────────────────────────────
+
+/**
+ * Platform features that have per-tier access rules.
+ *
+ * - "churchill"  Churchill free conversation + Whisper VAD (intro + complete)
+ * - "listening"  Attenborough AI listening tests               (intro + complete)
+ * - "reading"    Hemingway AI reading passages                 (intro + complete)
+ * - "flashcards" Vocabulary flashcards / study / quiz          (advance + complete)
+ * - "speaking"   Churchill structured speaking topics          (advance + complete)
+ * - "writing"    Orwell AI essay checker                       (advance + complete)
+ */
+export type Feature =
+  | "churchill"
+  | "listening"
+  | "reading"
+  | "flashcards"
+  | "speaking"
+  | "writing";
+
+const FEATURE_ACCESS: Record<Feature, readonly Tier[]> = {
+  churchill: ["intro", "complete"],
+  listening: ["intro", "complete"],
+  reading:   ["intro", "complete"],
+  flashcards: ["advance", "complete"],
+  speaking:   ["advance", "complete"],
+  writing:    ["advance", "complete"],
+};
+
+/**
+ * Returns true if `tier` is entitled to `feature`.
+ * Falls back to `getTier()` when `tier` is omitted, so most callsites can
+ * simply write `canAccess("listening")` without threading the tier prop.
+ */
+export function canAccess(feature: Feature, tier: Tier = getTier()): boolean {
+  return (FEATURE_ACCESS[feature] as readonly string[]).includes(tier);
+}
+
+/**
+ * Upgrade CTA copy shown to advance students who try to open an intro-only
+ * feature (or intro students who try to open an advance-only feature).
+ */
+export function getUpgradeMessage(feature: Feature, tier: Tier = getTier()): { en: string; ar: string } {
+  if (tier === "advance") {
+    return {
+      en: "This feature is available in the Intro and Comprehensive plans.",
+      ar: "هذه الميزة متاحة في باقة المقدّمة أو الشاملة",
+    };
+  }
+  if (tier === "intro") {
+    return {
+      en: "This feature is available in the Advance and Comprehensive plans.",
+      ar: "هذه الميزة متاحة في باقة المتقدّم أو الشاملة",
+    };
+  }
+  // feature reserved for future copy variants
+  void feature;
+  return {
+    en: "All features are available on your plan.",
+    ar: "جميع الميزات متاحة لباقتك",
+  };
+}

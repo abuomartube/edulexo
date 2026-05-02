@@ -2,7 +2,7 @@ import { Router, type Request, type Response } from "express";
 import { db } from "@workspace/ielts-db";
 import { introReadingAttempts, introStudents, settingsTable } from "@workspace/ielts-db";
 import { and, desc, eq } from "drizzle-orm";
-import { verifyStudentEmail } from "../lib/tier-auth";
+import { verifyStudentEmail, getStudentTier } from "../lib/tier-auth";
 import { logger } from "../lib/logger";
 import {
   READING_TYPES,
@@ -26,18 +26,43 @@ import {
 
 // ── Auth helpers ─────────────────────────────────────────────────────────────
 
-// getStudentId is the unified intro-tier gate: it verifies the HMAC token
-// and then looks up the student in the `introStudents` table. A non-null
-// return value means the caller is an authenticated intro-tier student.
+// getStudentId is the unified Churchill/Listening/Reading gate.
+// It verifies the HMAC token and resolves a student row ID.
+//   - Intro-tier students: already have a row in introStudents → return id.
+//   - Complete-tier students: auto-upsert a row in introStudents (status =
+//     "complete_tier") so their attempts can be persisted with a valid FK.
+//   - Advance-tier students and unauthenticated callers: return null → 401.
 async function getStudentId(req: Request): Promise<number | null> {
   const email = verifyStudentEmail(req);
   if (!email) return null;
-  const [row] = await db
+
+  // Check introStudents first (covers all intro-tier students).
+  const [existing] = await db
     .select({ id: introStudents.id })
     .from(introStudents)
     .where(eq(introStudents.email, email))
     .limit(1);
-  return row?.id ?? null;
+  if (existing) return existing.id;
+
+  // Not an intro student — check their standard tier.
+  const tier = await getStudentTier(email);
+  if (tier !== "complete") return null; // advance → deny
+
+  // Complete-tier student: lazily provision an introStudents row.
+  const [inserted] = await db
+    .insert(introStudents)
+    .values({ email, status: "complete_tier" })
+    .onConflictDoNothing()
+    .returning({ id: introStudents.id });
+  if (inserted) return inserted.id;
+
+  // Race condition: another request inserted the row concurrently.
+  const [retry] = await db
+    .select({ id: introStudents.id })
+    .from(introStudents)
+    .where(eq(introStudents.email, email))
+    .limit(1);
+  return retry?.id ?? null;
 }
 
 async function requireAdmin(req: Request, res: Response): Promise<boolean> {

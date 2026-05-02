@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   LogOut, ArrowLeft, Loader2, BookOpen,
-  CheckCircle2, XCircle, Trophy, RotateCcw,
+  CheckCircle2, XCircle, Trophy, RotateCcw, Lock,
 } from "lucide-react";
+import { Layout } from "@/components/layout";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 const NAVY = "#1E2155";
@@ -103,6 +104,38 @@ function toRoman(n: number): string {
 
 export default function IntroReading() {
   const [stage, setStage] = useState<Stage>({ kind: "level" });
+
+  // Entitled tiers: intro (by tier key or intro_email presence) + complete.
+  const isEntitled = (() => {
+    const tier = localStorage.getItem("lexo-ielts:tier");
+    const introEmail = localStorage.getItem("lexo-ielts:intro_email");
+    return tier === "intro" || tier === "complete" || (!tier && !!introEmail);
+  })();
+
+  if (!isEntitled) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex flex-col items-center justify-center text-center gap-4 px-4">
+          <div className="w-16 h-16 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+            <Lock className="w-8 h-8 text-violet-500" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground">Not Included in Your Plan</h2>
+          <p className="text-muted-foreground max-w-sm">
+            Hemingway AI Reading is available in the Intro and Comprehensive plans.
+          </p>
+          <p className="text-muted-foreground/60 text-sm max-w-sm" dir="rtl" lang="ar">
+            هذه الميزة متاحة في باقة المقدّمة أو الشاملة
+          </p>
+          <a
+            href={BASE_URL + "/"}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to home
+          </a>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleLogout = async () => {
     localStorage.removeItem("lexo-ielts:intro_email");

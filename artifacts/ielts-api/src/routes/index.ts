@@ -21,6 +21,7 @@ import spellItRouter from "./spell-it";
 import ssoRouter from "./sso";
 import introAuthRouter from "./intro-auth";
 import whisperRouter from "./whisper";
+import conversationRouter from "./conversation";
 
 const router: IRouter = Router();
 
@@ -28,6 +29,7 @@ router.use(healthRouter);
 router.use(ssoRouter);
 router.use(introAuthRouter);
 router.use(whisperRouter);
+router.use(conversationRouter);
 router.use(authRouter);
 router.use(flashcardsRouter);
 router.use(vocabPdfRouter);

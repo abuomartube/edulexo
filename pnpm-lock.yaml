@@ -451,6 +451,10 @@ importers:
         version: 3.25.76
 
   artifacts/ielts:
+    dependencies:
+      '@ricky0123/vad-web':
+        specifier: 0.0.30
+        version: 0.0.30
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0

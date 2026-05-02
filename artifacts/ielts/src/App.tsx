@@ -35,6 +35,7 @@ const FlipIt = lazy(() => import("@/pages/flip-it"));
 const SpellIt = lazy(() => import("@/pages/spell-it"));
 const Plan = lazy(() => import("@/pages/plan"));
 const Profile = lazy(() => import("@/pages/profile"));
+const FreeConversation = lazy(() => import("@/pages/free-conversation"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 setStudentEmailGetter(() => {
@@ -106,6 +107,7 @@ function Router() {
               <Route path="/spell-it" component={SpellIt} />
               <Route path="/plan" component={Plan} />
               <Route path="/profile" component={Profile} />
+              <Route path="/free-conversation" component={FreeConversation} />
               <Route component={NotFound} />
             </Switch>
           </PasswordGate>

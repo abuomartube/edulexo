@@ -90,7 +90,7 @@ const tiers: Tier[] = [
     icon: Rocket,
     logoSrc: tierIntroLogo,
     logoBg: "bg-gradient-to-br from-[#0a1230] via-[#0d1a45] to-[#0a1230]",
-    href: "/lexo-ielts/dashboard?tier=intro",
+    href: "/checkout/intro/intro",
     external: true,
     comingSoon: false,
     highlighted: false,
@@ -114,7 +114,7 @@ const tiers: Tier[] = [
     icon: GraduationCap,
     logoSrc: tierAdvanceLogo,
     logoBg: "bg-gradient-to-br from-[#1a0a30] via-[#2a0d4d] to-[#1a0a30]",
-    href: "/lexo-ielts/dashboard?tier=advance",
+    href: "/checkout/intro/advance",
     external: true,
     comingSoon: false,
     highlighted: false,
@@ -138,7 +138,7 @@ const tiers: Tier[] = [
     icon: Crown,
     logoSrc: tierCompleteLogo,
     logoBg: "bg-gradient-to-br from-[#0a1230] via-[#0d1f2a] to-[#0a1230]",
-    href: "/lexo-ielts/dashboard?tier=complete",
+    href: "/checkout/intro/complete",
     external: true,
     comingSoon: false,
     highlighted: true,
@@ -287,7 +287,7 @@ export default function IeltsCourse() {
             const TierIcon = tier.icon;
             const ctaLabel = tier.comingSoon
               ? t("ielts.tiers.cta.notify")
-              : t("ielts.tiers.cta.open");
+              : t("courses.upsell.cta");
             const CtaArrow = dir === "rtl" ? ArrowLeft : ArrowRight;
             const ctaInner = (
               <span className="inline-flex w-full items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition">
@@ -370,12 +370,13 @@ export default function IeltsCourse() {
                       {ctaInner}
                     </button>
                   ) : (
-                    <a
+                    <Link
                       href={tier.href}
+                      data-testid={`link-enroll-tier-${tier.id}`}
                       className={`block w-full ${tier.ctaClasses} rounded-xl`}
                     >
                       {ctaInner}
-                    </a>
+                    </Link>
                   )}
                 </div>
               </div>

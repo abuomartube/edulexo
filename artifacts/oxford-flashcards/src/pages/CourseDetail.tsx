@@ -287,7 +287,7 @@ export default function CourseDetail() {
                 <Link
                   href={checkoutHref}
                   data-testid="button-hero-buy-now"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#ff8a00] text-white font-bold shadow-lg shadow-[#ff8a00]/30 hover:bg-[#ff9a20] hover:scale-[1.02] active:scale-95 transition"
+                  className="glow-button inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-[#ff8a00] text-white font-bold shadow-lg shadow-[#ff8a00]/30 hover:bg-[#ff9a20] hover:scale-[1.02] active:scale-95 transition"
                 >
                   {t("course.detail.cta.buyNow")} · {t("course.detail.cta.price")}
                   <FwdIcon size={18} />
@@ -379,7 +379,7 @@ export default function CourseDetail() {
                 <div
                   key={g.titleKey}
                   data-testid={`card-goal-${i + 1}`}
-                  className="rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                  className="glow-card neon-border rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0a1f44] to-[#123b75] flex items-center justify-center text-white shadow-lg mb-4">
                     <Icon size={22} />
@@ -412,7 +412,7 @@ export default function CourseDetail() {
               <div
                 key={tile.labelKey}
                 data-testid={`tile-showcase-${i + 1}`}
-                className={`relative aspect-square rounded-2xl bg-gradient-to-br ${tile.gradient} overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+                className={`glow-card relative aspect-square rounded-2xl bg-gradient-to-br ${tile.gradient} overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
               >
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Icon size={56} className="text-white/30" />
@@ -535,7 +535,7 @@ export default function CourseDetail() {
                 <div
                   key={tt.nameKey}
                   data-testid={`testimonial-${i + 1}`}
-                  className="rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition flex flex-col"
+                  className="glow-card rounded-2xl p-6 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 hover:shadow-lg transition flex flex-col"
                 >
                   <div className="flex items-center gap-3 mb-4">
                     <div
@@ -708,7 +708,7 @@ export default function CourseDetail() {
             <Link
               href={checkoutHref}
               data-testid="button-bottom-buy-now"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#ff8a00] text-white font-bold shadow-lg shadow-[#ff8a00]/40 hover:bg-[#ff9a20] hover:scale-[1.02] active:scale-95 transition"
+              className="glow-button inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#ff8a00] text-white font-bold shadow-lg shadow-[#ff8a00]/40 hover:bg-[#ff9a20] hover:scale-[1.02] active:scale-95 transition"
             >
               {t("course.detail.cta.buyNow")}
               <FwdIcon size={18} />
@@ -730,7 +730,7 @@ export default function CourseDetail() {
       <Link
         href={checkoutHref}
         data-testid="button-floating-buy-now"
-        className="fixed bottom-5 end-5 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#ff8a00] text-white font-bold shadow-2xl shadow-[#ff8a00]/40 hover:bg-[#ff9a20] hover:scale-[1.03] active:scale-95 transition"
+        className="glow-button fixed bottom-5 end-5 z-40 inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[#ff8a00] text-white font-bold shadow-2xl shadow-[#ff8a00]/40 hover:bg-[#ff9a20] hover:scale-[1.03] active:scale-95 transition"
       >
         <ShoppingCart size={16} />
         {t("course.detail.cta.buyNow")} · {t("course.detail.cta.price")}

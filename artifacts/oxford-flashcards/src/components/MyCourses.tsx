@@ -306,7 +306,7 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
                 <div
                   key={`upsell-${tier}`}
                   data-testid={`card-ielts-upsell-${tier}`}
-                  className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                  className="glow-card rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
                 >
                   <div className="bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 p-4 text-white flex items-center gap-3">
                     <img
@@ -351,7 +351,7 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
               <div
                 key={e.id}
                 data-testid={`card-ielts-enrollment-${e.tier}`}
-                className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                className="glow-card rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
               >
                 <div className={`bg-gradient-to-br ${meta.gradient} p-4 text-white flex items-center gap-3`}>
                   <img
@@ -490,7 +490,7 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
                 <div
                   key={`upsell-${tier}`}
                   data-testid={`card-english-upsell-${tier}`}
-                  className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                  className="glow-card rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
                 >
                   <div className="bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 p-4 text-white flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-white/10 p-2 flex items-center justify-center">
@@ -533,7 +533,7 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
               <div
                 key={e.id}
                 data-testid={`card-english-enrollment-${tier}`}
-                className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                className="glow-card rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
               >
                 <div
                   className={`bg-gradient-to-br ${meta.gradient} p-4 text-white flex items-center gap-3`}

@@ -299,7 +299,7 @@ export default function IeltsCourse() {
             return (
               <div
                 key={tier.id}
-                className={`relative flex flex-col rounded-2xl bg-white dark:bg-slate-900/60 border ${tier.ringClasses} p-6 shadow-sm hover:shadow-xl transition-all ${tier.highlighted ? "md:-translate-y-2" : "hover:-translate-y-0.5"}`}
+                className={`glow-card neon-border relative flex flex-col rounded-2xl bg-white dark:bg-slate-900/60 border ${tier.ringClasses} p-6 shadow-sm hover:shadow-xl transition-all ${tier.highlighted ? "md:-translate-y-2" : "hover:-translate-y-0.5"}`}
               >
                 {tier.highlighted && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-[10px] font-bold uppercase tracking-wider shadow-md">

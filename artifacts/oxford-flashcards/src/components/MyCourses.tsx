@@ -9,9 +9,9 @@ import {
   KeyRound,
   Loader2,
   CheckCircle2,
-  BookOpen,
   Compass,
   Rocket,
+  ShoppingCart,
 } from "lucide-react";
 import {
   fetchMyEnrollments,
@@ -83,6 +83,14 @@ const ENGLISH_TIER_META: Record<
     nameKey: "courses.english.tier.advanced",
   },
 };
+
+// Display order for the always-on tier grid. Every tier renders a card,
+// even ones the student has not enrolled in yet — those become upsell cards
+// that link directly to the existing /checkout/<course>/<tier> flow. This
+// gives the dashboard a stable 3-up layout and surfaces tier upgrades as
+// first-class CTAs instead of hiding them behind a redeem form.
+const IELTS_TIER_ORDER: Tier[] = ["intro", "advance", "complete"];
+const ENGLISH_TIER_ORDER: EnglishTier[] = ["beginner", "intermediate", "advanced"];
 
 export default function MyCourses() {
   const t = useT();
@@ -285,21 +293,59 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
           <Loader2 size={20} className="inline animate-spin mr-2" />
           {t("common.loading")}
         </div>
-      ) : visible.length === 0 ? (
-        <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-gray-800 p-8 text-center">
-          <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">{t("courses.empty")}</p>
-          <Link
-            href="/ielts"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
-          >
-            <BookOpen size={14} />
-            {t("ielts.tiers.cta.open")}
-          </Link>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {visible.map((e) => {
-            const meta = IELTS_TIER_META[e.tier];
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {IELTS_TIER_ORDER.map((tier) => {
+            const meta = IELTS_TIER_META[tier];
+            const e = visible.find((x) => x.tier === tier);
+            // Unowned tier — render an upsell card that goes straight to checkout.
+            // We do NOT use SubscriptionMeta / StatusBadge here because the user
+            // has no enrollment row at all, not even an expired one.
+            if (!e) {
+              return (
+                <div
+                  key={`upsell-${tier}`}
+                  data-testid={`card-ielts-upsell-${tier}`}
+                  className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                >
+                  <div className="bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 p-4 text-white flex items-center gap-3">
+                    <img
+                      src={meta.logo}
+                      alt=""
+                      className="w-12 h-12 object-contain bg-white/10 rounded-lg p-1.5 opacity-80"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] uppercase tracking-wider opacity-80">{meta.range}</p>
+                      <h3 className="text-base font-bold leading-tight">{t(meta.nameKey)}</h3>
+                    </div>
+                    <span
+                      data-testid={`badge-ielts-not-enrolled-${tier}`}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 text-white"
+                    >
+                      {t("courses.upsell.notEnrolled")}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <div className="text-xs text-slate-600 dark:text-slate-300 mb-3 space-y-0.5">
+                      <p className="font-semibold text-slate-800 dark:text-slate-100">
+                        {t("courses.upsell.priceLabel")}
+                      </p>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        {t("courses.upsell.accessNote")}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/checkout/intro/${tier}`}
+                      data-testid={`link-enroll-ielts-${tier}`}
+                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow hover:opacity-90 transition"
+                    >
+                      <ShoppingCart size={15} />
+                      {t("courses.upsell.cta")}
+                    </Link>
+                  </div>
+                </div>
+              );
+            }
             const isActive = e.isActive;
             return (
               <div
@@ -432,27 +478,61 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
           <Loader2 size={20} className="inline animate-spin mr-2" />
           {t("common.loading")}
         </div>
-      ) : visible.length === 0 ? (
-        <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-gray-800 p-8 text-center">
-          <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">{t("courses.english.empty")}</p>
-          <Link
-            href="/english"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline"
-          >
-            <BookOpen size={14} />
-            {t("courses.english.browse")}
-          </Link>
-        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {visible.map((e) => {
-            const meta = ENGLISH_TIER_META[e.tier];
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {ENGLISH_TIER_ORDER.map((tier) => {
+            const meta = ENGLISH_TIER_META[tier];
             const Icon = meta.icon;
+            const e = visible.find((x) => x.tier === tier);
+            // Unowned tier — show upsell card pointing at /checkout/english/<tier>.
+            if (!e) {
+              return (
+                <div
+                  key={`upsell-${tier}`}
+                  data-testid={`card-english-upsell-${tier}`}
+                  className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
+                >
+                  <div className="bg-gradient-to-br from-slate-500 via-slate-600 to-slate-700 p-4 text-white flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-white/10 p-2 flex items-center justify-center">
+                      <Icon size={24} className="text-white opacity-80" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] uppercase tracking-wider opacity-80">{meta.range}</p>
+                      <h3 className="text-base font-bold leading-tight">{t(meta.nameKey)}</h3>
+                    </div>
+                    <span
+                      data-testid={`badge-english-not-enrolled-${tier}`}
+                      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-white/20 text-white"
+                    >
+                      {t("courses.upsell.notEnrolled")}
+                    </span>
+                  </div>
+                  <div className="p-4">
+                    <div className="text-xs text-slate-600 dark:text-slate-300 mb-3 space-y-0.5">
+                      <p className="font-semibold text-slate-800 dark:text-slate-100">
+                        {t("courses.upsell.priceLabel")}
+                      </p>
+                      <p className="text-slate-500 dark:text-slate-400">
+                        {t("courses.upsell.accessNote")}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/checkout/english/${tier}`}
+                      data-testid={`link-enroll-english-${tier}`}
+                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-semibold text-sm shadow hover:opacity-90 transition"
+                    >
+                      <ShoppingCart size={15} />
+                      {t("courses.upsell.cta")}
+                    </Link>
+                  </div>
+                </div>
+              );
+            }
             const isActive = e.isActive;
             return (
               <div
                 key={e.id}
-                data-testid={`card-english-enrollment-${e.tier}`}
+                data-testid={`card-english-enrollment-${tier}`}
                 className="rounded-2xl ring-1 ring-slate-200 dark:ring-gray-800 overflow-hidden bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition"
               >
                 <div

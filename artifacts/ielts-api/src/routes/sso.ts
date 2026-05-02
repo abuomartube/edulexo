@@ -194,7 +194,13 @@ router.get("/sso/redeem", async (req, res) => {
 
     // The IELTS app keeps its session in localStorage (key '4ielts_email'),
     // not in cookies. So we return a tiny bootstrap page that writes the
-    // session and redirects to /app-ielts/.
+    // session and redirects to /lexo-ielts/. The redirect target is taken
+    // from the `next` query param (validated to start with /lexo-ielts/) so
+    // the tier query string set by the central api-server is preserved.
+    const nextParam = String(req.query["next"] ?? "");
+    const safeNext = nextParam.startsWith("/lexo-ielts/")
+      ? nextParam
+      : "/lexo-ielts/";
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,7 +231,7 @@ router.get("/sso/redeem", async (req, res) => {
   } catch (e) {
     // localStorage unavailable — fall through to redirect anyway.
   }
-  window.location.replace("/app-ielts/");
+  window.location.replace(${jsString(safeNext)});
 })();
 </script>
 <noscript>

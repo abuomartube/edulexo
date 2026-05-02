@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/app-english/"
+previewPath = "/lexo-english/"
 title = "LEXO for English"
 version = "1.0.0"
 id = "artifacts/english"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/app-english/" ]
+paths = [ "/lexo-english/" ]
 localPort = 23567
 
 [services.development]
@@ -28,4 +28,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "23567"
-BASE_PATH = "/app-english/"
+BASE_PATH = "/lexo-english/"

@@ -521,7 +521,7 @@ export async function redeemEnglishCode(code: string): Promise<EnglishEnrollment
 }
 
 // English uses the shared session cookie — no SSO needed; just navigate.
-export const ENGLISH_APP_URL = "/app-english/";
+export const ENGLISH_APP_URL = "/lexo-english/";
 
 export const ENGLISH_TIER_LABELS: Record<EnglishTier, { en: string; ar: string }> = {
   beginner: { en: "Beginner", ar: "مبتدئ" },

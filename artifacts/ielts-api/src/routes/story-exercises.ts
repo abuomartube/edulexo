@@ -1,5 +1,4 @@
-import { Router, type IRouter } from "express";
-import crypto from "node:crypto";
+import { Router, type IRouter, type Response } from "express";
 import { eq, and, sql } from "drizzle-orm";
 import Anthropic from "@anthropic-ai/sdk";
 import {
@@ -9,23 +8,35 @@ import {
   xpEventsTable,
 } from "@workspace/ielts-db";
 import { logger } from "../lib/logger";
+import {
+  verifyStudentEmail,
+  getStudentTier,
+  tierAllowsLevel,
+} from "../lib/tier-auth.js";
 
 const router: IRouter = Router();
 
-// ── Auth (same scheme as plan-pdf / change-password / flashcards) ─────────
-
-const SESSION_SECRET = process.env["SESSION_SECRET"] ?? "fallback-secret";
-
-function verifyStudentEmail(req: import("express").Request): string | null {
-  const email = (req.headers["x-student-email"] as string || "").trim().toLowerCase();
-  const token = (req.headers["x-student-token"] as string || "").trim();
-  if (!email || !token) return null;
-  const expected = crypto
-    .createHmac("sha256", SESSION_SECRET)
-    .update(email + ":approved")
-    .digest("hex");
-  if (token !== expected) return null;
-  return email;
+// Returns true if the caller's tier allows the story; otherwise sends a 403
+// or 404 on the response and returns false.
+async function assertStoryAllowed(
+  storyId: number,
+  email: string,
+  res: Response,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ level: storiesTable.level })
+    .from(storiesTable)
+    .where(eq(storiesTable.id, storyId));
+  if (!row) {
+    res.status(404).json({ error: "Story not found." });
+    return false;
+  }
+  const tier = await getStudentTier(email);
+  if (!tierAllowsLevel(tier, row.level)) {
+    res.status(403).json({ error: "Tier does not allow this story." });
+    return false;
+  }
+  return true;
 }
 
 // ── Anthropic client ──────────────────────────────────────────────────────
@@ -290,6 +301,7 @@ router.get("/stories/:id/quiz", async (req, res) => {
     res.status(400).json({ error: "Invalid story id." });
     return;
   }
+  if (!(await assertStoryAllowed(storyId, email, res))) return;
   try {
     const quiz = await loadOrGenerateQuiz(storyId);
     res.json({ questions: publicView(quiz) });
@@ -314,6 +326,7 @@ router.post("/stories/:id/quiz/grade", async (req, res) => {
     res.status(400).json({ error: "Invalid story id." });
     return;
   }
+  if (!(await assertStoryAllowed(storyId, email, res))) return;
   const body = req.body as { answers?: Record<string, unknown> };
   const answers = body?.answers;
   if (!answers || typeof answers !== "object") {
@@ -468,6 +481,7 @@ router.post("/stories/:id/written-feedback", async (req, res) => {
     res.status(400).json({ error: "Invalid story id." });
     return;
   }
+  if (!(await assertStoryAllowed(storyId, email, res))) return;
 
   const body = req.body as { response?: unknown };
   const responseText = typeof body?.response === "string" ? body.response.trim() : "";

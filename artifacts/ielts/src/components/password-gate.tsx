@@ -105,7 +105,15 @@ async function bootstrapTierFromServer(email: string, token: string) {
     });
     if (!res.ok) return;
     const body = await res.json();
-    if (body && (body.tier === "intro" || body.tier === "advance" || body.tier === "complete")) {
+    // Only trust an authenticated response. The /me/tier endpoint is
+    // deny-by-default and returns "intro" for failed auth headers, so a
+    // transient HMAC mismatch must NOT overwrite a real complete/advance
+    // user's localStorage and silently downgrade them.
+    if (
+      body &&
+      body.authenticated === true &&
+      (body.tier === "intro" || body.tier === "advance" || body.tier === "complete")
+    ) {
       localStorage.setItem("lexo-ielts:tier", body.tier);
     }
   } catch {

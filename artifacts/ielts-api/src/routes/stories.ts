@@ -1,7 +1,12 @@
 import { Router } from "express";
 import { db, storiesTable } from "@workspace/ielts-db";
-import { eq, asc } from "drizzle-orm";
-import crypto from "node:crypto";
+import { eq, asc, inArray } from "drizzle-orm";
+import {
+  verifyStudentEmail,
+  getStudentTier,
+  tierAllowsLevel,
+  tierLevels,
+} from "../lib/tier-auth.js";
 
 const router = Router();
 
@@ -17,24 +22,46 @@ function requireAdmin(req: import("express").Request, res: import("express").Res
 }
 
 router.get("/stories", async (req, res): Promise<void> => {
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
   const { level } = req.query;
+
+  // Explicit level filter must be tier-allowed.
+  if (level && typeof level === "string" && !tierAllowsLevel(tier, level)) {
+    res.status(403).json({ error: "Tier does not allow this level" });
+    return;
+  }
+
   let rows;
   if (level && typeof level === "string") {
     rows = await db.select().from(storiesTable)
       .where(eq(storiesTable.level, level))
       .orderBy(asc(storiesTable.orderIndex), asc(storiesTable.id));
   } else {
-    rows = await db.select().from(storiesTable)
-      .orderBy(asc(storiesTable.level), asc(storiesTable.orderIndex), asc(storiesTable.id));
+    // Unfiltered list: clamp to the tier's allowed levels.
+    const allowed = tierLevels(tier);
+    rows = allowed
+      ? await db.select().from(storiesTable)
+          .where(inArray(storiesTable.level, [...allowed]))
+          .orderBy(asc(storiesTable.level), asc(storiesTable.orderIndex), asc(storiesTable.id))
+      : await db.select().from(storiesTable)
+          .orderBy(asc(storiesTable.level), asc(storiesTable.orderIndex), asc(storiesTable.id));
   }
   res.json(rows);
 });
 
 router.get("/stories/:id", async (req, res): Promise<void> => {
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
   const id = Number(req.params.id);
   const rows = await db.select().from(storiesTable).where(eq(storiesTable.id, id));
   if (rows.length === 0) { res.status(404).json({ error: "Story not found" }); return; }
-  res.json(rows[0]);
+  const story = rows[0]!;
+  if (!tierAllowsLevel(tier, story.level)) {
+    res.status(403).json({ error: "Tier does not allow this story" });
+    return;
+  }
+  res.json(story);
 });
 
 router.post("/admin/stories", async (req, res): Promise<void> => {

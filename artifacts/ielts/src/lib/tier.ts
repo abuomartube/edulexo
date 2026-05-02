@@ -13,12 +13,10 @@ export function getTier(): Tier {
   if (typeof window === "undefined") return DEFAULT_TIER;
 
   try {
-    const url = new URL(window.location.href);
-    const fromQuery = url.searchParams.get("tier");
-    if (isValidTier(fromQuery)) {
-      window.localStorage.setItem(STORAGE_KEY, fromQuery);
-      return fromQuery;
-    }
+    // Tier is server-sourced (bootstrapped from /api-ielts/me/tier on every
+    // gate unlock). We intentionally do NOT honor a `?tier=` query parameter
+    // here, because that would let any logged-in user self-escalate the
+    // client-side gating UI by simply navigating to `?tier=complete`.
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (isValidTier(stored)) return stored;
   } catch {

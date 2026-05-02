@@ -59,22 +59,4 @@ test.describe("IntroHome (intro tier home screen)", () => {
       .first();
     await expect(readingLink).toHaveAttribute("href", /intro-reading/);
   });
-
-  test("does NOT show the 'Your Tools' section to advance tier", async ({
-    page,
-  }) => {
-    // Re-configure as advance before navigating
-    // (this test uses a fresh page without the intro helper)
-    await page.evaluate(() => {
-      localStorage.setItem("lexo-ielts:tier", "advance");
-    });
-    await page.reload();
-    // After reload PasswordGate re-runs. The intro-email is still set, so the
-    // /api-ielts/auth/intro/me mock will still respond. The tier is now
-    // "advance" so server bootstrap will still say "intro". Because the
-    // authenticated flag is true from /api-ielts/me/tier (which returns tier=intro
-    // from our mock), this test is limited. So instead we just verify the
-    // standard home page (non-IntroHome) renders when tier is overridden.
-    // The definitive advance-tier home test is in tier-gating.spec.ts.
-  });
 });

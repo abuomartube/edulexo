@@ -41,6 +41,25 @@ export async function loginAsIntro(
     }),
   );
 
+  // Suppress the onboarding wizard: return values for all four user-data keys
+  // so useOnboardingCheck sees hasOnboarding=true and needsName=false.
+  await page.route("**/api-ielts/user-data/**", (route) => {
+    const url = route.request().url();
+    const key = url.split("/user-data/").pop()?.split("?")[0] ?? "";
+    const VALUE_MAP: Record<string, string> = {
+      current_level: "B2",
+      target_band: "7",
+      exam_date: "2026-12-31",
+      name: "Test Student",
+      tour_completed: "1",
+    };
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ value: VALUE_MAP[key] ?? "test" }),
+    });
+  });
+
   await page.addInitScript(
     ({ em, tok, tierValue }) => {
       localStorage.setItem("lexo-ielts:intro_email", em);
@@ -50,6 +69,10 @@ export async function loginAsIntro(
         "4ielts_email",
         JSON.stringify({ email: em, token: tok }),
       );
+      // Suppress the guided tour overlay (z-[9999]) so tests can click freely.
+      localStorage.setItem("lexo_tour_completed", "1");
+      // Suppress the exit-comment-popup (z-[80]) triggered by mouseout events.
+      try { sessionStorage.setItem("exitCommentDismissed", "1"); } catch { /* ignore */ }
     },
     { em: email, tok: "test-intro-token-123", tierValue: tier },
   );
@@ -104,6 +127,24 @@ export async function loginAsAdvanceOrComplete(
     }),
   );
 
+  // Suppress the onboarding wizard: return values for all four user-data keys.
+  await page.route("**/api-ielts/user-data/**", (route) => {
+    const url = route.request().url();
+    const key = url.split("/user-data/").pop()?.split("?")[0] ?? "";
+    const VALUE_MAP: Record<string, string> = {
+      current_level: "B2",
+      target_band: "7",
+      exam_date: "2026-12-31",
+      name: "Test Student",
+      tour_completed: "1",
+    };
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ value: VALUE_MAP[key] ?? "test" }),
+    });
+  });
+
   await page.addInitScript(
     ({ em, tok, tierValue }) => {
       localStorage.setItem(
@@ -111,6 +152,10 @@ export async function loginAsAdvanceOrComplete(
         JSON.stringify({ email: em, token: tok }),
       );
       localStorage.setItem("lexo-ielts:tier", tierValue);
+      // Suppress the guided tour overlay (z-[9999]) so tests can click freely.
+      localStorage.setItem("lexo_tour_completed", "1");
+      // Suppress the exit-comment-popup (z-[80]) triggered by mouseout events.
+      try { sessionStorage.setItem("exitCommentDismissed", "1"); } catch { /* ignore */ }
     },
     { em: email, tok: fakeToken, tierValue: tier },
   );

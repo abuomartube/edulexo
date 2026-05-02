@@ -4,6 +4,7 @@ import {
   CheckCircle2, XCircle, Trophy, RotateCcw, Lock,
 } from "lucide-react";
 import { Layout } from "@/components/layout";
+import { canAccess } from "@/lib/tier";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 const NAVY = "#1E2155";
@@ -105,12 +106,9 @@ function toRoman(n: number): string {
 export default function IntroReading() {
   const [stage, setStage] = useState<Stage>({ kind: "level" });
 
-  // Entitled tiers: intro (by tier key or intro_email presence) + complete.
-  const isEntitled = (() => {
-    const tier = localStorage.getItem("lexo-ielts:tier");
-    const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-    return tier === "intro" || tier === "complete" || (!tier && !!introEmail);
-  })();
+  // canAccess uses getTier() which reads lexo-ielts:tier and falls back to
+  // detecting intro via lexo-ielts:intro_email, so no manual localStorage reads needed.
+  const isEntitled = canAccess("reading");
 
   if (!isEntitled) {
     return (

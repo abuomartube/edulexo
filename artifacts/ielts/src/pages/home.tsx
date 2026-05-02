@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { DailyPlanSection } from "@/components/daily-plan-section";
+import { canAccess, getTier } from "@/lib/tier";
 
 function VocabDownloadSection() {
   return (
@@ -117,18 +118,12 @@ export default function Home() {
   const { data: streakInfo } = useStreak();
   const { data: xpInfo } = useXp();
 
-  const currentTier = (() => {
-    const tier = localStorage.getItem("lexo-ielts:tier");
-    const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-    if (tier === "intro" || (!tier && !!introEmail)) return "intro" as const;
-    if (tier === "advance") return "advance" as const;
-    return "complete" as const;
-  })();
-  // Churchill, Listening, and Reading are available to intro + complete tiers.
-  const canAccessIntroFeatures = currentTier === "intro" || currentTier === "complete";
-  // Preserved alias for the home screen layout switch (intro gets the dedicated
-  // intro-tool-picker layout; complete gets both layouts merged).
-  const isIntroTier = currentTier === "intro";
+  // Use the canonical canAccess helper from tier.ts — getTier() already handles
+  // the lexo-ielts:intro_email fallback detection for intro students.
+  const canAccessIntroFeatures = canAccess("churchill");
+  // Intro students get a dedicated tool-picker layout (advance/complete get the
+  // flashcard-first layout, which is also the default for complete students).
+  const isIntroTier = getTier() === "intro";
 
   const speak = (text: string) => {
     if ("speechSynthesis" in window) {

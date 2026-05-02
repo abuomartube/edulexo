@@ -5,6 +5,7 @@ import {
   TrendingUp, Calendar, Clock, BarChart3, Quote, RotateCcw, Ear
 } from "lucide-react";
 import { useLocation } from "wouter";
+import { canAccess } from "@/lib/tier";
 
 const TEAL = "#6B2FE6";
 const GREEN = "#1DB954";
@@ -1480,14 +1481,9 @@ export default function FreeConversationPage() {
   const [, navigate] = useLocation();
   const onBack = () => navigate("/");
 
-  const tier = localStorage.getItem("lexo-ielts:tier");
-  // Only allow students whose tier is explicitly "intro", or who have an intro-specific
-  // auth key (lexo-ielts:intro_email) and no conflicting tier set.
-  // Do NOT use "4ielts_email" — that key is present for advance/complete tier users too.
-  const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-  // Entitled tiers: intro (by tier key or intro_email presence) + complete.
-  // Advance students do not have access to Churchill features.
-  const isEntitled = tier === "intro" || tier === "complete" || (!tier && !!introEmail);
+  // canAccess uses getTier() which reads lexo-ielts:tier and falls back to
+  // detecting intro via lexo-ielts:intro_email, so no manual localStorage reads needed.
+  const isEntitled = canAccess("churchill");
 
   if (!isEntitled) {
     return (

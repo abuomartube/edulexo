@@ -7,6 +7,7 @@ import { useTheme } from "@/context/theme-context";
 import { Button } from "@/components/ui/button";
 import { MyPlanButton } from "@/components/my-plan-button";
 import { NotificationsBell } from "@/components/notifications-bell";
+import { canAccess } from "@/lib/tier";
 
 function handleLogout() {
   try {
@@ -62,27 +63,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const initial = (displayName || "?").trim().charAt(0).toUpperCase() || "?";
 
-  // Detect which tier the current student is on so we can show tier-relevant
-  // nav items. We mirror the same localStorage logic used in each page.
-  const studentTier = (() => {
-    try {
-      const t = localStorage.getItem("lexo-ielts:tier");
-      const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-      if (t === "intro" || (!t && !!introEmail)) return "intro";
-      if (t === "advance") return "advance";
-    } catch { /* ignore */ }
-    return "complete";
-  })();
+  // Show Churchill/Listening/Reading nav items for entitled tiers (intro + complete).
+  // canAccess uses getTier() which handles the intro_email fallback automatically.
+  const showIntroFeatures = canAccess("churchill");
 
   // Items available to intro + complete tiers (Churchill/Listening/Reading).
-  const introFeatureItems =
-    studentTier === "intro" || studentTier === "complete"
-      ? [
-          { href: "/free-conversation", label: "Churchill Free Conv.", icon: Mic },
-          { href: "/intro-listening", label: "Attenborough Listening", icon: Headphones },
-          { href: "/intro-reading", label: "Hemingway Reading", icon: BookOpen },
-        ]
-      : [];
+  const introFeatureItems = showIntroFeatures
+    ? [
+        { href: "/free-conversation", label: "Churchill Free Conv.", icon: Mic },
+        { href: "/intro-listening", label: "Attenborough Listening", icon: Headphones },
+        { href: "/intro-reading", label: "Hemingway Reading", icon: BookOpen },
+      ]
+    : [];
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: Home },

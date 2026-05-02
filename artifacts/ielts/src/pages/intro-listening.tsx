@@ -5,6 +5,7 @@ import {
   CheckCircle, Lock, ChevronRight, Eye, CheckCircle2, XCircle, Sparkles, RotateCw,
 } from "lucide-react";
 import { Layout } from "@/components/layout";
+import { canAccess } from "@/lib/tier";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 const GREEN = "#6EE7B7";
@@ -66,12 +67,9 @@ export default function IntroListening() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const cachedDataRef = useRef<{ sections: Section[]; tests: TestSummary[] } | null>(null);
 
-  // Entitled tiers: intro (by tier key or intro_email presence) + complete.
-  const isEntitled = (() => {
-    const tier = localStorage.getItem("lexo-ielts:tier");
-    const introEmail = localStorage.getItem("lexo-ielts:intro_email");
-    return tier === "intro" || tier === "complete" || (!tier && !!introEmail);
-  })();
+  // canAccess uses getTier() which reads lexo-ielts:tier and falls back to
+  // detecting intro via lexo-ielts:intro_email, so no manual localStorage reads needed.
+  const isEntitled = canAccess("listening");
 
   useEffect(() => {
     if (!isEntitled) return;

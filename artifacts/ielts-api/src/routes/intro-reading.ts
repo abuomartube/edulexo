@@ -26,17 +26,36 @@ import {
 
 // ── Auth helpers ─────────────────────────────────────────────────────────────
 
-// getStudentId is the unified Churchill/Listening/Reading gate.
-// It verifies the HMAC token and resolves a student row ID.
-//   - Intro-tier students: already have a row in introStudents → return id.
-//   - Complete-tier students: auto-upsert a row in introStudents (status =
-//     "complete_tier") so their attempts can be persisted with a valid FK.
-//   - Advance-tier students and unauthenticated callers: return null → 401.
-async function getStudentId(req: Request): Promise<number | null> {
+// requireStudentAccess — unified gate for Churchill/Listening/Reading routes.
+//
+// Sends the appropriate error response and returns null on failure so
+// callers can simply `if (studentId === null) return;` without re-sending.
+//
+// HTTP semantics:
+//   401 — missing/invalid auth token
+//   403 — authenticated but advance tier (not entitled)
+//   number — student ID from introStudents (always valid, auto-provisioned for complete)
+//
+// Tier resolution order:
+//   1. Advance tier check FIRST — denied regardless of any introStudents row.
+//   2. introStudents lookup — intro-tier students always have a row here.
+//   3. Complete tier — lazily provisions an introStudents row (idempotent).
+async function requireStudentAccess(req: Request, res: Response): Promise<number | null> {
   const email = verifyStudentEmail(req);
-  if (!email) return null;
+  if (!email) {
+    res.status(401).json({ error: "Not authenticated" });
+    return null;
+  }
 
-  // Check introStudents first (covers all intro-tier students).
+  // Check tier FIRST so an advance user with a legacy introStudents row is
+  // correctly denied rather than silently granted intro-feature access.
+  const tier = await getStudentTier(email);
+  if (tier === "advance") {
+    res.status(403).json({ error: "Reading tests are available in the Intro and Comprehensive plans only." });
+    return null;
+  }
+
+  // Intro-tier students have a row in introStudents (inserted at registration).
   const [existing] = await db
     .select({ id: introStudents.id })
     .from(introStudents)
@@ -44,25 +63,26 @@ async function getStudentId(req: Request): Promise<number | null> {
     .limit(1);
   if (existing) return existing.id;
 
-  // Not an intro student — check their standard tier.
-  const tier = await getStudentTier(email);
-  if (tier !== "complete") return null; // advance → deny
+  // Complete-tier student (or legacy "complete" fallback): lazily provision row.
+  if (tier === "complete") {
+    const [inserted] = await db
+      .insert(introStudents)
+      .values({ email, status: "complete_tier" })
+      .onConflictDoNothing()
+      .returning({ id: introStudents.id });
+    if (inserted) return inserted.id;
 
-  // Complete-tier student: lazily provision an introStudents row.
-  const [inserted] = await db
-    .insert(introStudents)
-    .values({ email, status: "complete_tier" })
-    .onConflictDoNothing()
-    .returning({ id: introStudents.id });
-  if (inserted) return inserted.id;
+    // Race condition: row was inserted concurrently.
+    const [retry] = await db
+      .select({ id: introStudents.id })
+      .from(introStudents)
+      .where(eq(introStudents.email, email))
+      .limit(1);
+    if (retry) return retry.id;
+  }
 
-  // Race condition: another request inserted the row concurrently.
-  const [retry] = await db
-    .select({ id: introStudents.id })
-    .from(introStudents)
-    .where(eq(introStudents.email, email))
-    .limit(1);
-  return retry?.id ?? null;
+  res.status(401).json({ error: "Not authenticated" });
+  return null;
 }
 
 async function requireAdmin(req: Request, res: Response): Promise<boolean> {
@@ -135,11 +155,8 @@ const router = Router();
 
 // GET /reading/levels-types — metadata: levels + question types + per-bucket counts
 router.get("/reading/levels-types", async (req, res) => {
-  const studentId = await getStudentId(req);
-  if (!studentId) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
+  const studentId = await requireStudentAccess(req, res);
+  if (studentId === null) return;
   try {
     const items = await loadAllItems();
     const counts: Record<string, number> = {};
@@ -160,11 +177,8 @@ router.get("/reading/levels-types", async (req, res) => {
 
 // GET /reading/items?level=a2&type=mcq — list of public items with completion flags
 router.get("/reading/items", async (req, res) => {
-  const studentId = await getStudentId(req);
-  if (!studentId) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
+  const studentId = await requireStudentAccess(req, res);
+  if (studentId === null) return;
   const level = String(req.query.level ?? "").toLowerCase() as ReadingLevel;
   const type = String(req.query.type ?? "").toLowerCase() as ReadingType;
   if (!VALID_LEVELS.has(level) || !VALID_TYPES.has(type)) {
@@ -207,11 +221,8 @@ router.get("/reading/items", async (req, res) => {
 
 // GET /reading/items/:slug — public item + existing attempt if already completed
 router.get("/reading/items/:slug", async (req, res) => {
-  const studentId = await getStudentId(req);
-  if (!studentId) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
+  const studentId = await requireStudentAccess(req, res);
+  if (studentId === null) return;
   const item = await loadItemBySlug(req.params.slug);
   if (!item) {
     res.status(404).json({ error: "Item not found" });
@@ -249,11 +260,8 @@ router.get("/reading/items/:slug", async (req, res) => {
 
 // POST /reading/items/:slug/submit — grade and persist the student's attempt
 router.post("/reading/items/:slug/submit", async (req, res) => {
-  const studentId = await getStudentId(req);
-  if (!studentId) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
+  const studentId = await requireStudentAccess(req, res);
+  if (studentId === null) return;
   const item = await loadItemBySlug(req.params.slug);
   if (!item) {
     res.status(404).json({ error: "Item not found" });
@@ -329,11 +337,8 @@ router.post("/reading/items/:slug/submit", async (req, res) => {
 
 // GET /reading/attempts — full history for the current student
 router.get("/reading/attempts", async (req, res) => {
-  const studentId = await getStudentId(req);
-  if (!studentId) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
+  const studentId = await requireStudentAccess(req, res);
+  if (studentId === null) return;
   try {
     const rows = await db
       .select({

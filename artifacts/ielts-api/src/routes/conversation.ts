@@ -16,16 +16,20 @@ type ChatMessage = { role: "user" | "assistant"; content: string };
  * Advance-tier students are explicitly denied.
  */
 async function verifyChurchillAccess(email: string): Promise<boolean> {
-  // Intro-tier gate: check the introStudents table first.
+  // Check tier FIRST so that an advance user with a legacy introStudents row
+  // is correctly denied regardless of any row presence in that table.
+  const tier = await getStudentTier(email);
+  if (tier === "advance") return false;
+  if (tier === "complete") return true;
+  // Tier defaults to "complete" for legacy intro users who have no tier row —
+  // they are allowed above. Explicitly "intro" users are allowed via
+  // introStudents (verify they are a registered intro student).
   const [introRow] = await db
     .select({ id: introStudents.id })
     .from(introStudents)
     .where(eq(introStudents.email, email))
     .limit(1);
-  if (introRow) return true;
-  // Fall back to the standard tier stored in user_data.
-  const tier = await getStudentTier(email);
-  return tier === "complete";
+  return !!introRow;
 }
 
 function getOpenAiClient(): OpenAI {

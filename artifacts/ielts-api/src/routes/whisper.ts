@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type Request, type Response, type NextFunction } from "express";
 import OpenAI, { toFile } from "openai";
 import multer from "multer";
 import { verifyStudentEmail } from "../lib/tier-auth";
@@ -17,6 +17,28 @@ const upload = multer({
 // Estimate Whisper cost: $0.006 / minute. Typical short utterance ≈ 20–30 s → ~$0.003.
 const WHISPER_COST_USD = 0.003;
 
+// Wrap multer so that LIMIT_FILE_SIZE (and any other MulterError) is always
+// converted to a structured JSON response before reaching the route handler.
+// Without this wrapper Express would fall through to its default error handler
+// and return an HTML/plain-text response for oversized uploads.
+function uploadAudio(req: Request, res: Response, next: NextFunction): void {
+  upload.single("audio")(req, res, (err: unknown) => {
+    if (err instanceof multer.MulterError) {
+      if (err.code === "LIMIT_FILE_SIZE") {
+        res.status(413).json({ error: "Audio file exceeds the 25 MB limit." });
+        return;
+      }
+      res.status(400).json({ error: `Upload error: ${err.message}` });
+      return;
+    }
+    if (err) {
+      res.status(400).json({ error: "Invalid upload." });
+      return;
+    }
+    next();
+  });
+}
+
 function getOpenAiClient(): OpenAI {
   const apiKey = process.env["OPENAI_API_KEY"];
   if (!apiKey) throw new Error("OPENAI_API_KEY environment variable is not configured.");
@@ -32,8 +54,10 @@ function getOpenAiClient(): OpenAI {
  * Auth: students must send x-student-email + x-student-token (HMAC) headers.
  * This works for both SSO-provisioned advance/complete students and intro
  * students, since both produce tokens with the same makeToken() formula.
+ *
+ * All error responses follow the structured JSON schema { error: string }.
  */
-router.post("/whisper", upload.single("audio"), async (req, res): Promise<void> => {
+router.post("/whisper", uploadAudio, async (req, res): Promise<void> => {
   const studentEmail = verifyStudentEmail(req);
   if (!studentEmail) {
     res.status(401).json({ error: "Authentication required. Please log in and try again." });
@@ -42,11 +66,6 @@ router.post("/whisper", upload.single("audio"), async (req, res): Promise<void> 
 
   if (!req.file) {
     res.status(400).json({ error: "Missing audio field. Send a multipart/form-data request with an 'audio' file field." });
-    return;
-  }
-
-  if (req.file.size > MAX_AUDIO_BYTES) {
-    res.status(413).json({ error: "Audio file exceeds the 25 MB limit." });
     return;
   }
 

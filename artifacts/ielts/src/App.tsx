@@ -39,11 +39,17 @@ const NotFound = lazy(() => import("@/pages/not-found"));
 
 setStudentEmailGetter(() => {
   try {
+    // Prefer 4ielts_email (SSO/advance/complete and intro students both write here on unlock).
     const raw = localStorage.getItem("4ielts_email");
-    if (!raw) return null;
-    const { email, token } = JSON.parse(raw);
-    if (!email || !token) return null;
-    return { email, token };
+    if (raw) {
+      const { email, token } = JSON.parse(raw);
+      if (email && token) return { email, token };
+    }
+    // Fall back to intro-specific keys in case only those are set.
+    const introEmail = localStorage.getItem("lexo-ielts:intro_email");
+    const introToken = localStorage.getItem("lexo-ielts:intro_token");
+    if (introEmail && introToken) return { email: introEmail, token: introToken };
+    return null;
   } catch { return null; }
 });
 

@@ -366,6 +366,11 @@ function PasswordGateUnlocked({ children }: { children: ReactNode }) {
     try {
       sessionStorage.setItem(LOGOUT_REASON_KEY, "idle");
       localStorage.removeItem(STORAGE_KEY);
+      // Also clear intro-student session so the student must re-authenticate.
+      localStorage.removeItem("lexo-ielts:intro_email");
+      localStorage.removeItem("lexo-ielts:intro_token");
+      localStorage.removeItem("lexo-ielts:intro_pending_email");
+      localStorage.removeItem("lexo-ielts:tier");
     } catch { /* ignore storage failures */ }
     window.location.reload();
   }, []);
@@ -453,6 +458,9 @@ export function PasswordGate({ children }: PasswordGateProps) {
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Tracks whether the currently-authenticated student is an intro (self-registered) student.
+  const [isIntroStudent, setIsIntroStudent] = useState(false);
+
   // Registration page video (set by admin in Teacher Dashboard)
   const [regVideoEmbedUrl, setRegVideoEmbedUrl] = useState<string | null>(null);
   useEffect(() => {
@@ -479,6 +487,41 @@ export function PasswordGate({ children }: PasswordGateProps) {
     bootstrapTierFromServer(em, token);
     setPhase("unlocked");
   }, []);
+
+  // Unlock for intro self-registered students. Stores session under the intro
+  // namespace AND in 4ielts_email so the existing x-student-email API middleware
+  // picks it up without any changes. Sets tier to "intro" since self-registered
+  // students are always on the intro tier.
+  const unlockAndSaveIntro = useCallback((em: string, token: string) => {
+    localStorage.setItem("lexo-ielts:intro_email", em);
+    localStorage.setItem("lexo-ielts:intro_token", token);
+    localStorage.removeItem("lexo-ielts:intro_pending_email");
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: em, token }));
+    localStorage.setItem("lexo-ielts:tier", "intro");
+    setIsIntroStudent(true);
+    setPhase("unlocked");
+  }, []);
+
+  // Poll /auth/intro/check for pending intro students.
+  const startIntroPolling = useCallback((em: string) => {
+    stopPolling();
+    const poll = async () => {
+      const result = await postJson("/api-ielts/auth/intro/check", { email: em });
+      if (result.status === "approved") {
+        setEmail(em);
+        setIsIntroStudent(true);
+        setPhase("approved-confirm");
+      } else if (result.status === "denied") {
+        localStorage.removeItem("lexo-ielts:intro_pending_email");
+        setError("Your access request was not approved. Please contact your instructor.");
+        setIsIntroStudent(false);
+        setPhase("login");
+      } else {
+        pollTimer.current = setTimeout(poll, 8000);
+      }
+    };
+    pollTimer.current = setTimeout(poll, 8000);
+  }, []); // eslint-disable-line
 
   // Pending → polls /access/check until admin acts.
   // On approval we no longer auto-unlock; we surface a "Log in now" screen.
@@ -525,6 +568,54 @@ export function PasswordGate({ children }: PasswordGateProps) {
   // Bootstrap: validate the localStorage token server-side before unlocking.
   useEffect(() => {
     async function init() {
+      // ── Intro student session check ───────────────────────────────────────
+      // Check for a live intro session (approved + valid token) first.
+      const introEmail = localStorage.getItem("lexo-ielts:intro_email");
+      const introToken = localStorage.getItem("lexo-ielts:intro_token");
+      if (introEmail && introToken) {
+        try {
+          const introMe = await fetch("/api-ielts/auth/intro/me", {
+            headers: { "x-student-email": introEmail, "x-student-token": introToken },
+          }).then((r) => r.json()).catch(() => ({ user: null }));
+          if (introMe?.user?.status === "approved") {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: introEmail, token: introToken }));
+            localStorage.setItem("lexo-ielts:tier", "intro");
+            setIsIntroStudent(true);
+            setPhase("unlocked");
+            return;
+          }
+        } catch { /* ignore, fall through */ }
+        // Token invalid or student no longer approved — clear intro keys.
+        localStorage.removeItem("lexo-ielts:intro_email");
+        localStorage.removeItem("lexo-ielts:intro_token");
+      }
+
+      // ── Intro pending check ───────────────────────────────────────────────
+      // Resume the pending screen if the student registered but wasn't yet
+      // approved when they last closed the tab.
+      const introPendingEmail = localStorage.getItem("lexo-ielts:intro_pending_email");
+      if (introPendingEmail) {
+        try {
+          const statusResult = await postJson("/api-ielts/auth/intro/check", { email: introPendingEmail });
+          if (statusResult.status === "pending") {
+            setEmail(introPendingEmail);
+            setIsIntroStudent(true);
+            setPhase("pending");
+            startIntroPolling(introPendingEmail);
+            return;
+          } else if (statusResult.status === "approved") {
+            setEmail(introPendingEmail);
+            setIsIntroStudent(true);
+            setPhase("approved-confirm");
+            return;
+          } else {
+            // denied / not_found — clear pending marker
+            localStorage.removeItem("lexo-ielts:intro_pending_email");
+          }
+        } catch { /* ignore, fall through */ }
+      }
+
+      // ── SSO / advance / complete session check (existing logic) ──────────
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         try {
@@ -582,7 +673,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
     }
     init();
     return stopPolling;
-  }, [startPolling, startExpiredPolling]);
+  }, [startPolling, startExpiredPolling, startIntroPolling]);
 
   // ── Submit handlers ───────────────────────────────────────────────
 
@@ -592,10 +683,37 @@ export function PasswordGate({ children }: PasswordGateProps) {
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setLoading(true); setError(""); setInfo("");
     const normalizedEmail = email.trim().toLowerCase();
+    const normalizedCode = accessCode.trim().toUpperCase();
+
+    // Intro access codes look like XXXX-XXXX-XXXX (contain dashes).
+    // Advance/complete codes are 10-char alphanumeric with no dashes.
+    const isIntroCode = normalizedCode.includes("-");
+
+    if (isIntroCode) {
+      const result = await postJson("/api-ielts/auth/intro/register", {
+        email: normalizedEmail,
+        password,
+        accessCode: normalizedCode,
+      });
+      setLoading(false);
+      if (result.status === "pending") {
+        localStorage.setItem("lexo-ielts:intro_pending_email", normalizedEmail);
+        setPassword("");
+        setAccessCode("");
+        setEmail(normalizedEmail);
+        setIsIntroStudent(true);
+        setPhase("pending");
+        startIntroPolling(normalizedEmail);
+      } else {
+        setError(result.error ?? "Registration failed. Please try again.");
+      }
+      return;
+    }
+
     const result = await postJson("/api-ielts/access/request", {
       email: normalizedEmail,
       password,
-      accessCode: accessCode.trim().toUpperCase(),
+      accessCode: normalizedCode,
     });
     setLoading(false);
     if (result.status === "pending") {
@@ -608,7 +726,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
     } else {
       setError(result.error ?? "Registration failed. Please try again.");
     }
-  }, [email, password, accessCode, startPolling]);
+  }, [email, password, accessCode, startPolling, startIntroPolling]);
 
   const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -616,25 +734,63 @@ export function PasswordGate({ children }: PasswordGateProps) {
     setLoading(true); setError(""); setInfo("");
     const normalizedEmail = email.trim().toLowerCase();
     const result = await postJson("/api-ielts/access/login", { email: normalizedEmail, password });
-    setLoading(false);
+
     if (result.status === "approved" && result.token) {
+      setLoading(false);
       setPassword("");
       unlockAndSave(normalizedEmail, result.token);
-    } else if (result.status === "needs_password_setup") {
+      return;
+    }
+    if (result.status === "needs_password_setup") {
+      setLoading(false);
       setError(result.error ?? "Your account is from a previous version. Please reopen LEXO from the device you originally used, or contact your instructor.");
-    } else if (result.status === "pending") {
+      return;
+    }
+    if (result.status === "pending") {
+      setLoading(false);
       localStorage.setItem("4ielts_last_email", normalizedEmail);
       setEmail(normalizedEmail);
       setPhase("pending");
       startPolling(normalizedEmail);
-    } else if (result.status === "expired") {
+      return;
+    }
+    if (result.status === "expired") {
+      setLoading(false);
       expiredEmailRef.current = normalizedEmail;
       setPhase("expired");
       startExpiredPolling(normalizedEmail);
-    } else {
-      setError(result.error ?? "Login failed.");
+      return;
     }
-  }, [email, password, unlockAndSave, startPolling, startExpiredPolling]);
+
+    // Regular login didn't find the account — try the intro tier as a fallback.
+    // Intro students self-registered through the intro product and may not appear
+    // in the advance/complete accessRequests table.
+    if (!result.status || result.error?.toLowerCase().includes("no account found")) {
+      const introResult = await postJson("/api-ielts/auth/intro/login", { email: normalizedEmail, password });
+      setLoading(false);
+      if (introResult.status === "approved" && introResult.token) {
+        setPassword("");
+        unlockAndSaveIntro(normalizedEmail, introResult.token);
+      } else if (introResult.status === "pending") {
+        localStorage.setItem("lexo-ielts:intro_pending_email", normalizedEmail);
+        setEmail(normalizedEmail);
+        setIsIntroStudent(true);
+        setPhase("pending");
+        startIntroPolling(normalizedEmail);
+      } else if (introResult.status === "denied") {
+        setError("Your access request was not approved. Please contact your instructor.");
+      } else if (introResult.status === "expired") {
+        setError("Your subscription has expired. Please contact your instructor.");
+      } else {
+        // Not found in either system
+        setError("No account found for this email. Please register with an access code first.");
+      }
+      return;
+    }
+
+    setLoading(false);
+    setError(result.error ?? "Login failed.");
+  }, [email, password, unlockAndSave, unlockAndSaveIntro, startPolling, startExpiredPolling, startIntroPolling]);
 
   const handleSetupPassword = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

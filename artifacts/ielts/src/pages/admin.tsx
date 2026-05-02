@@ -30,8 +30,25 @@ interface Review {
   adminReplyAt: string | null;
 }
 
-type Tab = "requests" | "reviews" | "settings";
+type Tab = "requests" | "reviews" | "settings" | "intro";
 type Filter = "all" | "pending" | "approved" | "rejected";
+
+interface IntroStudent {
+  id: number;
+  email: string;
+  accessCode: string;
+  status: "pending" | "approved" | "denied";
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+interface IntroAccessCode {
+  id: number;
+  code: string;
+  createdAt: string;
+  usedBy: string | null;
+  usedAt: string | null;
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -135,6 +152,15 @@ export default function AdminPage() {
   const [replyLoading, setReplyLoading] = useState<number | null>(null);
   const [replyError, setReplyError] = useState<{ id: number; text: string } | null>(null);
 
+  const [introStudents, setIntroStudents] = useState<IntroStudent[]>([]);
+  const [introCodes, setIntroCodes] = useState<IntroAccessCode[]>([]);
+  const [introActionLoading, setIntroActionLoading] = useState<number | null>(null);
+  const [introCodesLoading, setIntroCodesLoading] = useState(false);
+  const [introGenerateCount, setIntroGenerateCount] = useState(1);
+  const [introFilter, setIntroFilter] = useState<"all" | "pending" | "approved" | "denied">("all");
+  const [introExpiryEditing, setIntroExpiryEditing] = useState<Record<number, string>>({});
+  const [introExpiryLoading, setIntroExpiryLoading] = useState<number | null>(null);
+
   const [adminAvatar, setAdminAvatar] = useState<string | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -157,6 +183,16 @@ export default function AdminPage() {
     if (res.ok) { const d = await res.json(); setAccessCode(d.code); }
   }, []);
 
+  const fetchIntroStudents = useCallback(async (ap: string) => {
+    const res = await fetch("/api-ielts/admin/intro/students", { headers: { "x-admin-password": ap } });
+    if (res.ok) setIntroStudents(await res.json());
+  }, []);
+
+  const fetchIntroCodes = useCallback(async (ap: string) => {
+    const res = await fetch("/api-ielts/admin/intro/access-codes", { headers: { "x-admin-password": ap } });
+    if (res.ok) { const d = await res.json(); setIntroCodes(d.codes ?? []); }
+  }, []);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginLoading(true);
@@ -168,6 +204,8 @@ export default function AdminPage() {
         setRequests(await res.json());
         fetchAccessCode(adminPassword);
         fetchReviews(adminPassword);
+        fetchIntroStudents(adminPassword);
+        fetchIntroCodes(adminPassword);
       } else { setLoginError("Wrong admin password. Try again."); }
     } catch { setLoginError("Connection error."); }
     finally { setLoginLoading(false); }
@@ -213,6 +251,56 @@ export default function AdminPage() {
       setEditExpiry(prev => { const n = { ...prev }; delete n[id]; return n; });
       await fetchRequests(adminPassword);
     } finally { setExpiryLoading(null); }
+  };
+
+  const handleIntroAction = async (id: number, action: "approve" | "reject" | "delete", expiresAt?: string) => {
+    setIntroActionLoading(id);
+    try {
+      const url = action === "delete"
+        ? `/api-ielts/admin/intro/students/${id}`
+        : `/api-ielts/admin/intro/students/${id}/${action}`;
+      await fetch(url, {
+        method: action === "delete" ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
+        body: action !== "delete" ? JSON.stringify({ expiresAt }) : undefined,
+      });
+      await fetchIntroStudents(adminPassword);
+    } finally { setIntroActionLoading(null); }
+  };
+
+  const handleIntroSetExpiry = async (id: number) => {
+    setIntroExpiryLoading(id);
+    try {
+      const dateStr = introExpiryEditing[id];
+      const expiresAt = dateStr ? new Date(dateStr + "T23:59:59").toISOString() : null;
+      await fetch(`/api-ielts/admin/intro/students/${id}/set-expiry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
+        body: JSON.stringify({ expiresAt }),
+      });
+      setIntroExpiryEditing(prev => { const n = { ...prev }; delete n[id]; return n; });
+      await fetchIntroStudents(adminPassword);
+    } finally { setIntroExpiryLoading(null); }
+  };
+
+  const handleGenerateIntroCodes = async () => {
+    setIntroCodesLoading(true);
+    try {
+      await fetch("/api-ielts/admin/intro/access-codes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-admin-password": adminPassword },
+        body: JSON.stringify({ count: introGenerateCount }),
+      });
+      await fetchIntroCodes(adminPassword);
+    } finally { setIntroCodesLoading(false); }
+  };
+
+  const handleDeleteIntroCode = async (code: string) => {
+    await fetch(`/api-ielts/admin/intro/access-codes/${code}`, {
+      method: "DELETE",
+      headers: { "x-admin-password": adminPassword },
+    });
+    await fetchIntroCodes(adminPassword);
   };
 
   const handleChangeCode = async (e: React.FormEvent) => {
@@ -517,6 +605,16 @@ export default function AdminPage() {
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === "settings" ? "bg-teal-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50"}`}>
             <KeyRound className="w-4 h-4" />
             Settings
+          </button>
+          <button onClick={() => { setTab("intro"); fetchIntroStudents(adminPassword); fetchIntroCodes(adminPassword); }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === "intro" ? "bg-violet-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50"}`}>
+            <Users className="w-4 h-4" />
+            Intro Students
+            {introStudents.filter(s => s.status === "pending").length > 0 && (
+              <span className="bg-amber-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {introStudents.filter(s => s.status === "pending").length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -1022,6 +1120,241 @@ export default function AdminPage() {
 
           </div>
         )}
+
+        {/* ── INTRO STUDENTS TAB ───────────────────────────────────────────────── */}
+        {tab === "intro" && (() => {
+          const filteredIntro = introStudents.filter(s =>
+            introFilter === "all" || s.status === introFilter
+          );
+          const introCounts = {
+            all: introStudents.length,
+            pending: introStudents.filter(s => s.status === "pending").length,
+            approved: introStudents.filter(s => s.status === "approved").length,
+            denied: introStudents.filter(s => s.status === "denied").length,
+          };
+          const unusedCodes = introCodes.filter(c => !c.usedAt);
+          return (
+            <>
+              {/* Stats row */}
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                {(["all", "pending", "approved", "denied"] as const).map(f => (
+                  <button key={f} onClick={() => setIntroFilter(f)}
+                    className={`bg-white dark:bg-gray-900 rounded-2xl p-4 border text-left transition-all ${introFilter === f ? "border-violet-500 ring-2 ring-violet-200 dark:ring-violet-900" : "border-gray-200 dark:border-gray-800 hover:border-violet-300"}`}>
+                    <p className="text-2xl font-extrabold text-gray-900 dark:text-white">{introCounts[f]}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-0.5">{f}</p>
+                  </button>
+                ))}
+              </div>
+
+              {/* Student list */}
+              {filteredIntro.length === 0 ? (
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-12 text-center mb-6">
+                  <Users className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-3" />
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    No {introFilter !== "all" ? introFilter : ""} intro students yet.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3 mb-6">
+                  {filteredIntro.map(s => {
+                    const exp = s.expiresAt ? expiryStatus(s.expiresAt) : null;
+                    const isEditingExpiry = introExpiryEditing[s.id] !== undefined;
+                    const pendingExpiryVal = (pendingExpiry as Record<number, string>)[s.id] ?? oneYearFromNow();
+                    return (
+                      <div key={s.id} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
+                        <div className="flex flex-wrap items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{s.email}</p>
+                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                              Registered {formatDate(s.createdAt)} · Code: <span className="font-mono">{s.accessCode}</span>
+                            </p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {s.status === "approved" && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><CheckCircle2 className="w-3 h-3" />Approved</span>}
+                              {s.status === "pending" && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"><Clock className="w-3 h-3" />Pending</span>}
+                              {s.status === "denied" && <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"><XCircle className="w-3 h-3" />Denied</span>}
+                              {exp && (
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${exp.color}`}>
+                                  <Calendar className="w-3 h-3" />{exp.label}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 items-end shrink-0">
+                            {s.status === "pending" && (
+                              <div className="flex items-center gap-2 flex-wrap justify-end">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                  <input
+                                    type="date"
+                                    min={new Date().toISOString().split("T")[0]}
+                                    value={pendingExpiryVal}
+                                    onChange={e => setPendingExpiry(prev => ({ ...prev, [s.id]: e.target.value }))}
+                                    className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                  />
+                                </div>
+                                <button
+                                  onClick={() => handleIntroAction(s.id, "approve", new Date(pendingExpiryVal + "T23:59:59").toISOString())}
+                                  disabled={introActionLoading === s.id}
+                                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition-colors disabled:opacity-50"
+                                >
+                                  {introActionLoading === s.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                  Approve
+                                </button>
+                                <button
+                                  onClick={() => handleIntroAction(s.id, "reject")}
+                                  disabled={introActionLoading === s.id}
+                                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-xs font-medium transition-colors disabled:opacity-50"
+                                >
+                                  <XCircle className="w-3 h-3" />
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+
+                            {s.status === "approved" && (
+                              <div className="flex items-center gap-2 flex-wrap justify-end">
+                                {isEditingExpiry ? (
+                                  <>
+                                    <input
+                                      type="date"
+                                      min={new Date().toISOString().split("T")[0]}
+                                      value={introExpiryEditing[s.id]}
+                                      onChange={e => setIntroExpiryEditing(prev => ({ ...prev, [s.id]: e.target.value }))}
+                                      className="text-xs px-2 py-1.5 rounded-lg border border-violet-400 dark:border-violet-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-violet-500"
+                                    />
+                                    <button
+                                      onClick={() => handleIntroSetExpiry(s.id)}
+                                      disabled={introExpiryLoading === s.id}
+                                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium transition-colors disabled:opacity-50"
+                                    >
+                                      {introExpiryLoading === s.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                      Save
+                                    </button>
+                                    <button
+                                      onClick={() => setIntroExpiryEditing(prev => { const n = { ...prev }; delete n[s.id]; return n; })}
+                                      className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => setIntroExpiryEditing(prev => ({ ...prev, [s.id]: s.expiresAt ? s.expiresAt.split("T")[0] : oneYearFromNow() }))}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                  >
+                                    <Calendar className="w-3 h-3" />
+                                    {s.expiresAt ? "Change Expiry" : "Set Expiry"}
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => handleIntroAction(s.id, "reject")}
+                                  disabled={introActionLoading === s.id}
+                                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 text-xs font-medium transition-colors disabled:opacity-50"
+                                >
+                                  <XCircle className="w-3 h-3" />
+                                  Revoke
+                                </button>
+                              </div>
+                            )}
+
+                            {s.status === "denied" && (
+                              <button
+                                onClick={() => handleIntroAction(s.id, "approve", new Date(oneYearFromNow() + "T23:59:59").toISOString())}
+                                disabled={introActionLoading === s.id}
+                                className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-xs font-medium transition-colors disabled:opacity-50"
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                                Re-approve
+                              </button>
+                            )}
+
+                            <button
+                              onClick={() => handleIntroAction(s.id, "delete")}
+                              disabled={introActionLoading === s.id}
+                              className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium transition-colors disabled:opacity-50"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Access code generator */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <KeyRound className="w-5 h-5 text-violet-600" />
+                  <h2 className="font-bold text-gray-900 dark:text-white">Intro Access Codes</h2>
+                  <span className="ml-auto text-xs text-gray-400">{unusedCodes.length} unused</span>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  Generate <span className="font-mono">XXXX-XXXX-XXXX</span> codes for intro students. Each code is single-use.
+                </p>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={introGenerateCount}
+                    onChange={e => setIntroGenerateCount(Math.max(1, Math.min(50, Number(e.target.value))))}
+                    className="w-20 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  />
+                  <button
+                    onClick={handleGenerateIntroCodes}
+                    disabled={introCodesLoading}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+                  >
+                    {introCodesLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
+                    Generate {introGenerateCount} Code{introGenerateCount > 1 ? "s" : ""}
+                  </button>
+                  <button
+                    onClick={() => fetchIntroCodes(adminPassword)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {unusedCodes.length > 0 && (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {unusedCodes.map(c => (
+                      <div key={c.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 rounded-xl px-4 py-2.5">
+                        <span className="font-mono text-sm font-semibold text-violet-700 dark:text-violet-300 tracking-widest">{c.code}</span>
+                        <button
+                          onClick={() => handleDeleteIntroCode(c.code)}
+                          className="text-gray-400 hover:text-red-500 transition-colors"
+                          title="Delete code"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {introCodes.filter(c => c.usedAt).length > 0 && (
+                  <details className="text-xs">
+                    <summary className="text-gray-400 cursor-pointer hover:text-gray-600 select-none">
+                      Show used codes ({introCodes.filter(c => c.usedAt).length})
+                    </summary>
+                    <div className="mt-2 space-y-1">
+                      {introCodes.filter(c => c.usedAt).map(c => (
+                        <div key={c.id} className="flex items-center gap-3 px-3 py-1.5 rounded-lg bg-gray-50 dark:bg-gray-800 opacity-60">
+                          <span className="font-mono font-semibold text-gray-500 dark:text-gray-400 tracking-widest line-through">{c.code}</span>
+                          <span className="text-gray-400">→ {c.usedBy}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            </>
+          );
+        })()}
       </div>
     </div>
   );

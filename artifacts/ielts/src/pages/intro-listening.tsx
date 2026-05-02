@@ -64,6 +64,7 @@ export default function IntroListening() {
   const [, navigate] = useLocation();
   const [stage, setStage] = useState<Stage | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const cachedDataRef = useRef<{ sections: Section[]; tests: TestSummary[] } | null>(null);
 
   const isIntroTier = (() => {
     const tier = localStorage.getItem("lexo-ielts:tier");
@@ -82,6 +83,7 @@ export default function IntroListening() {
       const res = await fetch(`${BASE_URL}/api-ielts/listening/tests`, { headers: getAuthHeaders() });
       const data = await res.json() as { sections: Section[]; tests: TestSummary[] };
       if (!res.ok) throw new Error("Failed to load");
+      cachedDataRef.current = { sections: data.sections, tests: data.tests };
       setStage({ kind: "section-list", sections: data.sections, tests: data.tests });
     } catch {
       setLoadError("Could not load listening tests. Please try again.");
@@ -134,7 +136,14 @@ export default function IntroListening() {
         <ResultView
           attempt={stage.attempt}
           test={stage.test}
-          onBack={() => setStage({ kind: "test-list", sectionId: stage.test.sectionId, sections: [], tests: [] })}
+          onBack={() => {
+            const cached = cachedDataRef.current;
+            if (cached) {
+              setStage({ kind: "test-list", sectionId: stage.test.sectionId, sections: cached.sections, tests: cached.tests });
+            } else {
+              void loadSections();
+            }
+          }}
           onReload={loadSections}
         />
       </Layout>

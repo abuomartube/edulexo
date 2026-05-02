@@ -124,6 +124,10 @@ router.get("/listening/sections", async (_req, res) => {
 
 router.get("/listening/tests", async (req, res) => {
   const studentId = await getStudentId(req);
+  if (!studentId) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
   try {
     const tests = await loadAllTests();
     const completed = studentId
@@ -162,6 +166,10 @@ router.get("/listening/tests", async (req, res) => {
 
 router.get("/listening/tests/:testId", async (req, res) => {
   const studentId = await getStudentId(req);
+  if (!studentId) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
   const test = await loadTestBySlug(req.params.testId);
   if (!test) {
     res.status(404).json({ error: "Test not found" });

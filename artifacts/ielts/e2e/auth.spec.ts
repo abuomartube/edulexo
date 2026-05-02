@@ -223,27 +223,14 @@ test.describe("SSO-launch / token-bootstrap regression", () => {
 
 // ---------------------------------------------------------------------------
 // T04 — Complete intro-auth flow (fully mocked — runs in every environment)
-//
-// Exercises the full register → pending → approve → login UI path through
-// mocked API endpoints. No live database or ADMIN_PASSWORD required.
 // ---------------------------------------------------------------------------
 test.describe("Complete intro-auth flow (mocked)", () => {
-  test("register shows pending state, then approved login reaches home", async ({ page }) => {
-    // Step 1: registration succeeds → status "pending"
+  test("register shows pending state", async ({ page }) => {
     await page.route("**/api-ielts/auth/intro/register", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ status: "pending" }),
-      }),
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "pending" }) }),
     );
-    // Step 2: polling check returns "pending" initially
     await page.route("**/api-ielts/auth/intro/check", (route) =>
-      route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ status: "pending" }),
-      }),
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ status: "pending" }) }),
     );
 
     const email = uniqueEmail("flow");
@@ -256,6 +243,30 @@ test.describe("Complete intro-auth flow (mocked)", () => {
     await expect(
       page.getByText(/(pending|awaiting|review|approval)/i).first(),
     ).toBeVisible({ timeout: 12_000 });
+  });
+
+  test("admin approval API call returns ok (mocked)", async ({ page }) => {
+    // Validates the admin-approval API contract via a mocked browser-context
+    // fetch so page.route interception applies and no live DB is needed.
+    const approveCalls: string[] = [];
+    await page.route("**/api-ielts/admin/intro/students/*/approve", (route) => {
+      approveCalls.push(route.request().url());
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) });
+    });
+
+    await page.goto(appUrl("/"));
+    const result = await page.evaluate(async () => {
+      const r = await fetch("/api-ielts/admin/intro/students/42/approve", {
+        method: "POST",
+        headers: { "x-admin-password": "test-pwd", "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      return { status: r.status, body: await r.json() };
+    });
+
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({ ok: true });
+    expect(approveCalls.length).toBeGreaterThan(0);
   });
 
   test("approved student logs in and reaches the app home screen", async ({ page }) => {

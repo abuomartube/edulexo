@@ -110,6 +110,11 @@ const router = Router();
 
 // GET /reading/levels-types — metadata: levels + question types + per-bucket counts
 router.get("/reading/levels-types", async (req, res) => {
+  const studentId = await getStudentId(req);
+  if (!studentId) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
   try {
     const items = await loadAllItems();
     const counts: Record<string, number> = {};

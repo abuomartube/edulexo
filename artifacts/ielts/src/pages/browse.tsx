@@ -7,8 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Search, CheckCircle2, Bookmark, BookmarkCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ListFlashcardsLevel } from "@workspace/ielts-api-client-react";
+import { getDisplayLevels, isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { IntroTierBanner } from "@/components/intro-tier-banner";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Browse() {
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [levelFilter, setLevelFilter] = useState<ListFlashcardsLevel | "ALL">("ALL");
   const [categoryFilter, setCategoryFilter] = useState<string>("ALL");
@@ -27,13 +31,18 @@ export default function Browse() {
 
   const bookmarkSet = new Set(bookmarks ?? []);
 
+  // Tier gate: never surface restricted-level cards to intro students even
+  // when the API returns them (defence-in-depth alongside the server check).
+  const tierFiltered = (cards ?? []).filter(c => isLevelAllowed(c.level));
+
   const filteredCards = bookmarkedOnly
-    ? (cards ?? []).filter(c => bookmarkSet.has(c.id))
-    : (cards ?? []);
+    ? tierFiltered.filter(c => bookmarkSet.has(c.id))
+    : tierFiltered;
 
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
+        <IntroTierBanner />
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Browse Cards</h1>
@@ -67,16 +76,32 @@ export default function Browse() {
               className="pl-9 bg-background"
             />
           </div>
-          <Select value={levelFilter} onValueChange={(v) => setLevelFilter(v as any)}>
+          <Select
+            value={levelFilter}
+            onValueChange={(v) => {
+              if (!isLevelAllowed(v) && v !== "ALL") {
+                toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                return;
+              }
+              setLevelFilter(v as any);
+            }}
+          >
             <SelectTrigger className="w-full md:w-[150px] bg-background">
               <SelectValue placeholder="Level" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="ALL">All Levels</SelectItem>
-              <SelectItem value="A2">A2</SelectItem>
-              <SelectItem value="B1">B1</SelectItem>
-              <SelectItem value="B2">B2</SelectItem>
-              <SelectItem value="C1">C1</SelectItem>
+              {getDisplayLevels().map((lvl) => {
+                const allowed = isLevelAllowed(lvl);
+                return (
+                  <SelectItem key={lvl} value={lvl} disabled={!allowed}>
+                    <span className="flex items-center gap-1.5">
+                      {lvl}
+                      {!allowed && <span className="text-[10px]">🔒</span>}
+                    </span>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>

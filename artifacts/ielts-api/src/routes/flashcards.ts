@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import crypto from "node:crypto";
-import { eq, and, ilike, sql, lte, ne } from "drizzle-orm";
+import { eq, and, ilike, sql, lte, ne, inArray } from "drizzle-orm";
 import { db, flashcardsTable, progressTable, bookmarksTable, cardSrsTable, activityPositionTable, quizScoresTable, userDataTable, xpEventsTable, weakWordsTable } from "@workspace/ielts-db";
 import { desc } from "drizzle-orm";
 
@@ -14,6 +14,36 @@ function verifyStudentEmail(req: import("express").Request): string | null {
   if (token !== expected) return null;
   return email;
 }
+
+type Tier = "intro" | "advance" | "complete";
+const INTRO_LEVELS = ["A2", "B1"] as const;
+
+// Read the student's persisted tier from user_data.
+// Deny-by-default: unauthenticated requests are treated as "intro" so that
+// content gates cannot be bypassed by simply omitting the auth headers.
+// Legacy authenticated users with no `tier` row are grandfathered to
+// "complete" — new accounts are always provisioned via SSO which writes the
+// tier row up front.
+async function getStudentTier(email: string | null): Promise<Tier> {
+  if (!email) return "intro";
+  const [row] = await db.select({ value: userDataTable.value })
+    .from(userDataTable)
+    .where(and(eq(userDataTable.email, email), eq(userDataTable.key, "tier")))
+    .limit(1);
+  const v = row?.value;
+  if (v === "intro" || v === "advance" || v === "complete") return v;
+  return "complete";
+}
+
+function tierAllowsLevel(tier: Tier, level: string): boolean {
+  if (tier !== "intro") return true;
+  return (INTRO_LEVELS as readonly string[]).includes(level);
+}
+
+// Keys whose values are managed by the server only. Students must not be
+// able to write to these via the generic /user-data PUT endpoint or they
+// could trivially upgrade themselves out of the intro tier.
+const SERVER_MANAGED_USER_DATA_KEYS = new Set<string>(["tier"]);
 import {
   ListFlashcardsQueryParams,
   GetFlashcardParams,
@@ -35,8 +65,20 @@ router.get("/flashcards", async (req, res): Promise<void> => {
   const parsed = ListFlashcardsQueryParams.safeParse(req.query);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const { level, category, search } = parsed.data;
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
+  // Reject explicit out-of-tier level filters and clamp the result set to the
+  // tier's allowed levels so the client cannot bypass the UI gate.
+  if (level && !tierAllowsLevel(tier, level)) {
+    res.status(403).json({ error: "Level not available in your tier" });
+    return;
+  }
   const conditions = [];
-  if (level) conditions.push(eq(flashcardsTable.level, level));
+  if (level) {
+    conditions.push(eq(flashcardsTable.level, level));
+  } else if (tier === "intro") {
+    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  }
   if (category) conditions.push(eq(flashcardsTable.category, category));
   if (search) conditions.push(sql`(${ilike(flashcardsTable.english, `%${search}%`)} OR ${ilike(flashcardsTable.arabic, `%${search}%`)})`);
   const cards = conditions.length
@@ -72,6 +114,12 @@ router.get("/flashcards/:id", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
   const [card] = await db.select().from(flashcardsTable).where(eq(flashcardsTable.id, parsed.data.id));
   if (!card) { res.status(404).json({ error: "Flashcard not found" }); return; }
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
+  if (!tierAllowsLevel(tier, card.level)) {
+    res.status(403).json({ error: "This card is not available in your tier" });
+    return;
+  }
   res.json(GetFlashcardResponse.parse(card));
 });
 
@@ -430,7 +478,19 @@ router.get("/quiz", async (req, res): Promise<void> => {
   const level = req.query.level as string | undefined;
   const count = Math.min(parseInt(req.query.count as string ?? "10", 10), 100);
 
-  const conditions = level && level !== "ALL" ? [eq(flashcardsTable.level, level)] : [];
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
+  if (level && level !== "ALL" && !tierAllowsLevel(tier, level)) {
+    res.status(403).json({ error: "Level not available in your tier" });
+    return;
+  }
+
+  const conditions: any[] = [];
+  if (level && level !== "ALL") {
+    conditions.push(eq(flashcardsTable.level, level));
+  } else if (tier === "intro") {
+    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  }
   const allCards = conditions.length
     ? await db.select().from(flashcardsTable).where(and(...conditions))
     : await db.select().from(flashcardsTable);
@@ -459,7 +519,19 @@ router.get("/fill-blank", async (req, res): Promise<void> => {
   const level = req.query.level as string | undefined;
   const count = Math.min(parseInt(req.query.count as string ?? "10", 10), 100);
 
-  const conditions = level && level !== "ALL" ? [eq(flashcardsTable.level, level)] : [];
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
+  if (level && level !== "ALL" && !tierAllowsLevel(tier, level)) {
+    res.status(403).json({ error: "Level not available in your tier" });
+    return;
+  }
+
+  const conditions: any[] = [];
+  if (level && level !== "ALL") {
+    conditions.push(eq(flashcardsTable.level, level));
+  } else if (tier === "intro") {
+    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  }
   const pool = conditions.length
     ? await db.select().from(flashcardsTable).where(and(...conditions))
     : await db.select().from(flashcardsTable);
@@ -485,11 +557,21 @@ router.get("/srs/due", async (req, res): Promise<void> => {
 
   if (!email) { res.json([]); return; }
 
+  const tier = await getStudentTier(email);
+  if (level && level !== "ALL" && !tierAllowsLevel(tier, level)) {
+    res.status(403).json({ error: "Level not available in your tier" });
+    return;
+  }
+
   const srsRecords = await db.select().from(cardSrsTable).where(and(eq(cardSrsTable.email, email), lte(cardSrsTable.nextReviewAt, now)));
   const dueIds = new Set(srsRecords.map((r) => r.flashcardId));
 
   const conditions: any[] = [];
-  if (level && level !== "ALL") conditions.push(eq(flashcardsTable.level, level));
+  if (level && level !== "ALL") {
+    conditions.push(eq(flashcardsTable.level, level));
+  } else if (tier === "intro") {
+    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  }
 
   const allCards = conditions.length
     ? await db.select().from(flashcardsTable).where(and(...conditions))
@@ -631,6 +713,10 @@ router.put("/user-data/:key", async (req, res): Promise<void> => {
   const email = verifyStudentEmail(req);
   if (!email) { res.status(401).json({ error: "Unauthorized" }); return; }
   const key = req.params.key;
+  if (SERVER_MANAGED_USER_DATA_KEYS.has(key)) {
+    res.status(403).json({ error: "This key is managed by the server" });
+    return;
+  }
   const limit = userDataLimitFor(key);
   let value = typeof req.body.value === "string" ? req.body.value : "";
 
@@ -668,7 +754,14 @@ router.delete("/progress/reset", async (req, res): Promise<void> => {
   await db.delete(cardSrsTable).where(eq(cardSrsTable.email, email));
   await db.delete(activityPositionTable).where(eq(activityPositionTable.email, email));
   await db.delete(quizScoresTable).where(eq(quizScoresTable.email, email));
-  await db.delete(userDataTable).where(eq(userDataTable.email, email));
+  // Wipe user_data BUT preserve server-managed keys (e.g. tier) so a reset
+  // can't be used to escape the intro-tier lockdown.
+  await db.delete(userDataTable).where(
+    and(
+      eq(userDataTable.email, email),
+      ne(userDataTable.key, "tier"),
+    ),
+  );
   res.json({ success: true });
 });
 

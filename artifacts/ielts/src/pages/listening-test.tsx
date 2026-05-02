@@ -17,15 +17,20 @@ import {
 import { useAwardXp } from "@workspace/ielts-api-client-react";
 import ListeningSkills from "@/components/listening-skills";
 import { answerMatches } from "@/data/answer-matching";
-import { isLevelAllowed } from "@/lib/tier";
+import { isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { IntroTierBanner } from "@/components/intro-tier-banner";
+import { useToast } from "@/hooks/use-toast";
 
-const visibleListeningTests = listeningTests.filter((t) => isLevelAllowed(t.level));
+// Render every listening test, but lock out restricted-level mocks for
+// intro-tier students so they can see what the higher tiers unlock.
+const allListeningTests = listeningTests;
 
 type Answers = Record<number, string>;
 type Phase = "select" | "intro" | "test" | "results";
 type Mode = "menu" | "full" | "skills";
 
 export default function ListeningTestPage() {
+  const { toast } = useToast();
   const [mode, setMode] = useState<Mode>("menu");
   const [phase, setPhase] = useState<Phase>("select");
   const [selectedTest, setSelectedTest] = useState<ListeningTest | null>(null);
@@ -57,8 +62,8 @@ export default function ListeningTestPage() {
       const params = new URLSearchParams(window.location.search);
       const testId = params.get("test");
       if (testId) {
-        const match = visibleListeningTests.find((t) => t.id === testId);
-        if (match) {
+        const match = allListeningTests.find((t) => t.id === testId);
+        if (match && isLevelAllowed(match.level)) {
           setMode("full");
           setSelectedTest(match);
           setPhase("intro");
@@ -193,37 +198,63 @@ export default function ListeningTestPage() {
             <p className="text-sm text-muted-foreground mt-1" dir="rtl" lang="ar">اختر اختباراً للبدء</p>
           </div>
 
+          <IntroTierBanner />
+
           <div className="grid gap-4">
-            {visibleListeningTests.map(test => (
-              <button
-                key={test.id}
-                onClick={() => selectTest(test)}
-                className="bg-card border border-border rounded-2xl p-6 text-left hover:border-purple-400 hover:shadow-lg hover:shadow-purple-600/10 transition-all group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                        <ListChecks className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            {allListeningTests.map(test => {
+              const allowed = isLevelAllowed(test.level);
+              return (
+                <button
+                  key={test.id}
+                  onClick={() => {
+                    if (!allowed) {
+                      toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                      return;
+                    }
+                    selectTest(test);
+                  }}
+                  disabled={!allowed}
+                  className={`bg-card border border-border rounded-2xl p-6 text-left transition-all group ${
+                    !allowed
+                      ? "opacity-60 cursor-not-allowed"
+                      : "hover:border-purple-400 hover:shadow-lg hover:shadow-purple-600/10"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                          <ListChecks className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div>
+                          <h2 className={`text-lg font-bold text-foreground transition-colors ${allowed ? "group-hover:text-purple-600" : ""}`}>
+                            {test.label}
+                            {!allowed && <span className="ml-2 text-xs">🔒</span>}
+                          </h2>
+                          <p className="text-xs text-muted-foreground">{test.source}</p>
+                          <p className="text-xs text-muted-foreground">4 Parts · 40 Questions · ~30 Minutes</p>
+                          {!allowed && (
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              <span dir="rtl" lang="ar">{restrictedMessage.ar}</span>
+                              <span className="mx-1">·</span>
+                              <span>{restrictedMessage.en}</span>
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-lg font-bold text-foreground group-hover:text-purple-600 transition-colors">{test.label}</h2>
-                        <p className="text-xs text-muted-foreground">{test.source}</p>
-                        <p className="text-xs text-muted-foreground">4 Parts · 40 Questions · ~30 Minutes</p>
+                      <div className="flex gap-2 flex-wrap ml-13">
+                        {test.parts.map(p => (
+                          <span key={p.id} className="text-xs bg-muted/60 text-muted-foreground rounded-lg px-2.5 py-1 border border-border">
+                            Part {p.id}: {p.title}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    <div className="flex gap-2 flex-wrap ml-13">
-                      {test.parts.map(p => (
-                        <span key={p.id} className="text-xs bg-muted/60 text-muted-foreground rounded-lg px-2.5 py-1 border border-border">
-                          Part {p.id}: {p.title}
-                        </span>
-                      ))}
-                    </div>
+                    <ChevronRight className={`w-5 h-5 text-muted-foreground transition-colors shrink-0 ${allowed ? "group-hover:text-purple-600" : ""}`} />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-purple-600 transition-colors shrink-0" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
       </Layout>

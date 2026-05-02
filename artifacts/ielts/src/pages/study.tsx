@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useActivityPosition } from "@/hooks/use-activity-position";
 import type { ListFlashcardsLevel } from "@workspace/ielts-api-client-react";
-import { getAllowedLevels, isLevelAllowed } from "@/lib/tier";
+import { getDisplayLevels, isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { IntroTierBanner } from "@/components/intro-tier-banner";
 
 type StudyMode = "all" | "srs" | "bookmarks" | "unknown";
 
@@ -268,6 +269,7 @@ export default function Study() {
   return (
     <Layout>
       <div className="flex flex-col h-full max-w-2xl mx-auto animate-in fade-in duration-500">
+        <IntroTierBanner className="mb-4" />
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
             <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -275,13 +277,31 @@ export default function Study() {
               Study Mode
             </h1>
             <div className="flex gap-2 flex-wrap">
-              <Select value={levelFilter} onValueChange={(v) => { setLevelFilter(v as any); resetSession(); }}>
+              <Select
+                value={levelFilter}
+                onValueChange={(v) => {
+                  if (!isLevelAllowed(v) && v !== "ALL") {
+                    toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                    return;
+                  }
+                  setLevelFilter(v as any);
+                  resetSession();
+                }}
+              >
                 <SelectTrigger className="w-[110px]"><SelectValue placeholder="Level" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Levels</SelectItem>
-                  {getAllowedLevels().map((lvl) => (
-                    <SelectItem key={lvl} value={lvl}>{lvl}</SelectItem>
-                  ))}
+                  {getDisplayLevels().map((lvl) => {
+                    const allowed = isLevelAllowed(lvl);
+                    return (
+                      <SelectItem key={lvl} value={lvl} disabled={!allowed}>
+                        <span className="flex items-center gap-1.5">
+                          {lvl}
+                          {!allowed && <span className="text-[10px]">🔒</span>}
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); resetSession(); }}>

@@ -17,15 +17,20 @@ import {
 } from "@/data/reading-test";
 import { ReadingSkills } from "@/components/reading-skills";
 import { answerMatches } from "@/data/answer-matching";
-import { isLevelAllowed } from "@/lib/tier";
+import { isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { IntroTierBanner } from "@/components/intro-tier-banner";
+import { useToast } from "@/hooks/use-toast";
 
-const visibleReadingTests = readingTests.filter((t) => isLevelAllowed(t.level));
+// Show every test, but mark restricted-level tests as locked so intro
+// students can see what they would unlock by upgrading.
+const allReadingTests = readingTests;
 
 type Answers = Record<number, string>;
 type Mode = "menu" | "full" | "skills";
 type Phase = "select" | "intro" | "test" | "results";
 
 export default function ReadingTestPage() {
+  const { toast } = useToast();
   const [mode, setMode] = useState<Mode>("menu");
 
   const [phase, setPhase] = useState<Phase>("select");
@@ -47,8 +52,8 @@ export default function ReadingTestPage() {
       const params = new URLSearchParams(window.location.search);
       const testId = params.get("test");
       if (testId) {
-        const match = visibleReadingTests.find((t) => t.id === testId);
-        if (match) {
+        const match = allReadingTests.find((t) => t.id === testId);
+        if (match && isLevelAllowed(match.level)) {
           setMode("full");
           setSelectedTest(match);
           setPhase("intro");
@@ -209,36 +214,62 @@ export default function ReadingTestPage() {
             <p className="text-sm text-muted-foreground mt-1" dir="rtl" lang="ar">اختر اختباراً للبدء</p>
           </div>
 
+          <IntroTierBanner />
+
           <div className="grid gap-4">
-            {visibleReadingTests.map(test => (
-              <button
-                key={test.id}
-                onClick={() => selectTest(test)}
-                className="bg-card border border-border rounded-2xl p-6 text-left hover:border-blue-400 hover:shadow-lg hover:shadow-blue-600/10 transition-all group"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                        <ListChecks className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            {allReadingTests.map(test => {
+              const allowed = isLevelAllowed(test.level);
+              return (
+                <button
+                  key={test.id}
+                  onClick={() => {
+                    if (!allowed) {
+                      toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                      return;
+                    }
+                    selectTest(test);
+                  }}
+                  disabled={!allowed}
+                  className={`bg-card border border-border rounded-2xl p-6 text-left transition-all group ${
+                    !allowed
+                      ? "opacity-60 cursor-not-allowed"
+                      : "hover:border-blue-400 hover:shadow-lg hover:shadow-blue-600/10"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <ListChecks className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                          <h2 className={`text-lg font-bold text-foreground transition-colors ${allowed ? "group-hover:text-blue-600" : ""}`}>
+                            {test.label}
+                            {!allowed && <span className="ml-2 text-xs">🔒</span>}
+                          </h2>
+                          <p className="text-xs text-muted-foreground">3 Passages · 40 Questions · 60 Minutes</p>
+                          {!allowed && (
+                            <p className="text-[11px] text-muted-foreground mt-1">
+                              <span dir="rtl" lang="ar">{restrictedMessage.ar}</span>
+                              <span className="mx-1">·</span>
+                              <span>{restrictedMessage.en}</span>
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-lg font-bold text-foreground group-hover:text-blue-600 transition-colors">{test.label}</h2>
-                        <p className="text-xs text-muted-foreground">3 Passages · 40 Questions · 60 Minutes</p>
+                      <div className="flex gap-2 flex-wrap ml-13">
+                        {test.passages.map(p => (
+                          <span key={p.id} className="text-xs bg-muted/60 text-muted-foreground rounded-lg px-2.5 py-1 border border-border">
+                            {p.title}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                    <div className="flex gap-2 flex-wrap ml-13">
-                      {test.passages.map(p => (
-                        <span key={p.id} className="text-xs bg-muted/60 text-muted-foreground rounded-lg px-2.5 py-1 border border-border">
-                          {p.title}
-                        </span>
-                      ))}
-                    </div>
+                    <ChevronRight className={`w-5 h-5 text-muted-foreground transition-colors shrink-0 ${allowed ? "group-hover:text-blue-600" : ""}`} />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-blue-600 transition-colors shrink-0" />
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
       </Layout>

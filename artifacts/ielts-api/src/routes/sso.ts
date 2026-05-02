@@ -2,7 +2,7 @@ import { Router, type IRouter } from "express";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
-import { db, accessRequestsTable } from "@workspace/ielts-db";
+import { db, accessRequestsTable, userDataTable } from "@workspace/ielts-db";
 
 const router: IRouter = Router();
 
@@ -104,8 +104,13 @@ router.get("/sso/redeem", async (req, res) => {
     return;
   }
 
-  // The IELTS app accepts both 'advance' and 'complete' platform tiers.
-  if (payload.tier !== "advance" && payload.tier !== "complete") {
+  // The IELTS app accepts 'intro', 'advance', and 'complete' tiers. Intro
+  // students get a locked-down A2/B1-only experience inside the same app.
+  if (
+    payload.tier !== "intro" &&
+    payload.tier !== "advance" &&
+    payload.tier !== "complete"
+  ) {
     res
       .status(403)
       .type("text/plain")
@@ -171,6 +176,20 @@ router.get("/sso/redeem", async (req, res) => {
       return;
     }
 
+    // Persist the platform-issued tier so server-side gating (e.g. flashcards
+    // level filter) can read it later without re-validating the SSO token.
+    await db.insert(userDataTable)
+      .values({
+        email: emailClean,
+        key: "tier",
+        value: payload.tier,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [userDataTable.email, userDataTable.key],
+        set: { value: payload.tier, updatedAt: new Date() },
+      });
+
     const sessionToken = makeIeltsSessionToken(emailClean);
 
     // The IELTS app keeps its session in localStorage (key '4ielts_email'),
@@ -199,8 +218,10 @@ router.get("/sso/redeem", async (req, res) => {
   try {
     var email = ${jsString(emailClean)};
     var token = ${jsString(sessionToken)};
+    var tier = ${jsString(payload.tier)};
     localStorage.setItem("4ielts_email", JSON.stringify({ email: email, token: token }));
     localStorage.setItem("4ielts_last_email", email);
+    localStorage.setItem("lexo-ielts:tier", tier);
   } catch (e) {
     // localStorage unavailable — fall through to redirect anyway.
   }

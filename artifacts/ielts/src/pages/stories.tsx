@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/ielts-api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { getAllowedLevels, isLevelAllowed } from "@/lib/tier";
+import { getDisplayLevels, isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { IntroTierBanner } from "@/components/intro-tier-banner";
 
 interface Story {
   id: number;
@@ -23,7 +24,7 @@ interface Story {
   orderIndex: number;
 }
 
-const LEVELS = ["All", ...getAllowedLevels()] as const;
+const LEVELS = ["All", ...getDisplayLevels()] as const;
 type LevelFilter = (typeof LEVELS)[number];
 
 const levelColors: Record<string, string> = {
@@ -831,6 +832,8 @@ export default function StoriesPage() {
     <Layout>
       <div className="max-w-5xl mx-auto animate-in fade-in duration-500">
 
+        <IntroTierBanner className="mb-6" />
+
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
@@ -851,18 +854,30 @@ export default function StoriesPage() {
               ? stories.length
               : (levelCounts[lvl] ?? 0);
             const isActive = levelFilter === lvl;
+            const allowed = lvl === "All" ? true : isLevelAllowed(lvl);
             return (
               <button
                 key={lvl}
-                onClick={() => setLevelFilter(lvl)}
+                onClick={() => {
+                  if (!allowed) {
+                    toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                    return;
+                  }
+                  setLevelFilter(lvl);
+                }}
+                disabled={!allowed}
+                title={!allowed ? restrictedMessage.ar : undefined}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
-                  isActive
+                  !allowed
+                    ? "bg-card border-border text-muted-foreground/50 opacity-60 cursor-not-allowed"
+                    : isActive
                     ? "bg-primary text-primary-foreground border-primary shadow-sm"
                     : "bg-card border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
                 }`}
               >
                 {lvl}
-                {!isLoading && (
+                {!allowed && <span className="text-[10px]">🔒</span>}
+                {allowed && !isLoading && (
                   <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
                     isActive ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted"
                   }`}>

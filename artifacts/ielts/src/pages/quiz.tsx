@@ -11,7 +11,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { getAllowedLevels, isLevelAllowed } from "@/lib/tier";
+import { getDisplayLevels, isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { IntroTierBanner } from "@/components/intro-tier-banner";
+import { useToast } from "@/hooks/use-toast";
 
 interface QuizScore {
   id: number;
@@ -38,6 +40,7 @@ function speak(text: string) {
 }
 
 export default function Quiz() {
+  const { toast } = useToast();
   const [mode, setMode] = useState<QuizMode>("multiple-choice");
   const [level, setLevel] = useState<Level>("ALL");
   const [started, setStarted] = useState(false);
@@ -160,6 +163,7 @@ export default function Quiz() {
     return (
       <Layout>
         <div className="max-w-xl mx-auto mt-8 animate-in fade-in duration-500">
+          <IntroTierBanner className="mb-6" />
           <div className="text-center mb-10">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <HelpCircle className="w-8 h-8 text-primary" />
@@ -241,18 +245,35 @@ export default function Quiz() {
 
             <div>
               <label className="text-sm font-semibold text-foreground mb-2 block">Level</label>
-              <Select value={level} onValueChange={(v) => setLevel(v as Level)}>{/* tier-filtered options below */}
+              <Select
+                value={level}
+                onValueChange={(v) => {
+                  if (!isLevelAllowed(v) && v !== "ALL") {
+                    toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                    return;
+                  }
+                  setLevel(v as Level);
+                }}
+              >
                 <SelectTrigger className="w-full bg-background"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ALL">All Levels</SelectItem>
-                  {getAllowedLevels().map((lvl) => {
+                  {getDisplayLevels().map((lvl) => {
                     const labels: Record<string, string> = {
                       A2: "A2 – Elementary",
                       B1: "B1 – Intermediate",
                       B2: "B2 – Upper-Intermediate",
                       C1: "C1 – Advanced",
                     };
-                    return <SelectItem key={lvl} value={lvl}>{labels[lvl] ?? lvl}</SelectItem>;
+                    const allowed = isLevelAllowed(lvl);
+                    return (
+                      <SelectItem key={lvl} value={lvl} disabled={!allowed}>
+                        <span className="flex items-center gap-1.5">
+                          {labels[lvl] ?? lvl}
+                          {!allowed && <span className="text-[10px]">🔒</span>}
+                        </span>
+                      </SelectItem>
+                    );
                   })}
                 </SelectContent>
               </Select>

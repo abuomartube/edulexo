@@ -1378,6 +1378,10 @@ interface ListeningTestMeta {
   createdAt: string; updatedAt: string;
 }
 
+interface AnalyticsByTest {
+  testId: string; sectionId: number; title: string; attempts: number; avgPercent: number;
+}
+
 function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
   const [tests, setTests] = useState<ListeningTestMeta[]>([]);
   const [loadingTests, setLoadingTests] = useState(true);
@@ -1392,6 +1396,13 @@ function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
   const [addError, setAddError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [editJson, setEditJson] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
+  const [analytics, setAnalytics] = useState<{ totalAttempts: number; byTest: AnalyticsByTest[] } | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const primeAbortRef = useRef<AbortController | null>(null);
 
   const authHeaders = { "x-admin-password": adminPassword };
@@ -1416,10 +1427,56 @@ function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
     } catch { /* ignore */ }
   }, [adminPassword]);
 
+  const loadAnalytics = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/analytics`, { headers: authHeaders });
+      if (res.ok) {
+        const data = await res.json() as { totalAttempts: number; byTest: AnalyticsByTest[] };
+        setAnalytics(data);
+      }
+    } catch { /* ignore */ }
+  }, [adminPassword]);
+
   useEffect(() => {
     void loadTests();
     void loadAudioStats();
-  }, [loadTests, loadAudioStats]);
+    void loadAnalytics();
+  }, [loadTests, loadAudioStats, loadAnalytics]);
+
+  const handleEditLoad = async (slug: string) => {
+    setEditingSlug(slug);
+    setEditJson("");
+    setEditError(null);
+    setEditLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/tests/${slug}`, { headers: authHeaders });
+      const data = await res.json() as { test?: unknown; error?: string };
+      if (!res.ok) { setEditError(data.error ?? "Failed to load"); return; }
+      setEditJson(JSON.stringify(data.test, null, 2));
+    } catch { setEditError("Load failed"); }
+    finally { setEditLoading(false); }
+  };
+
+  const handleEditSave = async () => {
+    if (!editingSlug) return;
+    setEditError(null);
+    let payload: unknown;
+    try { payload = JSON.parse(editJson); } catch { setEditError("Invalid JSON"); return; }
+    setEditSaving(true);
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/tests/${editingSlug}`, {
+        method: "PUT",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json() as { test?: ListeningTestMeta; error?: string };
+      if (!res.ok) { setEditError(data.error ?? "Save failed"); return; }
+      setEditingSlug(null);
+      setEditJson("");
+      void loadTests();
+    } catch { setEditError("Save failed"); }
+    finally { setEditSaving(false); }
+  };
 
   const handleDelete = async (slug: string, title: string) => {
     if (!confirm(`Delete test "${title}"?`)) return;
@@ -1527,10 +1584,16 @@ function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
         </div>
         <div className="flex gap-2 flex-wrap">
           <button
-            onClick={() => { void loadTests(); void loadAudioStats(); }}
+            onClick={() => { void loadTests(); void loadAudioStats(); void loadAnalytics(); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button
+            onClick={() => setShowAnalytics((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${showAnalytics ? "bg-violet-100 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300" : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}
+          >
+            Analytics {analytics ? `(${analytics.totalAttempts})` : ""}
           </button>
           <button
             onClick={() => setShowAdd((v) => !v)}
@@ -1540,6 +1603,80 @@ function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
           </button>
         </div>
       </div>
+
+      {showAnalytics && analytics && (
+        <div className="bg-white dark:bg-gray-900 border border-violet-200 dark:border-violet-800 rounded-2xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-gray-900 dark:text-white text-sm">Student Attempt Analytics</h3>
+            <span className="text-xs bg-violet-100 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300 px-2.5 py-1 rounded-full font-medium">{analytics.totalAttempts} total</span>
+          </div>
+          {analytics.byTest.length === 0 ? (
+            <p className="text-sm text-gray-400">No attempts recorded yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((sid) => {
+                const sTests = analytics.byTest.filter((t) => t.sectionId === sid);
+                if (sTests.length === 0) return null;
+                return (
+                  <div key={sid}>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Section {sid}</p>
+                    <div className="divide-y divide-gray-100 dark:divide-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
+                      {sTests.map((t) => (
+                        <div key={t.testId} className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800">
+                          <p className="text-sm text-gray-900 dark:text-white truncate flex-1">{t.title}</p>
+                          <div className="flex items-center gap-3 shrink-0 ml-3">
+                            <span className="text-xs text-gray-500">{t.attempts} attempt{t.attempts !== 1 ? "s" : ""}</span>
+                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${t.avgPercent >= 75 ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : t.avgPercent >= 50 ? "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400" : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"}`}>{t.avgPercent}%</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {editingSlug && (
+        <div className="bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-800 rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-gray-900 dark:text-white text-sm">Edit Test: <span className="font-mono text-amber-600 dark:text-amber-400">{editingSlug}</span></h3>
+            <button onClick={() => { setEditingSlug(null); setEditJson(""); setEditError(null); }} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs">✕ Cancel</button>
+          </div>
+          {editLoading ? (
+            <div className="flex items-center gap-2 text-sm text-gray-500"><Loader2 className="w-4 h-4 animate-spin" /> Loading test data…</div>
+          ) : (
+            <>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Edit the JSON and save. The slug field is ignored on update (slug is fixed by URL).</p>
+              <textarea
+                value={editJson}
+                onChange={(e) => setEditJson(e.target.value)}
+                rows={14}
+                className="w-full rounded-xl border border-amber-200 dark:border-amber-800 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-mono p-3 outline-none focus:ring-2 focus:ring-amber-500 resize-y"
+              />
+              {editError && <p className="text-sm text-red-600 flex items-center gap-2"><AlertCircle className="w-4 h-4" />{editError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => void handleEditSave()}
+                  disabled={editSaving || !editJson.trim()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+                >
+                  {editSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  {editSaving ? "Saving…" : "Save Changes"}
+                </button>
+                <button
+                  onClick={() => { setEditingSlug(null); setEditJson(""); setEditError(null); }}
+                  className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {showAdd && (
         <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 space-y-3">
@@ -1657,13 +1794,22 @@ function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
                                 {t.questionCount}q · {t.segmentCount} seg · <span className="font-mono">{t.slug}</span>
                               </p>
                             </div>
-                            <button
-                              onClick={() => void handleDelete(t.slug, t.title)}
-                              className="shrink-0 text-gray-400 hover:text-red-500 transition-colors p-1"
-                              title="Delete test"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() => void handleEditLoad(t.slug)}
+                                className="text-gray-400 hover:text-amber-500 transition-colors p-1"
+                                title="Edit test"
+                              >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                              </button>
+                              <button
+                                onClick={() => void handleDelete(t.slug, t.title)}
+                                className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                                title="Delete test"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

@@ -1,11 +1,12 @@
-import { Router, type Request } from "express";
+import { Router, type Request, type Response } from "express";
 import { Readable } from "node:stream";
 import crypto from "node:crypto";
 import OpenAI from "openai";
 import { db } from "@workspace/ielts-db";
-import { introListeningAttempts, introStudents } from "@workspace/ielts-db";
-import { and, desc, eq } from "drizzle-orm";
+import { introListeningAttempts, introStudents, settingsTable } from "@workspace/ielts-db";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { verifyStudentEmail } from "../lib/tier-auth";
+import { logger } from "../lib/logger";
 import { SECTIONS, type ListeningTest, type Segment } from "../listening/testBank";
 import { gradeTest, buildAnalysisFallback, type GradeResult } from "../listening/grader";
 import {
@@ -56,14 +57,34 @@ async function getStudentId(req: Request): Promise<number | null> {
   return row?.id ?? null;
 }
 
-function verifyAdmin(req: Request): boolean {
-  const provided = (req.headers["x-admin-password"] as string || "").trim();
-  const expected = (process.env["ADMIN_PASSWORD"] || "Target8").trim();
-  if (!provided || !expected) return false;
+const ENV_ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"] ?? "";
+
+async function getAdminPassword(): Promise<string> {
+  try {
+    const [row] = await db
+      .select()
+      .from(settingsTable)
+      .where(eq(settingsTable.key, "admin_password_override"))
+      .limit(1);
+    if (row?.value) return row.value;
+  } catch { /* ignore, fall back to env */ }
+  return ENV_ADMIN_PASSWORD;
+}
+
+async function requireAdmin(req: Request, res: Response): Promise<boolean> {
+  const provided = String((req.headers["x-admin-password"] as string) ?? (req.body?.adminPassword ?? ""));
+  const correctPassword = await getAdminPassword();
+  if (!correctPassword) {
+    res.status(403).json({ error: "Forbidden" });
+    return false;
+  }
   const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+  const b = Buffer.from(correctPassword);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    res.status(403).json({ error: "Forbidden" });
+    return false;
+  }
+  return true;
 }
 
 function isPgUniqueViolation(err: unknown): boolean {
@@ -72,7 +93,7 @@ function isPgUniqueViolation(err: unknown): boolean {
 
 // Kick off seed on boot.
 initListeningTests().catch((err) => {
-  console.error("[listening] init failed:", err);
+  logger.error({ err }, "[listening] init failed");
 });
 
 function publicTest(test: ListeningTest) {
@@ -178,6 +199,11 @@ router.get("/listening/tests/:testId", async (req, res) => {
 });
 
 router.get("/listening/tests/:testId/audio", async (req, res) => {
+  const studentId = await getStudentId(req);
+  if (!studentId) {
+    res.status(401).json({ error: "Not authenticated" });
+    return;
+  }
   const test = await loadTestBySlug(req.params.testId);
   if (!test) {
     res.status(404).json({ error: "Test not found" });
@@ -382,10 +408,7 @@ export default router;
 export const listeningAdminRouter = Router();
 
 listeningAdminRouter.post("/listening/admin/prime-audio", async (req, res) => {
-  if (!verifyAdmin(req)) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+  if (!await requireAdmin(req, res)) return;
   res.status(200);
   res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
@@ -442,10 +465,7 @@ listeningAdminRouter.post("/listening/admin/prime-audio", async (req, res) => {
 });
 
 listeningAdminRouter.post("/listening/admin/preview-segment", async (req, res) => {
-  if (!verifyAdmin(req)) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+  if (!await requireAdmin(req, res)) return;
   const body = (req.body ?? {}) as { text?: unknown; voice?: unknown };
   const text = typeof body.text === "string" ? body.text.trim() : "";
   const voice = typeof body.voice === "string" ? body.voice : "";
@@ -585,7 +605,7 @@ function parseTestPayload(body: unknown, opts: { requireSlug: boolean }): Parsed
 }
 
 listeningAdminRouter.get("/listening/admin/tests", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   try {
     const rows = await loadAllTestRows();
     res.json({
@@ -610,7 +630,7 @@ listeningAdminRouter.get("/listening/admin/tests", async (req, res) => {
 });
 
 listeningAdminRouter.get("/listening/admin/tests/:slug", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   try {
     const row = await loadTestRowBySlug(req.params.slug);
     if (!row) { res.status(404).json({ error: "Test not found" }); return; }
@@ -622,7 +642,7 @@ listeningAdminRouter.get("/listening/admin/tests/:slug", async (req, res) => {
 });
 
 listeningAdminRouter.post("/listening/admin/tests", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   let parsed: ParsedTestPayload;
   try {
     parsed = parseTestPayload(req.body, { requireSlug: true });
@@ -648,7 +668,7 @@ listeningAdminRouter.post("/listening/admin/tests", async (req, res) => {
 });
 
 listeningAdminRouter.put("/listening/admin/tests/:slug", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   let parsed: ParsedTestPayload;
   try {
     parsed = parseTestPayload({ ...(req.body as object), slug: req.params.slug }, { requireSlug: false });
@@ -695,7 +715,7 @@ listeningAdminRouter.put("/listening/admin/tests/:slug", async (req, res) => {
 });
 
 listeningAdminRouter.post("/listening/admin/tests/reorder", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   const body = (req.body ?? {}) as { sectionId?: unknown; slugs?: unknown };
   const sectionId = Number(body.sectionId);
   if (![1, 2, 3, 4].includes(sectionId)) { res.status(400).json({ error: "sectionId must be 1, 2, 3 or 4" }); return; }
@@ -720,7 +740,7 @@ listeningAdminRouter.post("/listening/admin/tests/reorder", async (req, res) => 
 });
 
 listeningAdminRouter.post("/listening/admin/tests/move", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   const body = (req.body ?? {}) as { slug?: unknown; targetSectionId?: unknown; targetSlugs?: unknown; sourceSlugs?: unknown };
   const slug = typeof body.slug === "string" ? body.slug.trim() : "";
   if (!slug) { res.status(400).json({ error: "slug is required" }); return; }
@@ -773,7 +793,7 @@ listeningAdminRouter.post("/listening/admin/tests/move", async (req, res) => {
 });
 
 listeningAdminRouter.delete("/listening/admin/tests/:slug", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   try {
     const row = await loadTestRowBySlug(req.params.slug);
     if (!row) { res.status(404).json({ error: "Test not found" }); return; }
@@ -811,7 +831,7 @@ listeningAdminRouter.delete("/listening/admin/tests/:slug", async (req, res) => 
 });
 
 listeningAdminRouter.get("/listening/admin/audio-stats", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   try {
     const rows = await loadAllTestRows();
     const referenced = collectReferencedHashes(rows.map((r) => ({ segments: r.transcript })));
@@ -824,7 +844,7 @@ listeningAdminRouter.get("/listening/admin/audio-stats", async (req, res) => {
 });
 
 listeningAdminRouter.post("/listening/admin/cleanup-audio", async (req, res) => {
-  if (!verifyAdmin(req)) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!await requireAdmin(req, res)) return;
   try {
     const remaining = await loadAllTestRows();
     const referenced = collectReferencedHashes(remaining.map((r) => ({ segments: r.transcript })));
@@ -835,6 +855,39 @@ listeningAdminRouter.post("/listening/admin/cleanup-audio", async (req, res) => 
   } catch (err) {
     req.log.error({ err }, "Admin cleanup audio error");
     res.status(500).json({ error: "cleanup_failed" });
+  }
+});
+
+listeningAdminRouter.get("/listening/admin/analytics", async (req, res) => {
+  if (!await requireAdmin(req, res)) return;
+  try {
+    const rows = await db
+      .select({
+        testId: introListeningAttempts.testId,
+        sectionId: introListeningAttempts.sectionId,
+        attempts: sql<number>`count(*)::int`,
+        avgPercent: sql<number>`round(avg(${introListeningAttempts.percent}))::int`,
+      })
+      .from(introListeningAttempts)
+      .groupBy(introListeningAttempts.testId, introListeningAttempts.sectionId)
+      .orderBy(introListeningAttempts.sectionId);
+    const tests = await loadAllTests();
+    const titleById = new Map<string, string>();
+    for (const t of tests) titleById.set(t.id, t.title);
+    const totalAttempts = rows.reduce((sum, r) => sum + r.attempts, 0);
+    res.json({
+      totalAttempts,
+      byTest: rows.map((r) => ({
+        testId: r.testId,
+        sectionId: r.sectionId,
+        title: titleById.get(r.testId) ?? r.testId,
+        attempts: r.attempts,
+        avgPercent: r.avgPercent ?? 0,
+      })),
+    });
+  } catch (err) {
+    req.log.error({ err }, "Admin listening analytics error");
+    res.status(500).json({ error: "analytics_failed" });
   }
 });
 

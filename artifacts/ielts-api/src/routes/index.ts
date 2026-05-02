@@ -22,6 +22,7 @@ import ssoRouter from "./sso";
 import introAuthRouter from "./intro-auth";
 import whisperRouter from "./whisper";
 import conversationRouter from "./conversation";
+import introListeningRouter, { listeningAdminRouter, listeningStorageRouter } from "./intro-listening";
 
 const router: IRouter = Router();
 
@@ -48,5 +49,8 @@ router.use(lessonsRouter);
 router.use(sentenceCheckRouter);
 router.use(sentenceSessionsRouter);
 router.use(spellItRouter);
+router.use(introListeningRouter);
+router.use(listeningAdminRouter);
+router.use(listeningStorageRouter);
 
 export default router;

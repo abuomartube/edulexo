@@ -313,17 +313,30 @@ export default function Home() {
             </div>
           </Link>
           {isIntroTier ? (
-            <Link href="/free-conversation" data-tour="ai-tools" className="block">
-              <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-5 hover:border-teal-400/60 transition-colors h-full">
-                <div className="flex gap-2 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
-                    <Mic className="w-5 h-5 text-teal-600" />
+            <div className="flex flex-col gap-3 h-full">
+              <Link href="/free-conversation" data-tour="ai-tools" className="block flex-1">
+                <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-5 hover:border-teal-400/60 transition-colors h-full">
+                  <div className="flex gap-2 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+                      <Mic className="w-5 h-5 text-teal-600" />
+                    </div>
                   </div>
+                  <h3 className="font-bold text-foreground mb-1">Churchill Free Conversation</h3>
+                  <p className="text-sm text-muted-foreground">Practice speaking English in a free, natural conversation with AI.</p>
                 </div>
-                <h3 className="font-bold text-foreground mb-1">Churchill Free Conversation</h3>
-                <p className="text-sm text-muted-foreground">Practice speaking English in a free, natural conversation with AI.</p>
-              </div>
-            </Link>
+              </Link>
+              <Link href="/intro-listening" className="block">
+                <div className="bg-card border border-indigo-300/40 dark:border-indigo-600/30 rounded-2xl p-5 hover:border-indigo-400/60 transition-colors">
+                  <div className="flex gap-2 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
+                      <Volume2 className="w-5 h-5 text-indigo-600" />
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-foreground mb-1">Attenborough AI Listening</h3>
+                  <p className="text-sm text-muted-foreground">A2-level listening tests with AI-read audio — 4 IELTS sections.</p>
+                </div>
+              </Link>
+            </div>
           ) : (
             <div data-tour="ai-tools" className="bg-card border border-border rounded-2xl p-5">
               <div className="flex gap-2 mb-3">

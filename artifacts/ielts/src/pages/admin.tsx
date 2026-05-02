@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Eye, EyeOff, Loader2, CheckCircle2, XCircle, Clock, Trash2, RefreshCw,
   Lock, KeyRound, Users, AlertCircle, Calendar, CalendarX, Search,
   Download, Star, MessageSquare, ShieldCheck, KeySquare, Reply, Send,
-  Pencil, Image as ImageIcon, Upload, BadgeCheck
+  Pencil, Image as ImageIcon, Upload, BadgeCheck, Volume2, ChevronDown, ChevronRight as ChevronRightIcon
 } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ interface Review {
   adminReplyAt: string | null;
 }
 
-type Tab = "requests" | "reviews" | "settings" | "intro";
+type Tab = "requests" | "reviews" | "settings" | "intro" | "listening";
 type Filter = "all" | "pending" | "approved" | "rejected";
 
 interface IntroStudent {
@@ -616,6 +616,11 @@ export default function AdminPage() {
               </span>
             )}
           </button>
+          <button onClick={() => setTab("listening")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === "listening" ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50"}`}>
+            <BadgeCheck className="w-4 h-4" />
+            Listening
+          </button>
         </div>
 
         {/* ── REQUESTS TAB ─────────────────────────────────────────────────────── */}
@@ -1122,6 +1127,9 @@ export default function AdminPage() {
         )}
 
         {/* ── INTRO STUDENTS TAB ───────────────────────────────────────────────── */}
+        {/* ── LISTENING TAB ─────────────────────────────────────────────────── */}
+        {tab === "listening" && <ListeningAdminPanel adminPassword={adminPassword} />}
+
         {tab === "intro" && (() => {
           const filteredIntro = introStudents.filter(s =>
             introFilter === "all" || s.status === introFilter
@@ -1356,6 +1364,317 @@ export default function AdminPage() {
           );
         })()}
       </div>
+    </div>
+  );
+}
+
+// ── Listening Admin Panel ─────────────────────────────────────────────────────
+
+const BASE_URL_ADMIN = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+
+interface ListeningTestMeta {
+  id: number; slug: string; sectionId: number; title: string; description: string;
+  questionCount: number; segmentCount: number; sortOrder: number;
+  createdAt: string; updatedAt: string;
+}
+
+function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
+  const [tests, setTests] = useState<ListeningTestMeta[]>([]);
+  const [loadingTests, setLoadingTests] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [audioStats, setAudioStats] = useState<{ scanned: number; referenced: number; orphaned: number; bytes: number } | null>(null);
+  const [primeLog, setPrimeLog] = useState<string[]>([]);
+  const [priming, setPriming] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
+  const [cleanMsg, setCleanMsg] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addJson, setAddJson] = useState("");
+  const [addError, setAddError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const primeAbortRef = useRef<AbortController | null>(null);
+
+  const authHeaders = { "x-admin-password": adminPassword };
+
+  const loadTests = useCallback(async () => {
+    setLoadingTests(true); setLoadError(null);
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/tests`, { headers: authHeaders });
+      const data = await res.json() as { tests: ListeningTestMeta[]; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Failed to load");
+      setTests(data.tests);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Load failed");
+    } finally { setLoadingTests(false); }
+  }, [adminPassword]);
+
+  const loadAudioStats = useCallback(async () => {
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/audio-stats`, { headers: authHeaders });
+      const data = await res.json() as { scanned: number; referenced: number; orphaned: number; bytes: number };
+      if (res.ok) setAudioStats(data);
+    } catch { /* ignore */ }
+  }, [adminPassword]);
+
+  useEffect(() => {
+    void loadTests();
+    void loadAudioStats();
+  }, [loadTests, loadAudioStats]);
+
+  const handleDelete = async (slug: string, title: string) => {
+    if (!confirm(`Delete test "${title}"?`)) return;
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/tests/${slug}`, {
+        method: "DELETE", headers: authHeaders,
+      });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) { alert(data.error ?? "Delete failed"); return; }
+      void loadTests();
+      void loadAudioStats();
+    } catch { alert("Delete failed"); }
+  };
+
+  const handlePrime = async () => {
+    if (priming) { primeAbortRef.current?.abort(); return; }
+    setPriming(true); setPrimeLog([]);
+    const controller = new AbortController();
+    primeAbortRef.current = controller;
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/prime-audio`, {
+        method: "POST", headers: authHeaders, signal: controller.signal,
+      });
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No stream");
+      const decoder = new TextDecoder();
+      let buf = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const ev = JSON.parse(line) as Record<string, unknown>;
+            if (ev.kind === "summary") {
+              setPrimeLog((p) => [...p, String(ev.message ?? "Done.")]);
+            } else if (ev.kind === "test_start") {
+              setPrimeLog((p) => [...p, `→ ${String(ev.title)} (${String(ev.segmentCount)} segs)`]);
+            } else if (ev.kind === "test_done") {
+              const r = ev.result as { uploaded: number; skipped: number; failed: number };
+              setPrimeLog((p) => [...p, `  ✓ ${r.uploaded} uploaded, ${r.skipped} skipped${r.failed ? `, ${r.failed} FAILED` : ""}`]);
+            } else if (ev.kind === "error") {
+              setPrimeLog((p) => [...p, `Error: ${String(ev.error)}`]);
+            }
+          } catch { /* ignore parse errors */ }
+        }
+      }
+    } catch (err) {
+      if (!(err instanceof Error && err.name === "AbortError")) {
+        setPrimeLog((p) => [...p, `Error: ${err instanceof Error ? err.message : "Unknown"}`]);
+      }
+    } finally {
+      setPriming(false);
+      primeAbortRef.current = null;
+      void loadAudioStats();
+    }
+  };
+
+  const handleCleanup = async () => {
+    setCleaning(true); setCleanMsg(null);
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/cleanup-audio`, {
+        method: "POST", headers: authHeaders,
+      });
+      const data = await res.json() as { message?: string; error?: string };
+      if (res.ok) { setCleanMsg(data.message ?? "Done."); void loadAudioStats(); }
+      else setCleanMsg(data.error ?? "Failed");
+    } catch { setCleanMsg("Cleanup failed"); }
+    finally { setCleaning(false); }
+  };
+
+  const handleAdd = async () => {
+    setAddError(null);
+    let payload: unknown;
+    try { payload = JSON.parse(addJson); } catch { setAddError("Invalid JSON"); return; }
+    setAdding(true);
+    try {
+      const res = await fetch(`${BASE_URL_ADMIN}/api-ielts/listening/admin/tests`, {
+        method: "POST",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json() as { test?: ListeningTestMeta; error?: string };
+      if (!res.ok) { setAddError(data.error ?? "Create failed"); return; }
+      setAddJson(""); setShowAdd(false);
+      void loadTests();
+    } catch { setAddError("Create failed"); }
+    finally { setAdding(false); }
+  };
+
+  const SECTION_IDS = [1, 2, 3, 4];
+  const bySection = (id: number) => tests.filter((t) => t.sectionId === id);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Volume2 className="w-5 h-5 text-indigo-500" /> Attenborough Listening Tests
+          </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Manage A2 listening tests for intro-tier students</p>
+        </div>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => { void loadTests(); void loadAudioStats(); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </button>
+          <button
+            onClick={() => setShowAdd((v) => !v)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition-colors"
+          >
+            <Upload className="w-4 h-4" /> {showAdd ? "Cancel" : "Add Test"}
+          </button>
+        </div>
+      </div>
+
+      {showAdd && (
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 space-y-3">
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm">Add New Test (JSON)</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Paste a JSON object with: slug, sectionId (1–4), title, description, transcript [{"{"}voice,text{"}"}], questions, answerKey.
+          </p>
+          <textarea
+            value={addJson}
+            onChange={(e) => setAddJson(e.target.value)}
+            rows={10}
+            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-mono p-3 outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+            placeholder='{"slug":"s1-test-1","sectionId":1,"title":"...","description":"...","transcript":[...],"questions":[...],"answerKey":{...}}'
+          />
+          {addError && (
+            <p className="text-sm text-red-600 flex items-center gap-2"><AlertCircle className="w-4 h-4" />{addError}</p>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => void handleAdd()}
+              disabled={adding || !addJson.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+            >
+              {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {adding ? "Creating…" : "Create Test"}
+            </button>
+            <button
+              onClick={() => { setShowAdd(false); setAddJson(""); setAddError(null); }}
+              className="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-5 space-y-4">
+        <h3 className="font-bold text-gray-900 dark:text-white text-sm">Audio Cache</h3>
+        {audioStats && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Cached", value: String(audioStats.scanned) },
+              { label: "Referenced", value: String(audioStats.referenced) },
+              { label: "Orphaned", value: String(audioStats.orphaned) },
+              { label: "Size", value: `${(audioStats.bytes / 1024 / 1024).toFixed(1)} MB` },
+            ].map((s) => (
+              <div key={s.label} className="bg-gray-50 dark:bg-gray-800 rounded-xl p-3">
+                <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">{s.value}</p>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => void handlePrime()}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${priming ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
+          >
+            {priming ? <><Loader2 className="w-4 h-4 animate-spin" /> Stop Priming</> : <><Volume2 className="w-4 h-4" /> Prime Audio</>}
+          </button>
+          <button
+            onClick={() => void handleCleanup()}
+            disabled={cleaning}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white text-sm font-medium transition-colors"
+          >
+            {cleaning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            {cleaning ? "Cleaning…" : "Cleanup Orphans"}
+          </button>
+        </div>
+        {cleanMsg && <p className="text-sm text-gray-700 dark:text-gray-300">{cleanMsg}</p>}
+        {primeLog.length > 0 && (
+          <div className="max-h-48 overflow-y-auto bg-gray-50 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono text-gray-700 dark:text-gray-300 space-y-0.5">
+            {primeLog.map((line, i) => <div key={i}>{line}</div>)}
+          </div>
+        )}
+      </div>
+
+      {loadingTests ? (
+        <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-indigo-500" /></div>
+      ) : loadError ? (
+        <div className="text-sm text-red-600 flex items-center gap-2 py-4"><AlertCircle className="w-4 h-4" />{loadError}</div>
+      ) : (
+        <div className="space-y-4">
+          {SECTION_IDS.map((sectionId) => {
+            const sectionTests = bySection(sectionId);
+            const isOpen = expanded[sectionId] !== false;
+            return (
+              <div key={sectionId} className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden">
+                <button
+                  className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  onClick={() => setExpanded((p) => ({ ...p, [sectionId]: !isOpen }))}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center font-bold text-indigo-600 dark:text-indigo-400 text-sm">
+                      {sectionId}
+                    </div>
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white text-sm">Section {sectionId}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{sectionTests.length} test{sectionTests.length !== 1 ? "s" : ""}</p>
+                    </div>
+                  </div>
+                  {isOpen ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRightIcon className="w-4 h-4 text-gray-400" />}
+                </button>
+                {isOpen && (
+                  <div className="border-t border-gray-100 dark:border-gray-800">
+                    {sectionTests.length === 0 ? (
+                      <p className="px-5 py-4 text-sm text-gray-400">No tests yet.</p>
+                    ) : (
+                      <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                        {sectionTests.map((t) => (
+                          <div key={t.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-sm text-gray-900 dark:text-white truncate">{t.title}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">
+                                {t.questionCount}q · {t.segmentCount} seg · <span className="font-mono">{t.slug}</span>
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => void handleDelete(t.slug, t.title)}
+                              className="shrink-0 text-gray-400 hover:text-red-500 transition-colors p-1"
+                              title="Delete test"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

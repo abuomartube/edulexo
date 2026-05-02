@@ -85,6 +85,7 @@ function Router() {
           <PasswordGate>
             <Switch>
               <Route path="/" component={Home} />
+              <Route path="/dashboard" component={Home} />
               <Route path="/lessons" component={Lessons} />
               <Route path="/study" component={Study} />
               <Route path="/quiz" component={Quiz} />

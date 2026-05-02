@@ -74,7 +74,7 @@ router.post("/sso/:tier/launch", requireAuth, async (req, res, next) => {
     // SPA can read it on first paint and gate features. The downstream app
     // also receives the tier inside the signed SSO token + via localStorage,
     // but the URL param is the most ergonomic source for first-render logic.
-    const nextUrl = `${route.basePath}/?tier=${encodeURIComponent(tier)}`;
+    const nextUrl = `${route.basePath}/dashboard?tier=${encodeURIComponent(tier)}`;
     const redirectUrl = `${route.redeemPath}?token=${encodeURIComponent(token)}&next=${encodeURIComponent(nextUrl)}`;
     res.json({ url: redirectUrl, tier });
   } catch (err) {

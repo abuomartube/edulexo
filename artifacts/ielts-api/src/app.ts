@@ -44,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api-ielts", router);
 
 app.use("/app-ielts-intro", (_, res) => {
-  res.redirect(301, "/lexo-ielts/?tier=intro");
+  res.redirect(301, "/lexo-ielts/dashboard?tier=intro");
 });
 
 export default app;

@@ -480,6 +480,16 @@ export function PasswordGate({ children }: PasswordGateProps) {
 
   const stopPolling = () => { if (pollTimer.current) clearTimeout(pollTimer.current); };
 
+  // Auth is owned by the EduLexo platform: when LEXO has no session of its own
+  // (phase === "landing"), bounce the user back to /dashboard so they sign in
+  // and re-enter via "Launch course" SSO. The login/register forms are kept for
+  // legacy renewal flows reached from the "expired" screen only.
+  useEffect(() => {
+    if (phase === "landing" && typeof window !== "undefined") {
+      window.location.replace("/dashboard");
+    }
+  }, [phase]);
+
   const unlockAndSave = useCallback((em: string, token: string) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: em, token }));
     localStorage.setItem("4ielts_last_email", em);
@@ -850,7 +860,14 @@ export function PasswordGate({ children }: PasswordGateProps) {
   if (phase === "unlocked") return <PasswordGateUnlocked>{children}</PasswordGateUnlocked>;
 
   if (phase === "landing") {
-    return <LandingPage onLogin={() => goToLogin()} onRegister={() => goToRegister()} videoEmbedUrl={regVideoEmbedUrl} />;
+    // The useEffect above redirects to /dashboard. Render a spinner while the
+    // browser navigates so the LEXO landing page (with Register/Login buttons)
+    // is never shown — auth is owned by the EduLexo platform.
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600" />
+      </div>
+    );
   }
 
   if (phase === "expired") {

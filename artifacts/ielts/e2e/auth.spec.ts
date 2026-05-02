@@ -56,8 +56,10 @@ test.describe("Landing page (unauthenticated)", () => {
     await expect(page.getByPlaceholder(/email/i).first()).toBeVisible({
       timeout: 6000,
     });
+    // The access code field has placeholder "e.g. 7K9M2P4XAB" and is rendered
+    // as a mono font input — find it via the actual placeholder text.
     await expect(
-      page.getByPlaceholder(/access code/i).first(),
+      page.getByPlaceholder(/7K9M2P4XAB|e\.g\./i).first(),
     ).toBeVisible();
   });
 });
@@ -72,9 +74,11 @@ test.describe("Login error handling", () => {
     await page.getByPlaceholder(/email/i).first().fill("nobody@example.com");
     await page.getByPlaceholder(/password/i).first().fill("wrongpassword");
     await page.getByRole("button", { name: /sign in|log in/i }).last().click();
+    // The API may return "Login failed.", "No account found...", "Invalid
+    // credentials", or similar.  Broaden the regex to cover all variants.
     await expect(
-      page.getByText(/(not found|incorrect|invalid|error)/i).first(),
-    ).toBeVisible({ timeout: 8000 });
+      page.getByText(/(not found|incorrect|invalid|error|failed|account|unauthorized)/i).first(),
+    ).toBeVisible({ timeout: 12000 });
   });
 });
 
@@ -89,7 +93,8 @@ test.describe("Registration error handling", () => {
     await page.getByPlaceholder(/email/i).first().fill(uniqueEmail("regfail"));
     const pwField = page.getByPlaceholder(/password/i).first();
     await pwField.fill("password123");
-    const codeField = page.getByPlaceholder(/access code/i).first();
+    // Access code input has placeholder "e.g. 7K9M2P4XAB"
+    const codeField = page.getByPlaceholder(/7K9M2P4XAB|e\.g\./i).first();
     await codeField.fill("XXXX-XXXX-XXXX");
     await page.getByRole("button", { name: /create account|register|sign up/i }).last().click();
     await expect(

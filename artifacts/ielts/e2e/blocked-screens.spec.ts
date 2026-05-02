@@ -106,12 +106,15 @@ test.describe("Intro tier blocked from advance-only features", () => {
     await loginAsIntro(page, "intro@blocked.invalid", "intro");
   });
 
-  test("Flashcards (/study) — shows upgrade message for intro tier", async ({
+  test("Flashcards (/study) — shows level-restriction banner for intro tier", async ({
     page,
   }) => {
     await page.goto(appUrl("/study"));
+    // Intro tier sees the IntroTierBanner rather than a hard "Not Included"
+    // gate — it explains which CEFR levels (A2/B1) are unlocked and that
+    // Advance/Comprehensive plans unlock the rest.
     await expect(
-      page.getByText(/Not Included|Upgrade Your Plan|upgrade/i).first(),
+      page.getByText(/Intro tier|Advance.*Comprehensive|Comprehensive.*Advance/i).first(),
     ).toBeVisible({ timeout: 8000 });
   });
 });

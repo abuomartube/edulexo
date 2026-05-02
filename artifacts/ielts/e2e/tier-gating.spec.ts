@@ -58,9 +58,12 @@ test.describe("Intro tier", () => {
   }) => {
     await loginAsIntro(page, "intro@test.invalid", "intro");
     await page.goto(appUrl("/study"));
-    // Intro students cannot access flashcards — expect a blocked/upgrade UI
+    // Intro students see the IntroTierBanner which explains that B2/C1 levels
+    // are unavailable and that Advance/Comprehensive plans unlock them.
+    // The banner renders text like "Intro tier · A2 → B1" and
+    // "Available in Advance and Comprehensive tiers."
     await expect(
-      page.getByText(/Not Included|Upgrade Your Plan|upgrade/i).first(),
+      page.getByText(/Intro tier|Advance.*Comprehensive|Comprehensive.*Advance/i).first(),
     ).toBeVisible({ timeout: 8000 });
   });
 });

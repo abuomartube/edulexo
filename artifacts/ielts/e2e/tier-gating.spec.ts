@@ -1,0 +1,165 @@
+/**
+ * Tier-gating tests — verifies that the correct features are accessible or
+ * blocked based on the student's tier (intro / advance / complete).
+ *
+ * Feature matrix (from lib/tier.ts):
+ *   "churchill"  → intro + complete  (advance BLOCKED)
+ *   "listening"  → intro + complete  (advance BLOCKED)
+ *   "reading"    → intro + complete  (advance BLOCKED)
+ *   "flashcards" → advance + complete (intro BLOCKED)
+ *   "speaking"   → advance + complete (intro BLOCKED)
+ *   "writing"    → advance + complete (intro BLOCKED)
+ */
+import { test, expect } from "@playwright/test";
+import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
+
+// ---------------------------------------------------------------------------
+// Intro tier
+// ---------------------------------------------------------------------------
+test.describe("Intro tier", () => {
+  test("home shows IntroHome with 'Your Tools' section", async ({ page }) => {
+    await loginAsIntro(page, "intro@test.invalid", "intro");
+    await page.goto(appUrl("/"));
+    await expect(page.getByText("Your Tools")).toBeVisible({ timeout: 10000 });
+  });
+
+  test("Churchill (free-conversation) is accessible — no blocked screen", async ({
+    page,
+  }) => {
+    await loginAsIntro(page, "intro@test.invalid", "intro");
+    await page.goto(appUrl("/free-conversation"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+
+  test("Listening (intro-listening) is accessible — no blocked screen", async ({
+    page,
+  }) => {
+    await loginAsIntro(page, "intro@test.invalid", "intro");
+    await page.goto(appUrl("/intro-listening"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+
+  test("Reading (intro-reading) is accessible — no blocked screen", async ({
+    page,
+  }) => {
+    await loginAsIntro(page, "intro@test.invalid", "intro");
+    await page.goto(appUrl("/intro-reading"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+
+  test("Flashcards page (/study) is blocked for intro tier", async ({
+    page,
+  }) => {
+    await loginAsIntro(page, "intro@test.invalid", "intro");
+    await page.goto(appUrl("/study"));
+    // Intro students cannot access flashcards — expect a blocked/upgrade UI
+    await expect(
+      page.getByText(/Not Included|Upgrade Your Plan|upgrade/i).first(),
+    ).toBeVisible({ timeout: 8000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Advance tier
+// ---------------------------------------------------------------------------
+test.describe("Advance tier", () => {
+  test("home shows standard Home page (not IntroHome)", async ({ page }) => {
+    await loginAsAdvanceOrComplete(page, "advance@test.invalid", "advance");
+    await page.goto(appUrl("/"));
+    // Standard home should not show the "Your Tools" heading of IntroHome
+    await expect(page.getByText("Your Tools")).not.toBeVisible({
+      timeout: 8000,
+    });
+  });
+
+  test("Churchill (free-conversation) is BLOCKED for advance tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "advance@test.invalid", "advance");
+    await page.goto(appUrl("/free-conversation"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).toBeVisible({ timeout: 8000 });
+  });
+
+  test("Listening (intro-listening) is BLOCKED for advance tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "advance@test.invalid", "advance");
+    await page.goto(appUrl("/intro-listening"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).toBeVisible({ timeout: 8000 });
+  });
+
+  test("Reading (intro-reading) is BLOCKED for advance tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "advance@test.invalid", "advance");
+    await page.goto(appUrl("/intro-reading"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).toBeVisible({ timeout: 8000 });
+  });
+
+  test("Flashcards page (/study) is accessible for advance tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "advance@test.invalid", "advance");
+    await page.goto(appUrl("/study"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Complete tier
+// ---------------------------------------------------------------------------
+test.describe("Complete tier", () => {
+  test("Churchill (free-conversation) is accessible for complete tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "complete@test.invalid", "complete");
+    await page.goto(appUrl("/free-conversation"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+
+  test("Listening (intro-listening) is accessible for complete tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "complete@test.invalid", "complete");
+    await page.goto(appUrl("/intro-listening"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+
+  test("Reading (intro-reading) is accessible for complete tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "complete@test.invalid", "complete");
+    await page.goto(appUrl("/intro-reading"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+
+  test("Flashcards (/study) is accessible for complete tier", async ({
+    page,
+  }) => {
+    await loginAsAdvanceOrComplete(page, "complete@test.invalid", "complete");
+    await page.goto(appUrl("/study"));
+    await expect(
+      page.getByText("Not Included in Your Plan"),
+    ).not.toBeVisible({ timeout: 8000 });
+  });
+});

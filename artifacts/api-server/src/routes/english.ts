@@ -11,6 +11,7 @@ import {
   type EnglishTier,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../lib/auth";
+import { subscriptionExpiryFromNow } from "../lib/subscription-policy";
 import {
   notifyStudentSelfEnrolled,
   notifyEnrollmentApproved,
@@ -141,6 +142,7 @@ router.post("/english/redeem", requireAuth, async (req, res, next) => {
             status: "active",
             source: "code",
             note: `Redeemed code ${code.code}`,
+            expiresAt: subscriptionExpiryFromNow(),
           })
           .returning();
         return { enrollment };

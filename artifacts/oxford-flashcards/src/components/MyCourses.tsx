@@ -116,11 +116,120 @@ function SectionHeader({
   );
 }
 
-function formatExpires(expiresAt: string | null, lang: "en" | "ar"): string | null {
-  if (!expiresAt) return null;
-  return new Date(expiresAt).toLocaleDateString(
+function formatDate(value: string | null, lang: "en" | "ar"): string | null {
+  if (!value) return null;
+  return new Date(value).toLocaleDateString(
     lang === "ar" ? "ar-EG" : "en-US",
     { day: "numeric", month: "short", year: "numeric" },
+  );
+}
+
+// Whole days remaining until expiry. Returns null when there is no expiry
+// (admin-granted lifetime enrollments) so the caller can hide the countdown.
+//
+// We use `Math.ceil` so an active subscription never reads "0 days remaining"
+// during the final <24h window — the spec calls this row a "countdown", and
+// the natural reading is "≥1 day until expiry". Negative values fall through
+// to the caller's `days >= 0` guard and are masked by the expired-state UI.
+function daysUntil(expiresAt: string | null): number | null {
+  if (!expiresAt) return null;
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return 0;
+  return Math.ceil(ms / 86_400_000);
+}
+
+function daysRemainingLabel(
+  days: number,
+  t: (k: TranslationKey) => string,
+): string {
+  if (days === 1) return t("courses.dayRemaining");
+  return t("courses.daysRemaining").replace("{n}", String(days));
+}
+
+// Status-pill renderer reused by both the IELTS and English cards.
+function StatusBadge({
+  active,
+  t,
+}: {
+  active: boolean;
+  t: (k: TranslationKey) => string;
+}) {
+  return (
+    <span
+      data-testid={`badge-status-${active ? "active" : "expired"}`}
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+        active
+          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+          : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+      }`}
+    >
+      <span
+        className={`w-1.5 h-1.5 rounded-full ${
+          active ? "bg-emerald-500" : "bg-rose-500"
+        }`}
+      />
+      {t(active ? "courses.status.active" : "courses.status.expired")}
+    </span>
+  );
+}
+
+// Renders the subscription metadata block (enrollment date, expiry date,
+// days-remaining or expired notice). Shared between IELTS and English cards.
+function SubscriptionMeta({
+  grantedAt,
+  expiresAt,
+  isActive,
+  lang,
+  t,
+}: {
+  grantedAt: string;
+  expiresAt: string | null;
+  isActive: boolean;
+  lang: "en" | "ar";
+  t: (k: TranslationKey) => string;
+}) {
+  const enrolledLabel = formatDate(grantedAt, lang);
+  const expiresLabel = formatDate(expiresAt, lang);
+  const days = daysUntil(expiresAt);
+  return (
+    <div className="space-y-1 text-xs text-slate-500 dark:text-slate-400 mb-3">
+      {enrolledLabel && (
+        <p>
+          {t("courses.enrolledOn")}:{" "}
+          <span className="font-medium text-slate-700 dark:text-slate-300">
+            {enrolledLabel}
+          </span>
+        </p>
+      )}
+      {expiresLabel && (
+        <p>
+          {t("courses.expiresOn")}:{" "}
+          <span className="font-medium text-slate-700 dark:text-slate-300">
+            {expiresLabel}
+          </span>
+        </p>
+      )}
+      {isActive && days !== null && days >= 0 && (
+        <p
+          data-testid="text-days-remaining"
+          className={
+            days <= 7
+              ? "font-semibold text-amber-600 dark:text-amber-400"
+              : "font-medium text-slate-600 dark:text-slate-300"
+          }
+        >
+          {daysRemainingLabel(days, t)}
+        </p>
+      )}
+      {!isActive && (
+        <p
+          data-testid="text-expired-message"
+          className="font-semibold text-rose-600 dark:text-rose-400"
+        >
+          {t("courses.expiredMessage")}
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -156,7 +265,9 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
   });
 
   const enrollments: Enrollment[] = enrollmentsQuery.data ?? [];
-  const active = enrollments.filter((e) => e.isActive);
+  // Show every non-revoked enrollment (active AND expired). Expired cards
+  // surface a "Renew Now" CTA; revoked rows are hidden entirely.
+  const visible = enrollments.filter((e) => e.status !== "revoked");
 
   return (
     <section
@@ -174,7 +285,7 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
           <Loader2 size={20} className="inline animate-spin mr-2" />
           {t("common.loading")}
         </div>
-      ) : active.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-gray-800 p-8 text-center">
           <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">{t("courses.empty")}</p>
           <Link
@@ -187,9 +298,9 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {active.map((e) => {
+          {visible.map((e) => {
             const meta = IELTS_TIER_META[e.tier];
-            const expiresLabel = formatExpires(e.expiresAt, lang);
+            const isActive = e.isActive;
             return (
               <div
                 key={e.id}
@@ -202,32 +313,57 @@ function IeltsSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "en
                     alt=""
                     className="w-12 h-12 object-contain bg-white/15 rounded-lg p-1.5"
                   />
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[11px] uppercase tracking-wider opacity-80">{meta.range}</p>
                     <h3 className="text-base font-bold leading-tight">{t(meta.nameKey)}</h3>
                   </div>
+                  <StatusBadge active={isActive} t={t} />
                 </div>
                 <div className="p-4">
-                  {expiresLabel && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                      {t("courses.expiresOn")}:{" "}
-                      <span className="font-medium">{expiresLabel}</span>
-                    </p>
+                  <SubscriptionMeta
+                    grantedAt={e.grantedAt}
+                    expiresAt={e.expiresAt}
+                    isActive={isActive}
+                    lang={lang}
+                    t={t}
+                  />
+                  {isActive ? (
+                    <button
+                      type="button"
+                      onClick={() => launchMutation.mutate(e.tier)}
+                      disabled={launchMutation.isPending}
+                      data-testid={`button-launch-ielts-${e.tier}`}
+                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-50"
+                    >
+                      {launchMutation.isPending && launchMutation.variables === e.tier ? (
+                        <Loader2 size={15} className="animate-spin" />
+                      ) : (
+                        <ExternalLink size={15} />
+                      )}
+                      {t("courses.launch")}
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        data-testid={`button-launch-ielts-${e.tier}-disabled`}
+                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-600/80 text-white font-semibold text-sm cursor-not-allowed opacity-70"
+                      >
+                        <ExternalLink size={15} />
+                        {t("courses.launch")}
+                      </button>
+                      <Link
+                        href={`/checkout/intro/${e.tier}`}
+                        data-testid={`link-renew-ielts-${e.tier}`}
+                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow hover:opacity-90 transition"
+                      >
+                        <Rocket size={15} />
+                        {t("courses.renew")}
+                      </Link>
+                    </div>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => launchMutation.mutate(e.tier)}
-                    disabled={launchMutation.isPending}
-                    data-testid={`button-launch-ielts-${e.tier}`}
-                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold text-sm hover:opacity-90 transition disabled:opacity-50"
-                  >
-                    {launchMutation.isPending && launchMutation.variables === e.tier ? (
-                      <Loader2 size={15} className="animate-spin" />
-                    ) : (
-                      <ExternalLink size={15} />
-                    )}
-                    {t("courses.launch")}
-                  </button>
                 </div>
               </div>
             );
@@ -278,7 +414,7 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
   });
 
   const enrollments: EnglishEnrollment[] = enrollmentsQuery.data ?? [];
-  const active = enrollments.filter((e) => e.isActive);
+  const visible = enrollments.filter((e) => e.status !== "revoked");
 
   return (
     <section
@@ -296,7 +432,7 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
           <Loader2 size={20} className="inline animate-spin mr-2" />
           {t("common.loading")}
         </div>
-      ) : active.length === 0 ? (
+      ) : visible.length === 0 ? (
         <div className="rounded-xl border-2 border-dashed border-slate-200 dark:border-gray-800 p-8 text-center">
           <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">{t("courses.english.empty")}</p>
           <Link
@@ -309,10 +445,10 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {active.map((e) => {
+          {visible.map((e) => {
             const meta = ENGLISH_TIER_META[e.tier];
             const Icon = meta.icon;
-            const expiresLabel = formatExpires(e.expiresAt, lang);
+            const isActive = e.isActive;
             return (
               <div
                 key={e.id}
@@ -325,26 +461,51 @@ function EnglishSection({ t, lang }: { t: (k: TranslationKey) => string; lang: "
                   <div className="w-12 h-12 rounded-lg bg-white/15 p-2 flex items-center justify-center">
                     <Icon size={24} className="text-white" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-[11px] uppercase tracking-wider opacity-80">{meta.range}</p>
                     <h3 className="text-base font-bold leading-tight">{t(meta.nameKey)}</h3>
                   </div>
+                  <StatusBadge active={isActive} t={t} />
                 </div>
                 <div className="p-4">
-                  {expiresLabel && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                      {t("courses.expiresOn")}:{" "}
-                      <span className="font-medium">{expiresLabel}</span>
-                    </p>
+                  <SubscriptionMeta
+                    grantedAt={e.grantedAt}
+                    expiresAt={e.expiresAt}
+                    isActive={isActive}
+                    lang={lang}
+                    t={t}
+                  />
+                  {isActive ? (
+                    <a
+                      href={ENGLISH_APP_URL}
+                      data-testid={`button-launch-english-${e.tier}`}
+                      className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition"
+                    >
+                      <ExternalLink size={15} />
+                      {t("courses.launch")}
+                    </a>
+                  ) : (
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        disabled
+                        aria-disabled="true"
+                        data-testid={`button-launch-english-${e.tier}-disabled`}
+                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-600/80 text-white font-semibold text-sm cursor-not-allowed opacity-70"
+                      >
+                        <ExternalLink size={15} />
+                        {t("courses.launch")}
+                      </button>
+                      <Link
+                        href={`/checkout/english/${e.tier}`}
+                        data-testid={`link-renew-english-${e.tier}`}
+                        className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-semibold text-sm shadow hover:opacity-90 transition"
+                      >
+                        <Rocket size={15} />
+                        {t("courses.renew")}
+                      </Link>
+                    </div>
                   )}
-                  <a
-                    href={ENGLISH_APP_URL}
-                    data-testid={`button-launch-english-${e.tier}`}
-                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-semibold text-sm hover:opacity-90 transition"
-                  >
-                    <ExternalLink size={15} />
-                    {t("courses.launch")}
-                  </a>
                 </div>
               </div>
             );

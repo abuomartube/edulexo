@@ -591,6 +591,22 @@ export const translations = {
   },
   "courses.launch": { en: "Launch course", ar: "ابدأ الدورة" },
   "courses.expiresOn": { en: "Expires on", ar: "تنتهي في" },
+  "courses.enrolledOn": { en: "Enrolled on", ar: "تاريخ الالتحاق" },
+  "courses.status.active": { en: "Active", ar: "مفعّل" },
+  "courses.status.expired": { en: "Expired", ar: "منتهٍ" },
+  "courses.daysRemaining": {
+    en: "{n} days remaining",
+    ar: "متبقٍ {n} يوم",
+  },
+  "courses.dayRemaining": {
+    en: "1 day remaining",
+    ar: "متبقٍ يوم واحد",
+  },
+  "courses.expiredMessage": {
+    en: "Your subscription has expired.",
+    ar: "اشتراكك انتهى.",
+  },
+  "courses.renew": { en: "Renew now", ar: "جدّد الاشتراك" },
   "courses.tier.intro": { en: "LEXO for IELTS — Intro", ar: "LEXO for IELTS — تمهيدي" },
   "courses.tier.advance": { en: "LEXO for IELTS — Advance", ar: "LEXO for IELTS — متقدّم" },
   "courses.tier.complete": { en: "LEXO for IELTS — Complete", ar: "LEXO for IELTS — شامل" },

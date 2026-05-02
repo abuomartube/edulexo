@@ -8,6 +8,7 @@ import {
   type Payment,
 } from "@workspace/db";
 import { notifyStudentSelfEnrolled } from "../email-triggers";
+import { subscriptionExpiryFromNow } from "../subscription-policy";
 
 type ActivationResult =
   | { status: "already_captured"; enrollmentId: string | null }
@@ -123,7 +124,11 @@ async function upsertEnrollmentIntro(
     )
     .limit(1);
 
+  const newExpiry = subscriptionExpiryFromNow();
+
   if (existing && existing.status === "active") {
+    // Renewal on an already-active enrollment — extend (re-anchor) the
+    // expiry to now + 365 days per spec.
     await tx
       .update(enrollmentsTable)
       .set({
@@ -131,6 +136,7 @@ async function upsertEnrollmentIntro(
         paymentStatus: "paid",
         source: params.source,
         note: params.note,
+        expiresAt: newExpiry,
       })
       .where(eq(enrollmentsTable.id, existing.id));
     return existing.id;
@@ -143,6 +149,7 @@ async function upsertEnrollmentIntro(
         status: "active",
         source: params.source,
         grantedAt: new Date(),
+        expiresAt: newExpiry,
         paymentId: params.paymentId,
         paymentStatus: "paid",
         note: params.note,
@@ -160,6 +167,7 @@ async function upsertEnrollmentIntro(
         status: "active",
         source: params.source,
         note: params.note,
+        expiresAt: newExpiry,
         paymentId: params.paymentId,
         paymentStatus: "paid",
       })
@@ -190,6 +198,7 @@ async function upsertEnrollmentIntro(
             paymentStatus: "paid",
             source: params.source,
             note: params.note,
+            expiresAt: newExpiry,
           })
           .where(eq(enrollmentsTable.id, conflict.id));
         return conflict.id;
@@ -255,7 +264,10 @@ async function upsertEnrollmentEnglish(
     )
     .limit(1);
 
+  const newExpiry = subscriptionExpiryFromNow();
+
   if (existing && existing.status === "active") {
+    // Renewal on an already-active English enrollment — re-anchor expiry.
     await tx
       .update(englishEnrollmentsTable)
       .set({
@@ -263,6 +275,7 @@ async function upsertEnrollmentEnglish(
         paymentStatus: "paid",
         source: params.source,
         note: params.note,
+        expiresAt: newExpiry,
       })
       .where(eq(englishEnrollmentsTable.id, existing.id));
     return existing.id;
@@ -275,6 +288,7 @@ async function upsertEnrollmentEnglish(
         status: "active",
         source: params.source,
         grantedAt: new Date(),
+        expiresAt: newExpiry,
         paymentId: params.paymentId,
         paymentStatus: "paid",
         note: params.note,
@@ -292,6 +306,7 @@ async function upsertEnrollmentEnglish(
         status: "active",
         source: params.source,
         note: params.note,
+        expiresAt: newExpiry,
         paymentId: params.paymentId,
         paymentStatus: "paid",
       })
@@ -318,6 +333,7 @@ async function upsertEnrollmentEnglish(
             paymentStatus: "paid",
             source: params.source,
             note: params.note,
+            expiresAt: newExpiry,
           })
           .where(eq(englishEnrollmentsTable.id, conflict.id));
         return conflict.id;

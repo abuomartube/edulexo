@@ -10,8 +10,20 @@ import {
 } from "@workspace/db";
 import { requireAuth } from "../lib/auth";
 import { notifyStudentSelfEnrolled } from "../lib/email-triggers";
+import { subscriptionExpiryFromNow } from "../lib/subscription-policy";
 
 const router: IRouter = Router();
+
+// Marker thrown from inside the redeem transaction so the outer .catch()
+// handler can roll back the access-code use-claim and surface the correct
+// 409 to the client. Using a custom Error subclass (rather than returning a
+// status object from the txn callback) is what guarantees the rollback.
+class AlreadyEnrolledError extends Error {
+  constructor(public tier: Tier) {
+    super("already_enrolled");
+    this.name = "AlreadyEnrolledError";
+  }
+}
 
 // PG SQLSTATE 23505 = unique_violation. drizzle-orm@0.45 wraps query failures
 // in DrizzleQueryError where the original pg error sits on `.cause`.
@@ -112,6 +124,9 @@ router.post("/enrollments/redeem", requireAuth, async (req, res, next) => {
       //    drizzle-orm wraps DB errors in DrizzleQueryError, so the underlying
       //    pg error code lives on err.cause.code (with err.code as a fallback
       //    in case of unwrapped/native errors).
+      // Access-code redeem grants the same subscription window as a paid
+      // activation; expiry is enforced by /me's isActive computation and
+      // the SSO launch guard.
       try {
         const [enrollment] = await tx
           .insert(enrollmentsTable)
@@ -121,15 +136,26 @@ router.post("/enrollments/redeem", requireAuth, async (req, res, next) => {
             status: "active",
             source: "code",
             note: `Redeemed code ${code.code}`,
+            expiresAt: subscriptionExpiryFromNow(),
           })
           .returning();
         return { enrollment };
       } catch (err) {
+        // Unique-violation means the user already has an active enrollment
+        // for this tier. We MUST throw to roll back the transaction;
+        // returning here would commit the access-code use-claim above and
+        // burn a code without granting access. The outer .catch() converts
+        // the marker error back into the structured response.
         if (isUniqueViolation(err)) {
-          return { error: "already_enrolled" as const, tier };
+          throw new AlreadyEnrolledError(tier);
         }
         throw err;
       }
+    }).catch((err) => {
+      if (err instanceof AlreadyEnrolledError) {
+        return { error: "already_enrolled" as const, tier: err.tier };
+      }
+      throw err;
     });
 
     if ("error" in result && result.error) {

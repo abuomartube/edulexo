@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Search, CheckCircle2, Bookmark, BookmarkCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ListFlashcardsLevel } from "@workspace/ielts-api-client-react";
-import { getDisplayLevels, isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { getDisplayLevels, isLevelAllowed, getRestrictedMessage } from "@/lib/tier";
 import { IntroTierBanner } from "@/components/intro-tier-banner";
 import { useToast } from "@/hooks/use-toast";
 
@@ -80,7 +80,8 @@ export default function Browse() {
             value={levelFilter}
             onValueChange={(v) => {
               if (!isLevelAllowed(v) && v !== "ALL") {
-                toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                const m = getRestrictedMessage();
+                toast({ title: m.ar, description: m.en, variant: "destructive" });
                 return;
               }
               setLevelFilter(v as any);

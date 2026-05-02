@@ -17,10 +17,22 @@ function verifyStudentEmail(req: import("express").Request): string | null {
 
 type Tier = "intro" | "advance" | "complete";
 const INTRO_LEVELS = ["A2", "B1"] as const;
+const ADVANCE_LEVELS = ["B1", "B2", "C1"] as const;
+
+// Returns the set of CEFR levels the tier is allowed to see, or null for the
+// unrestricted "complete" tier.
+function tierLevels(tier: Tier): readonly string[] | null {
+  if (tier === "intro") return INTRO_LEVELS;
+  if (tier === "advance") return ADVANCE_LEVELS;
+  return null;
+}
 
 // Read the student's persisted tier from user_data.
 // Deny-by-default: unauthenticated requests are treated as "intro" so that
-// content gates cannot be bypassed by simply omitting the auth headers.
+// the paid B2/C1 content cannot be reached just by clearing the auth headers.
+// This is intentionally the most restrictive *paywalled* posture — the
+// advance tier's A2 lockout is a content-tier preference, not a paywall, so
+// it is enforced for authenticated advance users only.
 // Legacy authenticated users with no `tier` row are grandfathered to
 // "complete" — new accounts are always provisioned via SSO which writes the
 // tier row up front.
@@ -36,8 +48,9 @@ async function getStudentTier(email: string | null): Promise<Tier> {
 }
 
 function tierAllowsLevel(tier: Tier, level: string): boolean {
-  if (tier !== "intro") return true;
-  return (INTRO_LEVELS as readonly string[]).includes(level);
+  const allowed = tierLevels(tier);
+  if (!allowed) return true;
+  return allowed.includes(level);
 }
 
 // Keys whose values are managed by the server only. Students must not be
@@ -76,8 +89,9 @@ router.get("/flashcards", async (req, res): Promise<void> => {
   const conditions = [];
   if (level) {
     conditions.push(eq(flashcardsTable.level, level));
-  } else if (tier === "intro") {
-    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  } else {
+    const allowed = tierLevels(tier);
+    if (allowed) conditions.push(inArray(flashcardsTable.level, [...allowed]));
   }
   if (category) conditions.push(eq(flashcardsTable.category, category));
   if (search) conditions.push(sql`(${ilike(flashcardsTable.english, `%${search}%`)} OR ${ilike(flashcardsTable.arabic, `%${search}%`)})`);
@@ -488,8 +502,9 @@ router.get("/quiz", async (req, res): Promise<void> => {
   const conditions: any[] = [];
   if (level && level !== "ALL") {
     conditions.push(eq(flashcardsTable.level, level));
-  } else if (tier === "intro") {
-    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  } else {
+    const allowed = tierLevels(tier);
+    if (allowed) conditions.push(inArray(flashcardsTable.level, [...allowed]));
   }
   const allCards = conditions.length
     ? await db.select().from(flashcardsTable).where(and(...conditions))
@@ -529,8 +544,9 @@ router.get("/fill-blank", async (req, res): Promise<void> => {
   const conditions: any[] = [];
   if (level && level !== "ALL") {
     conditions.push(eq(flashcardsTable.level, level));
-  } else if (tier === "intro") {
-    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  } else {
+    const allowed = tierLevels(tier);
+    if (allowed) conditions.push(inArray(flashcardsTable.level, [...allowed]));
   }
   const pool = conditions.length
     ? await db.select().from(flashcardsTable).where(and(...conditions))
@@ -569,8 +585,9 @@ router.get("/srs/due", async (req, res): Promise<void> => {
   const conditions: any[] = [];
   if (level && level !== "ALL") {
     conditions.push(eq(flashcardsTable.level, level));
-  } else if (tier === "intro") {
-    conditions.push(inArray(flashcardsTable.level, [...INTRO_LEVELS]));
+  } else {
+    const allowed = tierLevels(tier);
+    if (allowed) conditions.push(inArray(flashcardsTable.level, [...allowed]));
   }
 
   const allCards = conditions.length
@@ -763,6 +780,19 @@ router.delete("/progress/reset", async (req, res): Promise<void> => {
     ),
   );
   res.json({ success: true });
+});
+
+// Bootstrap endpoint: returns the authenticated student's tier so the client
+// can sync localStorage on login / page reload. Without this, an SSO-redeemed
+// advance user who clears localStorage would see the UI behave as the default
+// (complete) tier while the server correctly enforces advance — producing
+// confusing UI states where A2 looks unlocked but the API returns 403.
+// Unauthenticated callers get the deny-by-default tier so the client also
+// renders the locked UI for the most restrictive paywalled posture.
+router.get("/me/tier", async (req, res): Promise<void> => {
+  const email = verifyStudentEmail(req);
+  const tier = await getStudentTier(email);
+  res.json({ tier, authenticated: email !== null });
 });
 
 export default router;

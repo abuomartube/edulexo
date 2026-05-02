@@ -17,7 +17,7 @@ import {
 } from "@/data/reading-test";
 import { ReadingSkills } from "@/components/reading-skills";
 import { answerMatches } from "@/data/answer-matching";
-import { isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { isLevelAllowed, getRestrictedMessage } from "@/lib/tier";
 import { IntroTierBanner } from "@/components/intro-tier-banner";
 import { useToast } from "@/hooks/use-toast";
 
@@ -224,7 +224,8 @@ export default function ReadingTestPage() {
                   key={test.id}
                   onClick={() => {
                     if (!allowed) {
-                      toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                      const m = getRestrictedMessage();
+                      toast({ title: m.ar, description: m.en, variant: "destructive" });
                       return;
                     }
                     selectTest(test);
@@ -248,13 +249,16 @@ export default function ReadingTestPage() {
                             {!allowed && <span className="ml-2 text-xs">🔒</span>}
                           </h2>
                           <p className="text-xs text-muted-foreground">3 Passages · 40 Questions · 60 Minutes</p>
-                          {!allowed && (
-                            <p className="text-[11px] text-muted-foreground mt-1">
-                              <span dir="rtl" lang="ar">{restrictedMessage.ar}</span>
-                              <span className="mx-1">·</span>
-                              <span>{restrictedMessage.en}</span>
-                            </p>
-                          )}
+                          {!allowed && (() => {
+                            const m = getRestrictedMessage();
+                            return (
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                <span dir="rtl" lang="ar">{m.ar}</span>
+                                <span className="mx-1">·</span>
+                                <span>{m.en}</span>
+                              </p>
+                            );
+                          })()}
                         </div>
                       </div>
                       <div className="flex gap-2 flex-wrap ml-13">

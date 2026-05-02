@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { customFetch } from "@workspace/ielts-api-client-react";
 import { useToast } from "@/hooks/use-toast";
-import { getDisplayLevels, isLevelAllowed, restrictedMessage } from "@/lib/tier";
+import { getDisplayLevels, isLevelAllowed, getRestrictedMessage } from "@/lib/tier";
 import { IntroTierBanner } from "@/components/intro-tier-banner";
 
 interface Story {
@@ -860,13 +860,14 @@ export default function StoriesPage() {
                 key={lvl}
                 onClick={() => {
                   if (!allowed) {
-                    toast({ title: restrictedMessage.ar, description: restrictedMessage.en, variant: "destructive" });
+                    const m = getRestrictedMessage();
+                    toast({ title: m.ar, description: m.en, variant: "destructive" });
                     return;
                   }
                   setLevelFilter(lvl);
                 }}
                 disabled={!allowed}
-                title={!allowed ? restrictedMessage.ar : undefined}
+                title={!allowed ? getRestrictedMessage().ar : undefined}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold border transition-colors ${
                   !allowed
                     ? "bg-card border-border text-muted-foreground/50 opacity-60 cursor-not-allowed"

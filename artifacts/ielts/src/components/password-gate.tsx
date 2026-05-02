@@ -93,6 +93,26 @@ async function checkDbSession(email: string): Promise<{ status: string; token?: 
   } catch { return { status: "none" }; }
 }
 
+// Sync the student's persisted tier from the server into localStorage. Called
+// on every gate unlock so an SSO-redeemed user whose localStorage was cleared
+// (incognito, browser cleanup, different device) still gets the correct
+// client-side tier UI. The /me/tier endpoint is deny-by-default, so an
+// unauthenticated request also returns a sensible (intro) tier.
+async function bootstrapTierFromServer(email: string, token: string) {
+  try {
+    const res = await fetch("/api-ielts/me/tier", {
+      headers: { "x-student-email": email, "x-student-token": token },
+    });
+    if (!res.ok) return;
+    const body = await res.json();
+    if (body && (body.tier === "intro" || body.tier === "advance" || body.tier === "complete")) {
+      localStorage.setItem("lexo-ielts:tier", body.tier);
+    }
+  } catch {
+    // Best effort — if this fails, the existing localStorage value (or default) is used.
+  }
+}
+
 const landingFeatures = [
   { icon: BookOpen, text: "3,000 words from A2 to C1", color: "text-teal-400" },
   { icon: Sparkles, text: "Interactive flashcards + word pronunciation", color: "text-sky-400" },
@@ -448,6 +468,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: em, token }));
     localStorage.setItem("4ielts_last_email", em);
     saveSessionToDb(em, token);
+    bootstrapTierFromServer(em, token);
     setPhase("unlocked");
   }, []);
 
@@ -507,6 +528,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
             await saveSessionToDb(storedEmail, token);
             const dbSession = await checkDbSession(storedEmail);
             if (dbSession.status === "active") {
+              bootstrapTierFromServer(storedEmail, token);
               setPhase("unlocked");
               return;
             } else if (dbSession.status === "expired") {
@@ -537,6 +559,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
         const dbSession = await checkDbSession(lastEmail);
         if (dbSession.status === "active" && dbSession.token) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify({ email: lastEmail, token: dbSession.token }));
+          bootstrapTierFromServer(lastEmail, dbSession.token);
           setPhase("unlocked");
           return;
         } else if (dbSession.status === "expired") {

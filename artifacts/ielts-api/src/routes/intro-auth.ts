@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import crypto from "node:crypto";
 import { db } from "@workspace/ielts-db";
-import { introStudents, introAccessCodes } from "@workspace/ielts-db";
+import { introStudents, introAccessCodes, settingsTable } from "@workspace/ielts-db";
 import { eq, desc, and, isNull } from "drizzle-orm";
 
 const router: IRouter = Router();
@@ -59,7 +59,22 @@ function generateAccessCode(): string {
 }
 
 // ─── Admin auth helper ────────────────────────────────────────────────────────
-// Reuses the same x-admin-password header pattern as the main admin routes.
+// Mirrors auth.ts exactly: checks settingsTable admin_password_override first,
+// then falls back to the ADMIN_PASSWORD env var, so password changes made via
+// the admin dashboard Settings tab work for intro routes too.
+
+const ENV_ADMIN_PASSWORD = process.env["ADMIN_PASSWORD"] ?? "";
+
+async function getAdminPassword(): Promise<string> {
+  try {
+    const rows = await db
+      .select()
+      .from(settingsTable)
+      .where(eq(settingsTable.key, "admin_password_override"));
+    if (rows.length > 0 && rows[0].value) return rows[0].value;
+  } catch { /* ignore, fall back to env */ }
+  return ENV_ADMIN_PASSWORD;
+}
 
 async function requireAdmin(
   req: import("express").Request,
@@ -68,13 +83,13 @@ async function requireAdmin(
   const provided = String(
     (req.headers["x-admin-password"] as string) ?? (req.body?.adminPassword ?? ""),
   );
-  const expected = process.env["ADMIN_PASSWORD"] ?? "";
-  if (!provided || !expected) {
+  const correctPassword = await getAdminPassword();
+  if (!correctPassword) {
     res.status(403).json({ error: "Forbidden" });
     return false;
   }
   const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
+  const b = Buffer.from(correctPassword);
   if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
     res.status(403).json({ error: "Forbidden" });
     return false;
@@ -124,6 +139,10 @@ router.post("/auth/intro/register", async (req, res): Promise<void> => {
   const oneYear = new Date();
   oneYear.setFullYear(oneYear.getFullYear() + 1);
 
+  class AccessCodeError extends Error {
+    constructor(msg: string) { super(msg); this.name = "AccessCodeError"; }
+  }
+
   try {
     await db.transaction(async (tx) => {
       const consumed = await tx
@@ -140,7 +159,7 @@ router.post("/auth/intro/register", async (req, res): Promise<void> => {
         const msg = exists
           ? "This access code has already been used."
           : "Invalid access code. Please check with your instructor.";
-        throw Object.assign(new Error("ACCESS_CODE"), { status: 401, message: msg });
+        throw new AccessCodeError(msg);
       }
 
       await tx.insert(introStudents).values({
@@ -151,8 +170,8 @@ router.post("/auth/intro/register", async (req, res): Promise<void> => {
         expiresAt: oneYear,
       });
     });
-  } catch (err: any) {
-    if (err?.status === 401) {
+  } catch (err: unknown) {
+    if (err instanceof AccessCodeError) {
       res.status(401).json({ error: err.message });
       return;
     }
@@ -340,9 +359,18 @@ router.post("/admin/intro/access-codes", async (req, res): Promise<void> => {
     for (let attempt = 0; attempt < 5 && !inserted; attempt++) {
       try {
         const code = generateAccessCode();
-        await db.insert(introAccessCodes).values({ code }).onConflictDoNothing();
-        created.push({ code });
-        inserted = true;
+        // Use .returning() so we only include codes that were actually inserted.
+        // onConflictDoNothing silently no-ops on collisions; returning() returns []
+        // for those cases, so we retry with a fresh code instead of reporting a dupe.
+        const rows = await db
+          .insert(introAccessCodes)
+          .values({ code })
+          .onConflictDoNothing()
+          .returning({ code: introAccessCodes.code });
+        if (rows.length > 0) {
+          created.push({ code: rows[0].code });
+          inserted = true;
+        }
       } catch { /* retry */ }
     }
   }

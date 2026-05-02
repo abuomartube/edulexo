@@ -1483,12 +1483,13 @@ export default function FreeConversationPage() {
   const onBack = () => navigate("/");
 
   const tier = localStorage.getItem("lexo-ielts:tier");
-  const hasIntroAuth = !!(
-    localStorage.getItem("lexo-ielts:intro_email") ||
-    (() => { try { const r = localStorage.getItem("4ielts_email"); return r && JSON.parse(r)?.email; } catch { return false; } })()
-  );
+  // Only allow students whose tier is explicitly "intro", or who have an intro-specific
+  // auth key (lexo-ielts:intro_email) and no conflicting tier set.
+  // Do NOT use "4ielts_email" — that key is present for advance/complete tier users too.
+  const introEmail = localStorage.getItem("lexo-ielts:intro_email");
+  const isIntroTier = tier === "intro" || (!tier && !!introEmail);
 
-  if (tier !== "intro" && !hasIntroAuth) {
+  if (!isIntroTier) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: `linear-gradient(160deg, #071422 0%, ${NAVY} 40%, #0C2040 100%)` }}>
         <div className="text-center space-y-4 max-w-sm">

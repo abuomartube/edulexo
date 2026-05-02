@@ -1,12 +1,26 @@
 import { Router } from "express";
 import OpenAI from "openai";
+import { eq } from "drizzle-orm";
 import { verifyStudentEmail } from "../lib/tier-auth";
 import { recordAiUsage } from "../lib/ai-usage";
-import { db, introConversations, introMessages } from "@workspace/ielts-db";
+import { db, introConversations, introMessages, introStudents } from "@workspace/ielts-db";
 
 const router = Router();
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
+
+/**
+ * Confirms the authenticated email belongs to an approved intro-tier student.
+ * Returns true only if a matching row exists in introStudents.
+ */
+async function verifyIntroTier(email: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: introStudents.id })
+    .from(introStudents)
+    .where(eq(introStudents.email, email))
+    .limit(1);
+  return !!row;
+}
 
 function getOpenAiClient(): OpenAI {
   const apiKey = process.env["OPENAI_API_KEY"];
@@ -82,6 +96,10 @@ router.post("/conversation/chat", async (req, res): Promise<void> => {
   const studentEmail = verifyStudentEmail(req);
   if (!studentEmail) {
     res.status(401).json({ error: "Authentication required." });
+    return;
+  }
+  if (!(await verifyIntroTier(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
     return;
   }
 
@@ -161,6 +179,10 @@ router.post("/conversation/feedback", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Authentication required." });
     return;
   }
+  if (!(await verifyIntroTier(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
+    return;
+  }
 
   const { messages, topic } = req.body as {
     messages: ChatMessage[];
@@ -232,6 +254,10 @@ router.post("/conversation/sessions", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Authentication required." });
     return;
   }
+  if (!(await verifyIntroTier(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
+    return;
+  }
 
   const { topic, messages } = req.body as {
     topic: string;
@@ -282,6 +308,10 @@ router.get("/conversation/sessions", async (req, res): Promise<void> => {
   const studentEmail = verifyStudentEmail(req);
   if (!studentEmail) {
     res.status(401).json({ error: "Authentication required." });
+    return;
+  }
+  if (!(await verifyIntroTier(studentEmail))) {
+    res.status(403).json({ error: "Free Conversation is available for intro-tier students only." });
     return;
   }
   res.json({ sessions: [] });

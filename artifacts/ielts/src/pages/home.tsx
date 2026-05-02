@@ -117,6 +117,12 @@ export default function Home() {
   const { data: streakInfo } = useStreak();
   const { data: xpInfo } = useXp();
 
+  const isIntroTier = (() => {
+    const tier = localStorage.getItem("lexo-ielts:tier");
+    const introEmail = localStorage.getItem("lexo-ielts:intro_email");
+    return tier === "intro" || (!tier && !!introEmail);
+  })();
+
   const speak = (text: string) => {
     if ("speechSynthesis" in window) {
       const u = new SpeechSynthesisUtterance(text);
@@ -306,18 +312,32 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Words you got wrong — review and master them.</p>
             </div>
           </Link>
-          <div data-tour="ai-tools" className="bg-card border border-border rounded-2xl p-5">
-            <div className="flex gap-2 mb-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
-                <Mic className="w-5 h-5 text-teal-600" />
+          {isIntroTier ? (
+            <Link href="/free-conversation" data-tour="ai-tools" className="block">
+              <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-5 hover:border-teal-400/60 transition-colors h-full">
+                <div className="flex gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+                    <Mic className="w-5 h-5 text-teal-600" />
+                  </div>
+                </div>
+                <h3 className="font-bold text-foreground mb-1">Churchill Free Conversation</h3>
+                <p className="text-sm text-muted-foreground">Practice speaking English in a free, natural conversation with AI.</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-violet-600" />
+            </Link>
+          ) : (
+            <div data-tour="ai-tools" className="bg-card border border-border rounded-2xl p-5">
+              <div className="flex gap-2 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+                  <Mic className="w-5 h-5 text-teal-600" />
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-violet-600" />
+                </div>
               </div>
+              <h3 className="font-bold text-foreground mb-1">Churchill & Orwell AI</h3>
+              <p className="text-sm text-muted-foreground">Speaking practice + Writing grading by AI.</p>
             </div>
-            <h3 className="font-bold text-foreground mb-1">Churchill & Orwell AI</h3>
-            <p className="text-sm text-muted-foreground">Speaking practice + Writing grading by AI.</p>
-          </div>
+          )}
           <div data-tour="tests" className="bg-card border border-border rounded-2xl p-5">
             <div className="flex gap-2 mb-3">
               <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center">

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Abu Omar EduLexo project is an AI-powered, bilingual (English + Arabic) learning platform offering specialized courses: LEXO for English and LEXO for IELTS. It aims to provide a comprehensive educational experience through features like Oxford 3000 flashcards, CEFR-aligned packages, structured IELTS courses, and full localization. The project's vision is to become a leading AI-powered educational platform, expanding its course offerings and market reach within the educational technology sector.
+The Abu Omar EduLexo project is an AI-powered, bilingual (English + Arabic) learning platform offering three specialized courses: LEXO Intro (A2→B1, IELTS-prep entry course), LEXO for English (Oxford 3000, A1→C1), and LEXO for IELTS (full mock prep with Churchill speaking + Orwell writing). It aims to provide a comprehensive educational experience through features like Oxford 3000 flashcards, CEFR-aligned packages, structured IELTS courses, and full localization. The project's vision is to become a leading AI-powered educational platform, expanding its course offerings and market reach within the educational technology sector. The platform landing page (`/`) presents all three courses as side-by-side cards in a 3-column grid, ordered Intro → English → IELTS.
 
 ## User Preferences
 

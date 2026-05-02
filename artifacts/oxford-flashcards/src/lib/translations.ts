@@ -42,7 +42,7 @@ export const translations = {
     en: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by EduLexo AI",
     ar: "Abu Omar EduLexo — Learn · Practice · Achieve · Powered by EduLexo AI",
   },
-  "platform.hero.headline1": { en: "Two powerful courses.", ar: "مساران قويان…" },
+  "platform.hero.headline1": { en: "Three powerful courses.", ar: "ثلاث دورات قويّة." },
   "platform.hero.headline2": { en: "One smart platform.", ar: "منصة ذكية واحدة." },
   "platform.hero.subtitle": {
     en: "Whether you're starting your journey from your first English words or aiming for an IELTS band 8 — Abu Omar EduLexo gives you AI-powered practice, native audio, bilingual support, and a real teacher beside you.",
@@ -51,13 +51,15 @@ export const translations = {
   "platform.products.eyebrow": { en: "Our Courses", ar: "دوراتنا" },
   "platform.products.title": { en: "Choose the right path for you", ar: "اختر المسار المناسب لك" },
   "platform.products.subtitle": {
-    en: "Two complete courses, both built with the same AI-powered platform.",
-    ar: "دورتان متكاملتان، كلتاهما مبنيّتان على المنصّة نفسها المدعومة بالذكاء الاصطناعي.",
+    en: "Three complete courses, all built with the same AI-powered platform.",
+    ar: "ثلاث دورات متكاملة، جميعها مبنيّة على المنصّة نفسها المدعومة بالذكاء الاصطناعي.",
   },
   "platform.products.courseOne": { en: "Course One", ar: "الدورة الأولى" },
   "platform.products.courseTwo": { en: "Course Two", ar: "الدورة الثانية" },
+  "platform.products.courseThree": { en: "Course Three", ar: "الدورة الثالثة" },
   "platform.products.englishName": { en: "LEXO for English", ar: "LEXO for English" },
   "platform.products.ieltsName": { en: "LEXO for IELTS", ar: "LEXO for IELTS" },
+  "platform.products.introName": { en: "LEXO Intro", ar: "LEXO Intro" },
   "platform.products.englishDesc": {
     en: "Master everyday English from the ground up — built on the Oxford 3000 wordlist with native British audio, bilingual translations, and progressive packages from A1 to C1.",
     ar: "أتقن الإنجليزية اليوميّة من الصفر — مبنية على قائمة أكسفورد 3000 بصوت بريطاني أصلي وترجمات ثنائية اللغة وباقات متدرّجة من A1 إلى C1.",
@@ -66,7 +68,12 @@ export const translations = {
     en: "Your AI-powered companion for IELTS success. Master vocabulary, ace your speaking and writing with Churchill & Orwell AI, and prepare with full mock tests for Listening and Reading.",
     ar: "رفيقك الذكي للنجاح في الأيلتس. أتقن المفردات، طوّر مهارات المحادثة والكتابة مع تشرشل وأورويل AI، واستعد باختبارات تجريبية كاملة للاستماع والقراءة.",
   },
+  "platform.products.introDesc": {
+    en: "The perfect starting point for IELTS beginners — build A2 + B1 vocabulary, listening, reading, speaking, and writing foundations before moving up to the full IELTS prep track.",
+    ar: "نقطة الانطلاق المثاليّة لمبتدئي الأيلتس — ابنِ مفردات A2 و B1 ومهارات الاستماع والقراءة والمحادثة والكتابة قبل الانتقال إلى مسار الإعداد الكامل للأيلتس.",
+  },
   "platform.products.mostAdvanced": { en: "Most Advanced", ar: "الأكثر تطوّراً" },
+  "platform.products.startHere": { en: "Start Here", ar: "ابدأ هنا" },
   "platform.eng.h1": { en: "2,988 Oxford 3000 words", ar: "2,988 كلمة من أكسفورد 3000" },
   "platform.eng.h2": { en: "Native British audio", ar: "صوت بريطاني أصلي" },
   "platform.eng.h3": { en: "AI Speaking practice", ar: "تدريب على المحادثة بالذكاء الاصطناعي" },
@@ -75,6 +82,10 @@ export const translations = {
   "platform.ielts.h2": { en: "Orwell AI essay checker", ar: "مدقّق المقالات أورويل AI" },
   "platform.ielts.h3": { en: "Listening + Reading tests", ar: "اختبارات استماع وقراءة" },
   "platform.ielts.h4": { en: "Full IELTS Mock Tests", ar: "اختبارات أيلتس تجريبية كاملة" },
+  "platform.intro.h1": { en: "A2 + B1 vocabulary (~1,400 words)", ar: "مفردات A2 + B1 (~1,400 كلمة)" },
+  "platform.intro.h2": { en: "Lessons, study, quiz & browse modes", ar: "دروس، دراسة، اختبارات وتصفّح" },
+  "platform.intro.h3": { en: "Stories · Listening · Reading practice", ar: "قصص · تدريب استماع وقراءة" },
+  "platform.intro.h4": { en: "Churchill Speaking + Orwell Writing", ar: "تشرشل للمحادثة + أورويل للكتابة" },
 
   "platform.features.eyebrow": { en: "Why EduLexo", ar: "لماذا EduLexo" },
   "platform.features.title": {

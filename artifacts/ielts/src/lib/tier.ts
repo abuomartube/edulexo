@@ -1,4 +1,4 @@
-export type Tier = "advance" | "complete";
+export type Tier = "intro" | "advance" | "complete";
 
 export type CefrLevel = "A2" | "B1" | "B2" | "C1";
 
@@ -6,7 +6,7 @@ const STORAGE_KEY = "lexo-ielts:tier";
 const DEFAULT_TIER: Tier = "complete";
 
 function isValidTier(value: unknown): value is Tier {
-  return value === "advance" || value === "complete";
+  return value === "intro" || value === "advance" || value === "complete";
 }
 
 export function getTier(): Tier {
@@ -37,11 +37,25 @@ export function setTier(tier: Tier): void {
   }
 }
 
+export const ALL_LEVELS: readonly CefrLevel[] = ["A2", "B1", "B2", "C1"] as const;
+
+const INTRO_LEVELS: readonly CefrLevel[] = ["A2", "B1"] as const;
 const ADVANCE_LEVELS: readonly CefrLevel[] = ["B1", "B2", "C1"] as const;
 const COMPLETE_LEVELS: readonly CefrLevel[] = ["A2", "B1", "B2", "C1"] as const;
 
 export function getAllowedLevels(tier: Tier = getTier()): readonly CefrLevel[] {
-  return tier === "advance" ? ADVANCE_LEVELS : COMPLETE_LEVELS;
+  if (tier === "intro") return INTRO_LEVELS;
+  if (tier === "advance") return ADVANCE_LEVELS;
+  return COMPLETE_LEVELS;
+}
+
+/**
+ * All four CEFR levels — used by pickers that want to display every level
+ * (with the restricted ones rendered in a disabled state) instead of hiding
+ * the restricted ones.
+ */
+export function getDisplayLevels(): readonly CefrLevel[] {
+  return ALL_LEVELS;
 }
 
 export function isLevelAllowed(level: string | undefined | null, tier: Tier = getTier()): boolean {
@@ -50,6 +64,27 @@ export function isLevelAllowed(level: string | undefined | null, tier: Tier = ge
   return (allowed as readonly string[]).includes(level);
 }
 
-export function tierLabel(tier: Tier): string {
-  return tier === "advance" ? "B1 → C1" : "A2 → C1";
+export function isIntro(tier: Tier = getTier()): boolean {
+  return tier === "intro";
 }
+
+export function tierLabel(tier: Tier): string {
+  if (tier === "intro") return "A2 → B1";
+  if (tier === "advance") return "B1 → C1";
+  return "A2 → C1";
+}
+
+export function tierLabelAr(tier: Tier): string {
+  if (tier === "intro") return "مقدّمة (A2 إلى B1)";
+  if (tier === "advance") return "متقدّم (B1 إلى C1)";
+  return "شاملة (A2 إلى C1)";
+}
+
+/**
+ * Short, friendly restriction copy shown next to a locked level/feature.
+ * Bilingual EN + AR — callers render whichever language matches their UI.
+ */
+export const restrictedMessage = {
+  en: "Available in Advance and Comprehensive tiers.",
+  ar: "هذا مخصص للمتقدم والشاملة",
+} as const;

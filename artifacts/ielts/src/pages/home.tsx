@@ -211,22 +211,23 @@ function IntroHome() {
 
         {/* ── Course Lessons ── */}
         <section>
-          <Link href="/lessons">
-            <a className="group block rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01]">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
-                  <PlayCircle className="w-8 h-8 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="inline-block text-[10px] font-bold tracking-widest uppercase text-white/80 mb-1">
-                    Video Course
-                  </span>
-                  <h2 className="text-xl font-extrabold text-white leading-tight">the course lessons</h2>
-                  <p className="text-white/85 text-sm mt-1">Watch your level's full IELTS course — learn at your own pace.</p>
-                </div>
-                <ExternalLink className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block" />
+          <Link
+            href="/lessons"
+            className="group block rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01]"
+          >
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                <PlayCircle className="w-8 h-8 text-white" />
               </div>
-            </a>
+              <div className="flex-1 min-w-0">
+                <span className="inline-block text-[10px] font-bold tracking-widest uppercase text-white/80 mb-1">
+                  Video Course
+                </span>
+                <h2 className="text-xl font-extrabold text-white leading-tight">the course lessons</h2>
+                <p className="text-white/85 text-sm mt-1">Watch your level's full IELTS course — learn at your own pace.</p>
+              </div>
+              <ExternalLink className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block" />
+            </div>
           </Link>
         </section>
 
@@ -359,26 +360,27 @@ export default function Home() {
 
         {/* ── The Course Lessons (prominent CTA) ── */}
         <section>
-          <Link href="/lessons">
-            <a className="group block rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-6 sm:p-7 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01]">
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
-                  <PlayCircle className="w-8 h-8 sm:w-9 sm:h-9 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className="inline-block text-[10px] font-bold tracking-widest uppercase text-white/80 mb-1">
-                    Video Course
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
-                    the course lessons
-                  </h2>
-                  <p className="text-white/85 text-sm mt-1">
-                    Watch your level's full IELTS course — learn at your own pace.
-                  </p>
-                </div>
-                <ExternalLink className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block" />
+          <Link
+            href="/lessons"
+            className="group block rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-6 sm:p-7 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01]"
+          >
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                <PlayCircle className="w-8 h-8 sm:w-9 sm:h-9 text-white" />
               </div>
-            </a>
+              <div className="flex-1 min-w-0">
+                <span className="inline-block text-[10px] font-bold tracking-widest uppercase text-white/80 mb-1">
+                  Video Course
+                </span>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-tight">
+                  the course lessons
+                </h2>
+                <p className="text-white/85 text-sm mt-1">
+                  Watch your level's full IELTS course — learn at your own pace.
+                </p>
+              </div>
+              <ExternalLink className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block" />
+            </div>
           </Link>
         </section>
 

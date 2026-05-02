@@ -10,7 +10,7 @@
  *   "speaking"   → advance + complete (intro BLOCKED)
  *   "writing"    → advance + complete (intro BLOCKED)
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
 
 // ---------------------------------------------------------------------------

@@ -9,9 +9,8 @@
  * All /api-ielts/speaking/* endpoints are mocked — no live AI backend needed.
  * TTS audio calls are stubbed to return an empty MP3 so playback never blocks.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect, sseOneDelta } from "./helpers/fixtures";
 import { loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard, sseOneDelta } from "./helpers/fixtures";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -83,7 +82,6 @@ async function setupSpeakingMocks(
 
 test.describe("Churchill AI (/speaking) — idle screen", () => {
   test("renders Churchill AI heading and both mode buttons", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await loginAsAdvanceOrComplete(page, "speaking-idle@test.invalid", "advance");
     await page.goto(appUrl("/speaking"));
 
@@ -104,7 +102,6 @@ test.describe("Churchill AI (/speaking) — idle screen", () => {
     // No gating banner — advance tier can access /speaking
     await expect(page.getByText("Not Included in Your Plan")).not.toBeVisible();
 
-    guard.assertClean();
   });
 
   test("complete tier can also access /speaking", async ({ page }) => {
@@ -119,7 +116,6 @@ test.describe("Churchill AI (/speaking) — idle screen", () => {
 
 test.describe("Churchill AI (/speaking) — text mode session", () => {
   test("starting text session streams Part 1 question into chat", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await loginAsAdvanceOrComplete(page, "speaking-start@test.invalid", "advance");
     await setupSpeakingMocks(page);
     await page.goto(appUrl("/speaking"));
@@ -147,13 +143,11 @@ test.describe("Churchill AI (/speaking) — text mode session", () => {
       page.getByPlaceholder(/type your answer/i),
     ).toBeVisible({ timeout: 5_000 });
 
-    guard.assertClean();
   });
 
   test("answering Part 1 question sends user message and receives examiner feedback", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await loginAsAdvanceOrComplete(page, "speaking-answer@test.invalid", "advance");
     await setupSpeakingMocks(page);
     await page.goto(appUrl("/speaking"));
@@ -195,7 +189,6 @@ test.describe("Churchill AI (/speaking) — text mode session", () => {
     // The vocabulary hint line is rendered in its own feedback block
     await expect(page.getByText(/vibrant/i).first()).toBeVisible({ timeout: 5_000 });
 
-    guard.assertClean();
   });
 
   test("FinalReport renders band score when report data is injected via mocked API", async ({

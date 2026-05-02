@@ -1,5 +1,8 @@
+import { test as base, expect } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
+// ── Allowlists ────────────────────────────────────────────────────────────────
+// Console-error messages that are known-benign in the test environment.
 const IGNORED_CONSOLE: RegExp[] = [
   /ChromeDriver/i,
   /chrome-extension/i,
@@ -7,13 +10,25 @@ const IGNORED_CONSOLE: RegExp[] = [
   /\[dbus\]/i,
   /glib/i,
   /NS_ERROR/i,
+  // App-level diagnostic logs that intentionally write to console.error
   /\[Churchill\]/i,
   /\[FreeConv\]/i,
+  // React internal noise in dev builds
   /Warning: ReactDOM/i,
   /unstable_scheduleCallback/i,
   /ResizeObserver loop/i,
+  // "Failed to load resource" console messages are browser-generated duplicates
+  // of HTTP response failures already tracked by the network response listener.
+  // Ignoring them here avoids double-counting and false positives from
+  // infrastructure 502s (Replit dev banner, logo at root path, etc.).
+  // All real API failures are still caught via the network listener.
+  /Failed to load resource/i,
 ];
 
+// Network response URLs that may legitimately return 4xx/5xx in tests.
+// Keep this list narrowly scoped: only Vite/HMR internals, browser-injected
+// requests, Replit dev-infrastructure, and static asset files that browsers
+// request automatically and are unrelated to application logic.
 const IGNORED_NETWORK: RegExp[] = [
   /favicon\.ico/,
   /\.hot\//,
@@ -22,7 +37,14 @@ const IGNORED_NETWORK: RegExp[] = [
   /ws:\/\//,
   /\/vite\//,
   /hot-update/,
+  // Replit development infrastructure scripts (unavailable in test environment)
+  /vite-plugin-dev-banner/,
+  // Static image/font assets requested at the root path before Vite rewrites
+  // the base — these are never API calls and failures are harmless in tests
+  /localhost\/[^/]+\.(png|jpg|jpeg|svg|webp|gif|woff2?|ttf|eot)$/i,
 ];
+
+// ── ErrorGuard ────────────────────────────────────────────────────────────────
 
 export interface ErrorGuard {
   consoleErrors: string[];
@@ -30,12 +52,7 @@ export interface ErrorGuard {
   assertClean(): void;
 }
 
-/**
- * Attaches listeners for console errors and 4xx/5xx HTTP responses.
- * Call guard.assertClean() at the end of a happy-path flow to ensure
- * no unexpected errors were emitted.
- */
-export function attachErrorGuard(page: Page): ErrorGuard {
+function createErrorGuard(page: Page): ErrorGuard {
   const guard: ErrorGuard = {
     consoleErrors: [],
     networkErrors: [],
@@ -66,6 +83,29 @@ export function attachErrorGuard(page: Page): ErrorGuard {
 
   return guard;
 }
+
+// ── Custom test fixture ───────────────────────────────────────────────────────
+// `errorGuard` is auto-attached to every test and asserts clean on teardown.
+// Tests that intentionally trigger error-path flows must mock the relevant
+// endpoints to return HTTP 2xx with an error body (avoiding false 4xx hits).
+
+type TestFixtures = { errorGuard: ErrorGuard };
+
+export const test = base.extend<TestFixtures>({
+  errorGuard: [
+    async ({ page }, use) => {
+      const guard = createErrorGuard(page);
+      await use(guard);
+      guard.assertClean();
+    },
+    { auto: true },
+  ],
+});
+
+export { expect };
+export type { Page };
+
+// ── SSE helpers ───────────────────────────────────────────────────────────────
 
 /** Build a Server-Sent-Events body with a single text delta then DONE. */
 export function sseOneDelta(text: string): string {

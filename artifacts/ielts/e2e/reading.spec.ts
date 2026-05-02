@@ -6,9 +6,8 @@
  *
  * All API calls are intercepted; no live backend required.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard } from "./helpers/fixtures";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -158,7 +157,6 @@ test.describe("Reading — intro tier full flow", () => {
   test("level-picker → A2 → TFNG type → player → answer both questions → submit → result", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await loginAsIntro(page, "reading@test.invalid", "intro");
     await setupReadingMocks(page);
     await page.goto(appUrl("/intro-reading"));
@@ -227,7 +225,6 @@ test.describe("Reading — intro tier full flow", () => {
       page.getByText(/True|Correct/i).first(),
     ).toBeVisible({ timeout: 5_000 });
 
-    guard.assertClean();
   });
 
   test("advance tier is blocked from Reading and sees upgrade CTA", async ({ page }) => {

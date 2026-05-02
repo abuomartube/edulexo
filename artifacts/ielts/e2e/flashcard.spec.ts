@@ -9,9 +9,9 @@
  *   - Progress counter increments
  *   - Intro tier is blocked from /study
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
+import type { Page } from "@playwright/test";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard } from "./helpers/fixtures";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -43,7 +43,7 @@ const MOCK_CATEGORIES = ["Academic", "Business", "Environment", "Technology"];
 
 const MOCK_PROGRESS_RESPONSE = { id: 1, flashcardId: 1, known: true, reviewedAt: new Date().toISOString(), email: "test@test.invalid" };
 
-async function setupFlashcardMocks(page: Parameters<Parameters<typeof test>[1]>[0]["page"]) {
+async function setupFlashcardMocks(page: Page) {
   // Flashcard list
   await page.route("**/api-ielts/flashcards/categories", (route) =>
     route.fulfill({
@@ -186,7 +186,6 @@ test.describe("Flashcard Study — advance tier", () => {
   });
 
   test("study page renders card deck with word and arabic translation", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/study"));
 
     // Page heading
@@ -197,11 +196,9 @@ test.describe("Flashcard Study — advance tier", () => {
     // First card front — English word from mock (rendered in both h2 and p, use first())
     await expect(page.getByText("abandon").first()).toBeVisible({ timeout: 8_000 });
 
-    guard.assertClean();
   });
 
   test("flip card reveals Arabic translation and example sentence", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/study"));
 
     await expect(page.getByText("abandon").first()).toBeVisible({ timeout: 10_000 });
@@ -223,11 +220,9 @@ test.describe("Flashcard Study — advance tier", () => {
       page.getByText(/abandon the project|قررت التخلي/i).first(),
     ).toBeVisible({ timeout: 3_000 });
 
-    guard.assertClean();
   });
 
   test('"Got it!" marks card as known and advances to next card', async ({ page }) => {
-    const guard = attachErrorGuard(page);
 
     // Capture POST /progress calls
     const progressPosts: Array<{ flashcardId: number; known: boolean }> = [];
@@ -259,11 +254,9 @@ test.describe("Flashcard Study — advance tier", () => {
       page.getByText(/benevolent|Well done|Finished|cards left/i).first(),
     ).toBeVisible({ timeout: 6_000 });
 
-    guard.assertClean();
   });
 
   test('"Still Learning" marks card as unknown and advances', async ({ page }) => {
-    const guard = attachErrorGuard(page);
 
     const progressPosts: Array<{ flashcardId: number; known: boolean }> = [];
     page.on("request", (req) => {
@@ -291,7 +284,6 @@ test.describe("Flashcard Study — advance tier", () => {
       .poll(() => progressPosts.some((p) => p.known === false), { timeout: 5_000 })
       .toBe(true);
 
-    guard.assertClean();
   });
 });
 

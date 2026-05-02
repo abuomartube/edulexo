@@ -6,9 +6,8 @@
  *
  * All API calls are intercepted; no live backend or audio playback required.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard } from "./helpers/fixtures";
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -152,7 +151,6 @@ test.describe("Listening — intro tier full flow", () => {
   test("section-list → test-list → player → answer both MCQs → submit → result", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await loginAsIntro(page, "listening@test.invalid", "intro");
     await setupListeningMocks(page);
     await page.goto(appUrl("/intro-listening"));
@@ -210,7 +208,6 @@ test.describe("Listening — intro tier full flow", () => {
       timeout: 5_000,
     });
 
-    guard.assertClean();
   });
 
   test("advance tier is blocked from Listening and sees upgrade CTA", async ({ page }) => {

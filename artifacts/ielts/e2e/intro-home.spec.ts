@@ -3,7 +3,7 @@
  * correct "Your Tools" section with Churchill, Listening, and Reading CTAs
  * as the three primary entry points.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAsIntro, appUrl } from "./helpers/auth";
 
 test.describe("IntroHome (intro tier home screen)", () => {

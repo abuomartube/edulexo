@@ -6,9 +6,8 @@
  * blank-screen JS crashes and routing regressions without duplicating the
  * full-flow coverage in the feature-specific spec files.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard } from "./helpers/fixtures";
 
 // ── Advance tier ──────────────────────────────────────────────────────────────
 
@@ -20,7 +19,6 @@ test.describe("Advance tier — core page smoke tests", () => {
   test("/study (Flashcards) renders study-mode heading without gate screen", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/study"));
     await expect(
       page.getByText("Not Included in Your Plan"),
@@ -29,13 +27,11 @@ test.describe("Advance tier — core page smoke tests", () => {
     await expect(
       page.getByText(/Study Mode|Flashcards|IELTS Words|Word List/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("/speaking (Speaking Topics) renders speaking topics list", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/speaking"));
     await expect(
       page.getByText("Not Included in Your Plan"),
@@ -43,13 +39,11 @@ test.describe("Advance tier — core page smoke tests", () => {
     await expect(
       page.getByText(/Speaking|Topics|Practice/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("/essay-checker (Orwell AI) renders intro branding screen", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/essay-checker"));
     await expect(
       page.getByText("Not Included in Your Plan"),
@@ -58,11 +52,9 @@ test.describe("Advance tier — core page smoke tests", () => {
     await expect(
       page.getByRole("heading", { name: "Orwell AI" }),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("/browse (Word Browser) renders browse heading", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/browse"));
     await expect(
       page.getByText("Not Included in Your Plan"),
@@ -70,11 +62,9 @@ test.describe("Advance tier — core page smoke tests", () => {
     await expect(
       page.getByText(/Browse|Word Browser|Vocabulary|Explore/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("/sentence-builder renders Sentence Builder heading", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     // The route is /sentence-builder (sentence-builder.tsx), not /sentence-check
     await page.goto(appUrl("/sentence-builder"));
     await expect(
@@ -84,7 +74,6 @@ test.describe("Advance tier — core page smoke tests", () => {
     await expect(
       page.getByRole("heading", { name: /Sentence Builder/i }),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 });
 
@@ -98,7 +87,6 @@ test.describe("Complete tier — all features render", () => {
   test("Churchill (/free-conversation) renders topic-source screen", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     // Intercept session fetch so the page doesn't wait for a real DB
     await page.route("**/api-ielts/conversation/sessions", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sessions: [] }) }),
@@ -110,13 +98,11 @@ test.describe("Complete tier — all features render", () => {
     await expect(
       page.getByText(/What would you like to talk about|Choose a topic|Your own topic/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("Listening (/intro-listening) renders section list for complete tier", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.route("**/api-ielts/listening/tests", (route) =>
       route.fulfill({
         status: 200,
@@ -134,13 +120,11 @@ test.describe("Complete tier — all features render", () => {
     await expect(
       page.getByText(/Attenborough AI|Section 1|Listening/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("Reading (/intro-reading) renders level picker for complete tier", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.route("**/api-ielts/reading/levels-types", (route) =>
       route.fulfill({
         status: 200,
@@ -159,11 +143,9 @@ test.describe("Complete tier — all features render", () => {
     await expect(
       page.getByText(/A2|Reading|Level|Pre-intermediate/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("/study (Flashcards) renders for complete tier", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/study"));
     await expect(
       page.getByText("Not Included in Your Plan"),
@@ -171,11 +153,9 @@ test.describe("Complete tier — all features render", () => {
     await expect(
       page.getByText(/Study Mode|Flashcards|IELTS Words|Word List/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("/essay-checker (Orwell AI) renders for complete tier", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/essay-checker"));
     await expect(
       page.getByText("Not Included in Your Plan"),
@@ -183,7 +163,6 @@ test.describe("Complete tier — all features render", () => {
     await expect(
       page.getByRole("heading", { name: "Orwell AI" }),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 });
 
@@ -197,7 +176,6 @@ test.describe("Intro tier — core features render", () => {
   test("Churchill (/free-conversation) renders topic-source screen for intro tier", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.route("**/api-ielts/conversation/sessions", (route) =>
       route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ sessions: [] }) }),
     );
@@ -208,13 +186,11 @@ test.describe("Intro tier — core features render", () => {
     await expect(
       page.getByText(/What would you like to talk about|Choose a topic/i).first(),
     ).toBeVisible({ timeout: 10_000 });
-    guard.assertClean();
   });
 
   test("Listening (/intro-listening) renders Attenborough AI heading with sections", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.route("**/api-ielts/listening/tests", (route) =>
       route.fulfill({
         status: 200,
@@ -234,13 +210,11 @@ test.describe("Intro tier — core features render", () => {
     ).not.toBeVisible({ timeout: 8_000 });
     await expect(page.getByText("Attenborough AI")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("Section 1 — Daily Life")).toBeVisible();
-    guard.assertClean();
   });
 
   test("Reading (/intro-reading) renders level picker with A2 and B1", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.route("**/api-ielts/reading/levels-types", (route) =>
       route.fulfill({
         status: 200,
@@ -261,7 +235,6 @@ test.describe("Intro tier — core features render", () => {
     ).not.toBeVisible({ timeout: 8_000 });
     await expect(page.getByText("A2")).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText("B1")).toBeVisible();
-    guard.assertClean();
   });
 });
 

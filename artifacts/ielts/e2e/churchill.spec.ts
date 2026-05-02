@@ -7,9 +7,9 @@
  * Text mode is used throughout — no microphone required.
  * All API calls are intercepted so no live AI backend is needed.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect, sseOneDelta } from "./helpers/fixtures";
+import type { Page } from "@playwright/test";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard, sseOneDelta } from "./helpers/fixtures";
 
 // ── Shared mock data ─────────────────────────────────────────────────────────
 
@@ -34,7 +34,7 @@ const MOCK_FEEDBACK = {
   },
 };
 
-async function setupChurchillMocks(page: ReturnType<typeof test.info> extends never ? never : Parameters<Parameters<typeof test>[1]>[0]["page"]) {
+async function setupChurchillMocks(page: Page) {
   await page.route("**/api-ielts/conversation/sessions", (route) => {
     if (route.request().method() === "GET") {
       return route.fulfill({
@@ -76,7 +76,6 @@ test.describe("Churchill — intro tier full flow (text mode)", () => {
   test("topic-source → topic-pick → mode-pick → chat → send message → end → session report", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await loginAsIntro(page, "churchill@test.invalid", "intro");
     await setupChurchillMocks(page);
     await page.goto(appUrl("/free-conversation"));
@@ -142,7 +141,6 @@ test.describe("Churchill — intro tier full flow (text mode)", () => {
       page.getByText(/Grammar Corrections|Subject.verb/i).first(),
     ).toBeVisible({ timeout: 5_000 });
 
-    guard.assertClean();
   });
 
   test("custom topic path: topic-input → mode-pick shows the typed topic", async ({
@@ -217,7 +215,6 @@ test.describe("Churchill — voice mode (mic + VAD + Whisper)", () => {
   test("mic permission granted, VAD mounts, speech triggers Whisper, AI reply renders", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     // intro tier can access Churchill free-conversation
     await loginAsIntro(page, "voice@church.invalid", "intro");
 
@@ -264,10 +261,7 @@ test.describe("Churchill — voice mode (mic + VAD + Whisper)", () => {
         createMediaStreamSource() { return fakeSource; }
         createAnalyser() { return fakeAnalyser; }
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).AudioContext = FakeAudioContext;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (window as any).webkitAudioContext = FakeAudioContext;
+      Object.assign(window, { AudioContext: FakeAudioContext, webkitAudioContext: FakeAudioContext });
     });
 
     // ── 2. Intercept the @ricky0123/vad-web Vite pre-bundled chunk ────────────
@@ -384,6 +378,5 @@ test.describe("Churchill — voice mode (mic + VAD + Whisper)", () => {
       page.getByText(/Hello|Let's talk|Travel|exploring/i).first(),
     ).toBeVisible({ timeout: 12_000 });
 
-    guard.assertClean();
   });
 });

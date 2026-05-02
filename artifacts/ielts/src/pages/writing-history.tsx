@@ -250,10 +250,11 @@ export default function WritingHistory() {
     <Layout>
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
-          <Link href="/essay-checker">
-            <a className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-accent">
-              <ArrowLeft className="w-4 h-4" />
-            </a>
+          <Link
+            href="/essay-checker"
+            className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-muted-foreground hover:bg-accent"
+          >
+            <ArrowLeft className="w-4 h-4" />
           </Link>
           <div>
             <h1 className="text-2xl font-extrabold">Writing History</h1>
@@ -375,8 +376,8 @@ export default function WritingHistory() {
           <div className="rounded-2xl border border-border bg-card p-8 text-center text-sm text-muted-foreground">
             <BookOpen className="w-10 h-10 mx-auto mb-3 opacity-40" />
             <p>No submissions yet in this category.</p>
-            <Link href="/essay-checker">
-              <a className="inline-block mt-3 text-primary font-semibold underline">Start writing →</a>
+            <Link href="/essay-checker" className="inline-block mt-3 text-primary font-semibold underline">
+              Start writing →
             </Link>
           </div>
         ) : (

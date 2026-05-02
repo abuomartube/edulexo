@@ -6,7 +6,7 @@
  * 3. Intro-tier students who navigate to advance-only features (Flashcards,
  *    Speaking, Writing) see a similar upgrade prompt.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./helpers/fixtures";
 import { loginAsIntro, loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
 
 const WHATSAPP_PATTERN = /wa\.me/;

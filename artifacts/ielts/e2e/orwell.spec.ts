@@ -10,9 +10,8 @@
  *
  * All API calls are intercepted.
  */
-import { test, expect } from "@playwright/test";
+import { test, expect, sseOneDelta, sseDone } from "./helpers/fixtures";
 import { loginAsAdvanceOrComplete, appUrl } from "./helpers/auth";
-import { attachErrorGuard, sseOneDelta, sseDone } from "./helpers/fixtures";
 
 // ── Mock response payloads ────────────────────────────────────────────────────
 
@@ -117,7 +116,6 @@ test.describe("Orwell AI — advance tier", () => {
   });
 
   test("intro screen renders Orwell AI branding and start button", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/essay-checker"));
 
     // "Orwell AI" appears in the nav link and the h1 — target the heading
@@ -130,13 +128,11 @@ test.describe("Orwell AI — advance tier", () => {
     // Writing History link
     await expect(page.getByText("📚 Writing History")).toBeVisible();
 
-    guard.assertClean();
   });
 
   test("Free Check full flow: intro → select → Free Check → freewriting → submit → result", async ({
     page,
   }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/essay-checker"));
 
     // ── Intro screen: click start ────────────────────────────────────────────
@@ -198,11 +194,9 @@ test.describe("Orwell AI — advance tier", () => {
       timeout: 5_000,
     });
 
-    guard.assertClean();
   });
 
   test("Task 1 structured flow: select → writing → submit → result", async ({ page }) => {
-    const guard = attachErrorGuard(page);
     await page.goto(appUrl("/essay-checker"));
 
     // Navigate to select screen
@@ -242,7 +236,6 @@ test.describe("Orwell AI — advance tier", () => {
       page.getByText(/too short|at least 150/i).first(),
     ).toBeVisible({ timeout: 5_000 });
 
-    guard.assertClean();
   });
 });
 

@@ -13,6 +13,13 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 // ─── Students / Auth ────────────────────────────────────────────────────────
+//
+// Three tables back the intro auth system ported in Task #2:
+//   intro_students     — the student accounts table (registration, approval, session)
+//   intro_settings     — global per-app config (e.g. registration open/closed flag)
+//   intro_access_codes — single-use invite codes that gate registration
+// All three exist in lexo-intro-db/src/schema/students.ts and must be present
+// in ielts-db so ielts-api can manage them without cross-package DB access.
 
 export const introStudents = pgTable("intro_students", {
   id: serial("id").primaryKey(),

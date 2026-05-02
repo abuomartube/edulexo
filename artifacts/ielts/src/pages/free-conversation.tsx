@@ -1498,10 +1498,18 @@ export default function FreeConversationPage() {
           <h2 className="text-xl font-bold text-white">Not Included in Your Plan</h2>
           <p className="text-white/60 text-sm">Free Conversation with Churchill is available in the Intro and Comprehensive plans.</p>
           <p className="text-white/40 text-xs" dir="rtl" lang="ar">هذه الميزة متاحة في باقة المقدّمة أو الشاملة</p>
+          <a
+            href="https://wa.me/4ielts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full py-3 rounded-2xl font-bold text-sm text-center"
+            style={{ background: `linear-gradient(135deg, ${TEAL}, #8B5FF6)`, color: NAVY }}
+          >
+            Upgrade Your Plan
+          </a>
           <button
             onClick={onBack}
-            className="w-full py-3 rounded-2xl font-bold text-sm"
-            style={{ background: `linear-gradient(135deg, ${TEAL}, #8B5FF6)`, color: NAVY }}
+            className="w-full py-2 rounded-2xl text-sm font-medium text-white/60 hover:text-white/80 transition"
           >
             Go Back
           </button>

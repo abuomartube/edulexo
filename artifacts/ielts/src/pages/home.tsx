@@ -10,7 +10,7 @@ import {
   Volume2, Globe, Layers, Award, ExternalLink,
   Flame, Star, HelpCircle, Sparkles, MessageCircle,
   FileText, ArrowLeftRight, ArrowUpDown, BookMarked, Mic, Send, CheckCircle2, Loader2,
-  TrendingUp, PlayCircle
+  TrendingUp, PlayCircle, Headphones
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { DailyPlanSection } from "@/components/daily-plan-section";
@@ -112,18 +112,202 @@ const highlightFeatures = [
   },
 ];
 
+// ── Dedicated dashboard for Intro-tier students ───────────────────────────────
+// Intro students see Churchill / Listening / Reading as the three primary CTAs
+// instead of the advance/complete flashcard-first layout.
+function IntroHome() {
+  const { data: streakInfo } = useStreak();
+  const { data: xpInfo } = useXp();
+
+  const TEAL = "#6B2FE6";
+  const NAVY = "#1E2155";
+
+  return (
+    <Layout>
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+        {/* ── Personalized Daily Study Plan ── */}
+        <DailyPlanSection />
+
+        {/* ── Hero ── */}
+        <section
+          className="relative rounded-3xl overflow-hidden px-8 py-12 shadow-lg"
+          style={{ background: `linear-gradient(135deg, ${TEAL} 0%, ${NAVY} 100%)` }}
+        >
+          <div className="relative z-10 max-w-xl">
+            <span className="inline-block text-xs font-semibold tracking-widest uppercase text-white/70 mb-3">
+              LEXO Intro Plan
+            </span>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight mb-3">
+              Your English Practice Hub
+            </h1>
+            <p className="text-white/80 text-base mb-6 leading-relaxed">
+              AI-powered speaking, listening, and reading tools — designed for A2–B1 learners.
+              <span className="block mt-1 text-white/60 text-sm" dir="rtl" lang="ar">
+                تحدث، استمع، واقرأ مع الذكاء الاصطناعي
+              </span>
+            </p>
+          </div>
+          <Mic className="absolute -bottom-6 -right-6 w-40 h-40 text-white/8 rotate-12" />
+          <div className="absolute top-0 right-0 w-56 h-56 rounded-full bg-white/5 -translate-y-1/3 translate-x-1/3" />
+        </section>
+
+        {/* ── Three primary tool CTAs ── */}
+        <section>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Your Tools</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Churchill */}
+            <Link href="/free-conversation" className="block group">
+              <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-6 hover:border-teal-400/60 hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center mb-4">
+                  <Mic className="w-6 h-6 text-teal-600" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-1">Churchill Free Conversation</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                  Practice speaking English naturally with an AI partner — no scripts, just real conversation.
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-2" dir="rtl" lang="ar">تحدث بحرية مع الذكاء الاصطناعي</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-teal-600 text-sm font-semibold group-hover:gap-2 transition-all">
+                  Start talking →
+                </span>
+              </div>
+            </Link>
+
+            {/* Attenborough Listening */}
+            <Link href="/intro-listening" className="block group">
+              <div className="bg-card border border-indigo-300/40 dark:border-indigo-600/30 rounded-2xl p-6 hover:border-indigo-400/60 hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-4">
+                  <Headphones className="w-6 h-6 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-1">Attenborough AI Listening</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                  A2-level listening tests with AI-read audio — 4 IELTS-style sections with instant scoring.
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-2" dir="rtl" lang="ar">اختبارات الاستماع بصوت الذكاء الاصطناعي</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-indigo-600 text-sm font-semibold group-hover:gap-2 transition-all">
+                  Start listening →
+                </span>
+              </div>
+            </Link>
+
+            {/* Hemingway Reading */}
+            <Link href="/intro-reading" className="block group">
+              <div className="bg-card border border-violet-300/40 dark:border-violet-600/30 rounded-2xl p-6 hover:border-violet-400/60 hover:shadow-md transition-all h-full flex flex-col">
+                <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mb-4">
+                  <BookOpen className="w-6 h-6 text-violet-600" />
+                </div>
+                <h3 className="text-lg font-bold text-foreground mb-1">Hemingway AI Reading</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+                  A2 &amp; B1 reading passages — 10 question types, 5 passages each. IELTS-style comprehension practice.
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-2" dir="rtl" lang="ar">تدريب القراءة بأسلوب IELTS</p>
+                <span className="mt-4 inline-flex items-center gap-1 text-violet-600 text-sm font-semibold group-hover:gap-2 transition-all">
+                  Start reading →
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
+
+        {/* ── Course Lessons ── */}
+        <section>
+          <Link href="/lessons">
+            <a className="group block rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 p-6 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01]">
+              <div className="flex items-center gap-5">
+                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0">
+                  <PlayCircle className="w-8 h-8 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="inline-block text-[10px] font-bold tracking-widest uppercase text-white/80 mb-1">
+                    Video Course
+                  </span>
+                  <h2 className="text-xl font-extrabold text-white leading-tight">the course lessons</h2>
+                  <p className="text-white/85 text-sm mt-1">Watch your level's full IELTS course — learn at your own pace.</p>
+                </div>
+                <ExternalLink className="w-5 h-5 text-white/80 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block" />
+              </div>
+            </a>
+          </Link>
+        </section>
+
+        {/* ── Streak + XP ── */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-card border border-border rounded-2xl p-6 flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center shrink-0">
+              <Flame className="w-7 h-7 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Daily Streak</p>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-extrabold text-foreground">{streakInfo?.streak ?? 0}</span>
+                <span className="text-lg font-semibold text-muted-foreground mb-1">day{streakInfo?.streak !== 1 ? "s" : ""}</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{streakInfo?.totalDays ?? 0} total study days</p>
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded-2xl p-6 flex items-center gap-5">
+            <div className="w-14 h-14 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-7 h-7 text-violet-500" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-muted-foreground">Experience</p>
+              <div className="flex items-end gap-1">
+                <span className="text-4xl font-extrabold text-foreground">{xpInfo?.total ?? 0}</span>
+                <span className="text-lg font-semibold text-muted-foreground mb-1">XP</span>
+              </div>
+              <p className="text-xs text-violet-600 dark:text-violet-400 font-semibold mt-1 truncate">
+                {xpInfo?.levelName ?? "🌱 Starter"}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Instructor / About ── */}
+        <section className="bg-card border border-border rounded-3xl overflow-hidden shadow-sm">
+          <div className="flex flex-col md:flex-row">
+            <div className="md:w-48 shrink-0">
+              <img src="/owner.png" alt="Instructor" className="w-full h-auto md:h-full md:w-48 object-cover object-center block" />
+            </div>
+            <div className="p-7 flex flex-col justify-center">
+              <span className="text-xs font-semibold tracking-widest uppercase text-primary mb-2">Meet Your Instructor</span>
+              <h2 className="text-xl font-extrabold text-foreground mb-1">Abu Omar</h2>
+              <p className="text-primary font-semibold mb-3">Your Guide to Band 7+</p>
+              <p className="text-muted-foreground leading-relaxed mb-4 text-sm">
+                Created by the team behind{" "}
+                <a href="https://www.4ielts.com" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold hover:underline">
+                  4IELTS.com
+                </a>
+                {" "}— dedicated to helping Arabic-speaking students achieve their target IELTS band.
+              </p>
+              <a
+                href="https://wa.me/4ielts"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="self-start inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 hover:bg-green-600 text-white text-sm font-semibold transition-colors shadow-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Contact on WhatsApp
+              </a>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </Layout>
+  );
+}
+
 export default function Home() {
   const { data: summary, isLoading } = useGetProgressSummary();
   const { data: wordOfDay } = useWordOfDay();
   const { data: streakInfo } = useStreak();
   const { data: xpInfo } = useXp();
 
-  // Use the canonical canAccess helper from tier.ts — getTier() already handles
-  // the lexo-ielts:intro_email fallback detection for intro students.
-  const canAccessIntroFeatures = canAccess("churchill");
   // Intro students get a dedicated tool-picker layout (advance/complete get the
   // flashcard-first layout, which is also the default for complete students).
   const isIntroTier = getTier() === "intro";
+
+  if (isIntroTier) return <IntroHome />;
 
   const speak = (text: string) => {
     if ("speechSynthesis" in window) {
@@ -314,56 +498,18 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">Words you got wrong — review and master them.</p>
             </div>
           </Link>
-          {isIntroTier ? (
-            <div className="flex flex-col gap-3 h-full">
-              <Link href="/free-conversation" data-tour="ai-tools" className="block flex-1">
-                <div className="bg-card border border-teal-300/40 dark:border-teal-600/30 rounded-2xl p-5 hover:border-teal-400/60 transition-colors h-full">
-                  <div className="flex gap-2 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
-                      <Mic className="w-5 h-5 text-teal-600" />
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-foreground mb-1">Churchill Free Conversation</h3>
-                  <p className="text-sm text-muted-foreground">Practice speaking English in a free, natural conversation with AI.</p>
-                </div>
-              </Link>
-              <Link href="/intro-listening" className="block">
-                <div className="bg-card border border-indigo-300/40 dark:border-indigo-600/30 rounded-2xl p-5 hover:border-indigo-400/60 transition-colors">
-                  <div className="flex gap-2 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-                      <Volume2 className="w-5 h-5 text-indigo-600" />
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-foreground mb-1">Attenborough AI Listening</h3>
-                  <p className="text-sm text-muted-foreground">A2-level listening tests with AI-read audio — 4 IELTS sections.</p>
-                </div>
-              </Link>
-              <Link href="/intro-reading" className="block">
-                <div className="bg-card border border-violet-300/40 dark:border-violet-600/30 rounded-2xl p-5 hover:border-violet-400/60 transition-colors">
-                  <div className="flex gap-2 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                      <BookOpen className="w-5 h-5 text-violet-600" />
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-foreground mb-1">Hemingway AI Reading</h3>
-                  <p className="text-sm text-muted-foreground">A2 &amp; B1 reading passages — 10 question types, 5 passages each.</p>
-                </div>
-              </Link>
-            </div>
-          ) : (
-            <div data-tour="ai-tools" className="bg-card border border-border rounded-2xl p-5">
-              <div className="flex gap-2 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
-                  <Mic className="w-5 h-5 text-teal-600" />
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-violet-600" />
-                </div>
+          <div data-tour="ai-tools" className="bg-card border border-border rounded-2xl p-5">
+            <div className="flex gap-2 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-900/20 flex items-center justify-center">
+                <Mic className="w-5 h-5 text-teal-600" />
               </div>
-              <h3 className="font-bold text-foreground mb-1">Churchill & Orwell AI</h3>
-              <p className="text-sm text-muted-foreground">Speaking practice + Writing grading by AI.</p>
+              <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-violet-600" />
+              </div>
             </div>
-          )}
+            <h3 className="font-bold text-foreground mb-1">Churchill & Orwell AI</h3>
+            <p className="text-sm text-muted-foreground">Speaking practice + Writing grading by AI.</p>
+          </div>
           <div data-tour="tests" className="bg-card border border-border rounded-2xl p-5">
             <div className="flex gap-2 mb-3">
               <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-900/20 flex items-center justify-center">

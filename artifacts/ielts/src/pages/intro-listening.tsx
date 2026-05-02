@@ -103,9 +103,17 @@ export default function IntroListening() {
           <p className="text-muted-foreground/60 text-sm max-w-sm" dir="rtl" lang="ar">
             هذه الميزة متاحة في باقة المقدّمة أو الشاملة
           </p>
+          <a
+            href="https://wa.me/4ielts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+          >
+            Upgrade Your Plan
+          </a>
           <button
             onClick={() => navigate("/")}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-muted-foreground text-sm hover:text-foreground transition"
           >
             <ArrowLeft className="w-4 h-4" /> Back to home
           </button>

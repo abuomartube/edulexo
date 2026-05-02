@@ -125,8 +125,16 @@ export default function IntroReading() {
             هذه الميزة متاحة في باقة المقدّمة أو الشاملة
           </p>
           <a
+            href="https://wa.me/4ielts"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+          >
+            Upgrade Your Plan
+          </a>
+          <a
             href={BASE_URL + "/"}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition"
+            className="flex items-center gap-2 px-5 py-2 rounded-xl text-muted-foreground text-sm hover:text-foreground transition"
           >
             <ArrowLeft className="w-4 h-4" /> Back to home
           </a>

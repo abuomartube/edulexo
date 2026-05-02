@@ -49,7 +49,16 @@ export const englishEnrollmentsTable = pgTable(
 
 export const englishAccessCodesTable = pgTable("english_access_codes", {
   id: uuid("id").primaryKey().defaultRandom(),
-  code: varchar("code", { length: 32 }).notNull().unique(),
+  // Pinned to the postgres-default constraint name (`*_key`) instead of
+  // drizzle's `*_unique` convention because the live database — including
+  // production — was originally created with the `_key` suffix. Renaming
+  // the constraint shows up to Replit's publish-time dev↔prod diff as a
+  // drop+add, which the validator refuses as potentially data-losing.
+  // Keeping the explicit `_key` name keeps schema, dev DB, and prod DB
+  // perfectly aligned.
+  code: varchar("code", { length: 32 })
+    .notNull()
+    .unique("english_access_codes_code_key"),
   tier: varchar("tier", { length: 16 }).notNull(),
   status: varchar("status", { length: 16 }).notNull().default("active"),
   maxUses: integer("max_uses").notNull().default(1),

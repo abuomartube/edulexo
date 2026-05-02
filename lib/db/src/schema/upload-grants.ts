@@ -21,7 +21,11 @@ export const uploadGrantsTable = pgTable(
   "upload_grants",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    objectPath: text("object_path").notNull().unique(),
+    // See note in `english.ts` — pinning the constraint name to the live
+    // DB's existing `*_key` to avoid a publish-time rename diff.
+    objectPath: text("object_path")
+      .notNull()
+      .unique("upload_grants_object_path_key"),
     userId: uuid("user_id")
       .notNull()
       .references(() => usersTable.id, { onDelete: "cascade" }),

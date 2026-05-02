@@ -67,7 +67,11 @@ export const paymentsTable = pgTable(
     currency: varchar("currency", { length: 3 }).notNull().default("SAR"),
     provider: varchar("provider", { length: 16 }).notNull(),
     mode: varchar("mode", { length: 8 }).notNull(),
-    providerSessionId: text("provider_session_id").unique(),
+    // See note in `english.ts` — pinning the constraint name to the live
+    // DB's existing `*_key` to avoid a publish-time rename diff.
+    providerSessionId: text("provider_session_id").unique(
+      "payments_provider_session_id_key",
+    ),
     providerPaymentId: text("provider_payment_id"),
     status: varchar("status", { length: 16 }).notNull().default("created"),
     failureReason: text("failure_reason"),

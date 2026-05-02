@@ -24,7 +24,11 @@ export const certificatesTable = pgTable(
     course: varchar("course", { length: 16 }).notNull(),
     tier: varchar("tier", { length: 32 }).notNull(),
     enrollmentId: uuid("enrollment_id"),
-    certificateId: text("certificate_id").notNull().unique(),
+    // See note in `english.ts` — pinning the constraint name to the live
+    // DB's existing `*_key` to avoid a publish-time rename diff.
+    certificateId: text("certificate_id")
+      .notNull()
+      .unique("certificates_certificate_id_key"),
     completionDate: date("completion_date").notNull(),
     issuedAt: timestamp("issued_at", { withTimezone: true })
       .notNull()

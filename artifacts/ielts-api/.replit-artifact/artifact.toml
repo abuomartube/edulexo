@@ -7,7 +7,7 @@ id = "artifacts/ielts-api"
 [[services]]
 localPort = 8082
 name = "IELTS API Server"
-paths = ["/api-ielts"]
+paths = ["/api-ielts", "/app-ielts-intro"]
 
 [services.development]
 run = "pnpm --filter @workspace/ielts-api run dev"

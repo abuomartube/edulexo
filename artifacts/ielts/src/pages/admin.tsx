@@ -3,7 +3,8 @@ import {
   Eye, EyeOff, Loader2, CheckCircle2, XCircle, Clock, Trash2, RefreshCw,
   Lock, KeyRound, Users, AlertCircle, Calendar, CalendarX, Search,
   Download, Star, MessageSquare, ShieldCheck, KeySquare, Reply, Send,
-  Pencil, Image as ImageIcon, Upload, BadgeCheck, Volume2, ChevronDown, ChevronRight as ChevronRightIcon
+  Pencil, Image as ImageIcon, Upload, BadgeCheck, Volume2, ChevronDown, ChevronRight as ChevronRightIcon,
+  BookOpen
 } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -30,7 +31,7 @@ interface Review {
   adminReplyAt: string | null;
 }
 
-type Tab = "requests" | "reviews" | "settings" | "intro" | "listening";
+type Tab = "requests" | "reviews" | "settings" | "intro" | "listening" | "reading";
 type Filter = "all" | "pending" | "approved" | "rejected";
 
 interface IntroStudent {
@@ -621,6 +622,11 @@ export default function AdminPage() {
             <BadgeCheck className="w-4 h-4" />
             Listening
           </button>
+          <button onClick={() => setTab("reading")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${tab === "reading" ? "bg-violet-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:bg-gray-50"}`}>
+            <BookOpen className="w-4 h-4" />
+            Reading
+          </button>
         </div>
 
         {/* ── REQUESTS TAB ─────────────────────────────────────────────────────── */}
@@ -1129,6 +1135,7 @@ export default function AdminPage() {
         {/* ── INTRO STUDENTS TAB ───────────────────────────────────────────────── */}
         {/* ── LISTENING TAB ─────────────────────────────────────────────────── */}
         {tab === "listening" && <ListeningAdminPanel adminPassword={adminPassword} />}
+        {tab === "reading" && <ReadingAdminPanel adminPassword={adminPassword} />}
 
         {tab === "intro" && (() => {
           const filteredIntro = introStudents.filter(s =>
@@ -1819,6 +1826,279 @@ function ListeningAdminPanel({ adminPassword }: { adminPassword: string }) {
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Reading Admin Panel ───────────────────────────────────────────────────────
+
+interface ReadingItemMeta {
+  id: number; slug: string; level: string; type: string;
+  title: string; sortOrder: number; questionCount: number;
+  createdAt: string; updatedAt: string;
+}
+
+interface ReadingAnalyticsRow {
+  slug: string; level: string; type: string; attempts: number; avgPercent: number;
+}
+
+function ReadingAdminPanel({ adminPassword }: { adminPassword: string }) {
+  const API = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+  const headers = { "Content-Type": "application/json", "x-admin-password": adminPassword };
+  const headersGet = { "x-admin-password": adminPassword };
+
+  const [items, setItems] = useState<ReadingItemMeta[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [addJson, setAddJson] = useState("");
+  const [addError, setAddError] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const [editingSlug, setEditingSlug] = useState<string | null>(null);
+  const [editJson, setEditJson] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [analytics, setAnalytics] = useState<ReadingAnalyticsRow[] | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const res = await fetch(`${API}/api-ielts/reading/admin/items`, { headers: headersGet });
+      if (!res.ok) { setLoadError("Failed to load items"); return; }
+      const data = await res.json();
+      setItems(data.items ?? []);
+    } catch {
+      setLoadError("Network error");
+    } finally {
+      setLoading(false);
+    }
+  }, [adminPassword]);
+
+  useEffect(() => { fetchItems(); }, [fetchItems]);
+
+  const handleAdd = async () => {
+    setAddError(null);
+    setAdding(true);
+    try {
+      let payload: unknown;
+      try { payload = JSON.parse(addJson); } catch { setAddError("Invalid JSON"); setAdding(false); return; }
+      const res = await fetch(`${API}/api-ielts/reading/admin/items`, {
+        method: "POST", headers, body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) { setAddError(data.error ?? "Create failed"); return; }
+      setAddJson(""); setShowAdd(false);
+      await fetchItems();
+    } finally { setAdding(false); }
+  };
+
+  const handleDelete = async (slug: string) => {
+    if (!confirm(`Delete reading item "${slug}"?`)) return;
+    try {
+      const res = await fetch(`${API}/api-ielts/reading/admin/items/${slug}`, { method: "DELETE", headers });
+      if (!res.ok) { const d = await res.json(); alert(d.error ?? "Delete failed"); return; }
+      await fetchItems();
+    } catch { alert("Network error"); }
+  };
+
+  const handleEdit = async (slug: string) => {
+    try {
+      const res = await fetch(`${API}/api-ielts/reading/admin/items/${slug}`, { headers: headersGet });
+      if (!res.ok) { alert("Failed to load item"); return; }
+      const data = await res.json();
+      setEditJson(JSON.stringify(data.item, null, 2));
+      setEditingSlug(slug);
+      setEditError(null);
+    } catch { alert("Network error"); }
+  };
+
+  const handleSave = async () => {
+    if (!editingSlug) return;
+    setEditError(null);
+    setSaving(true);
+    try {
+      let payload: unknown;
+      try { payload = JSON.parse(editJson); } catch { setEditError("Invalid JSON"); setSaving(false); return; }
+      const res = await fetch(`${API}/api-ielts/reading/admin/items/${editingSlug}`, {
+        method: "PUT", headers, body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) { setEditError(data.error ?? "Save failed"); return; }
+      setEditingSlug(null); setEditJson("");
+      await fetchItems();
+    } finally { setSaving(false); }
+  };
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true);
+    try {
+      const res = await fetch(`${API}/api-ielts/reading/admin/analytics`, { headers: headersGet });
+      if (!res.ok) { alert("Failed to load analytics"); return; }
+      const data = await res.json();
+      setAnalytics(data.byItem ?? []);
+      setShowAnalytics(true);
+    } catch { alert("Network error"); } finally { setAnalyticsLoading(false); }
+  };
+
+  const byLevel: Record<string, ReadingItemMeta[]> = {};
+  for (const it of items) {
+    const key = it.level.toUpperCase();
+    (byLevel[key] ??= []).push(it);
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-violet-600" /> Reading Items
+        </h2>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={fetchAnalytics}
+            disabled={analyticsLoading}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            {analyticsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
+            Analytics
+          </button>
+          <button
+            onClick={() => { setShowAdd((v) => !v); setAddError(null); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-violet-600 text-white hover:bg-violet-700 transition-colors"
+          >
+            + Add Item
+          </button>
+        </div>
+      </div>
+
+      {loadError && <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm">{loadError}</div>}
+
+      {showAnalytics && analytics && (
+        <div className="rounded-2xl border border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/10 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-bold text-gray-900 dark:text-white text-sm">Attempt Analytics</h3>
+            <button onClick={() => setShowAnalytics(false)} className="text-xs text-gray-500 hover:text-gray-700">Close</button>
+          </div>
+          {analytics.length === 0 ? (
+            <p className="text-sm text-gray-500">No attempts yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                    <th className="py-2 pr-3">Slug</th>
+                    <th className="py-2 pr-3">Level</th>
+                    <th className="py-2 pr-3">Type</th>
+                    <th className="py-2 pr-3">Attempts</th>
+                    <th className="py-2">Avg %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {analytics.sort((a, b) => b.attempts - a.attempts).map((row) => (
+                    <tr key={row.slug} className="border-b border-gray-100 dark:border-gray-800">
+                      <td className="py-1.5 pr-3 font-mono text-gray-700 dark:text-gray-300">{row.slug}</td>
+                      <td className="py-1.5 pr-3 text-gray-600 dark:text-gray-400">{row.level.toUpperCase()}</td>
+                      <td className="py-1.5 pr-3 text-gray-600 dark:text-gray-400">{row.type}</td>
+                      <td className="py-1.5 pr-3 font-bold text-gray-900 dark:text-white">{row.attempts}</td>
+                      <td className="py-1.5 font-bold" style={{ color: row.avgPercent >= 70 ? "#22c55e" : row.avgPercent >= 50 ? "#f59e0b" : "#ef4444" }}>
+                        {row.avgPercent}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showAdd && (
+        <div className="rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/10 p-4 space-y-3">
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm">Add Reading Item (JSON)</h3>
+          <textarea
+            value={addJson}
+            onChange={(e) => setAddJson(e.target.value)}
+            rows={12}
+            placeholder='{"slug":"a2-mcq-6","level":"a2","type":"mcq","title":"...","instructions":"...","passage":"...","questions":[...],"answerKey":{...}}'
+            className="w-full rounded-xl px-3 py-2.5 text-xs font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-900 border border-amber-300 dark:border-amber-700 outline-none resize-y"
+          />
+          {addError && <p className="text-red-600 text-xs">{addError}</p>}
+          <div className="flex gap-2">
+            <button onClick={handleAdd} disabled={adding || !addJson.trim()} className="px-4 py-2 rounded-xl text-sm font-medium bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2">
+              {adding && <Loader2 className="w-4 h-4 animate-spin" />} Save Item
+            </button>
+            <button onClick={() => { setShowAdd(false); setAddJson(""); setAddError(null); }} className="px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {editingSlug && (
+        <div className="rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/10 p-4 space-y-3">
+          <h3 className="font-bold text-gray-900 dark:text-white text-sm">Edit: <span className="font-mono">{editingSlug}</span></h3>
+          <textarea
+            value={editJson}
+            onChange={(e) => setEditJson(e.target.value)}
+            rows={16}
+            className="w-full rounded-xl px-3 py-2.5 text-xs font-mono text-gray-900 dark:text-white bg-white dark:bg-gray-900 border border-indigo-300 dark:border-indigo-700 outline-none resize-y"
+          />
+          {editError && <p className="text-red-600 text-xs">{editError}</p>}
+          <div className="flex gap-2">
+            <button onClick={handleSave} disabled={saving} className="px-4 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />} Save Changes
+            </button>
+            <button onClick={() => { setEditingSlug(null); setEditJson(""); setEditError(null); }} className="px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-sm text-gray-500"><Loader2 className="w-4 h-4 animate-spin" /> Loading items...</div>
+      ) : (
+        <div className="space-y-6">
+          {Object.entries(byLevel).sort(([a], [b]) => a.localeCompare(b)).map(([level, levelItems]) => (
+            <div key={level}>
+              <h3 className="text-sm font-black tracking-widest text-violet-600 dark:text-violet-400 uppercase mb-3">{level}</h3>
+              <div className="space-y-2">
+                {levelItems.map((it) => (
+                  <div key={it.id} className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-mono text-xs text-gray-500">{it.slug}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-violet-100 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 font-medium">{it.type}</span>
+                      </div>
+                      <div className="font-medium text-gray-900 dark:text-white text-sm truncate mt-0.5">{it.title}</div>
+                      <div className="text-xs text-gray-400">{it.questionCount} questions</div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={() => handleEdit(it.slug)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(it.slug)}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {items.length === 0 && <p className="text-sm text-gray-500 text-center py-8">No reading items yet. Add one above.</p>}
         </div>
       )}
     </div>

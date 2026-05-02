@@ -336,6 +336,17 @@ export default function Home() {
                   <p className="text-sm text-muted-foreground">A2-level listening tests with AI-read audio — 4 IELTS sections.</p>
                 </div>
               </Link>
+              <Link href="/intro-reading" className="block">
+                <div className="bg-card border border-violet-300/40 dark:border-violet-600/30 rounded-2xl p-5 hover:border-violet-400/60 transition-colors">
+                  <div className="flex gap-2 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-violet-600" />
+                    </div>
+                  </div>
+                  <h3 className="font-bold text-foreground mb-1">Hemingway AI Reading</h3>
+                  <p className="text-sm text-muted-foreground">A2 &amp; B1 reading passages — 10 question types, 5 passages each.</p>
+                </div>
+              </Link>
             </div>
           ) : (
             <div data-tour="ai-tools" className="bg-card border border-border rounded-2xl p-5">

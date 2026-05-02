@@ -23,6 +23,7 @@ import introAuthRouter from "./intro-auth";
 import whisperRouter from "./whisper";
 import conversationRouter from "./conversation";
 import introListeningRouter, { listeningAdminRouter, listeningStorageRouter } from "./intro-listening";
+import introReadingRouter, { readingAdminRouter } from "./intro-reading";
 
 const router: IRouter = Router();
 
@@ -52,5 +53,7 @@ router.use(spellItRouter);
 router.use(introListeningRouter);
 router.use(listeningAdminRouter);
 router.use(listeningStorageRouter);
+router.use(introReadingRouter);
+router.use(readingAdminRouter);
 
 export default router;

@@ -173,7 +173,7 @@ export default function IntroListening() {
           section={section}
           tests={tests}
           onBack={() => void loadSections()}
-          onChooseTest={(testId, mode) => void loadTest(testId, mode, stage)}
+          onChooseTest={(testId, mode) => void loadTest(testId, mode)}
         />
       </Layout>
     );
@@ -193,23 +193,29 @@ export default function IntroListening() {
     </Layout>
   );
 
-  async function loadTest(testId: string, mode: "take" | "review", currentStage: Extract<Stage, { kind: "test-list" }>) {
-    const res = await fetch(`${BASE_URL}/api-ielts/listening/tests/${testId}`, { headers: getAuthHeaders() });
-    const data = await res.json() as {
-      test: TestPayload; alreadyCompleted?: boolean;
-      attempt?: Attempt;
-    };
-    if (mode === "review" || data.alreadyCompleted) {
-      if (data.attempt && data.test) {
-        setStage({ kind: "result", attempt: data.attempt, test: data.test });
+  async function loadTest(testId: string, mode: "take" | "review") {
+    try {
+      const res = await fetch(`${BASE_URL}/api-ielts/listening/tests/${testId}`, { headers: getAuthHeaders() });
+      if (!res.ok) {
+        setLoadError("Could not load test. Please try again.");
+        return;
       }
-    } else {
-      if (data.test) {
-        setStage({ kind: "player", test: data.test, prefetchedAttempt: data.attempt });
+      const data = await res.json() as {
+        test: TestPayload; alreadyCompleted?: boolean;
+        attempt?: Attempt;
+      };
+      if (mode === "review" || data.alreadyCompleted) {
+        if (data.attempt && data.test) {
+          setStage({ kind: "result", attempt: data.attempt, test: data.test });
+        }
+      } else {
+        if (data.test) {
+          setStage({ kind: "player", test: data.test, prefetchedAttempt: data.attempt });
+        }
       }
+    } catch {
+      setLoadError("Could not load test. Please try again.");
     }
-    return;
-    void currentStage;
   }
 }
 

@@ -46,6 +46,10 @@ import { findStaticAudio } from "../lib/staticAudio";
 
 // ── Auth helpers ─────────────────────────────────────────────────────────────
 
+// getStudentId is the unified intro-tier gate: it verifies the HMAC token
+// and then looks up the student in the `introStudents` table. A non-null
+// return value means the caller is an authenticated intro-tier student.
+// Regular IELTS students (not in introStudents) receive null → 401.
 async function getStudentId(req: Request): Promise<number | null> {
   const email = verifyStudentEmail(req);
   if (!email) return null;

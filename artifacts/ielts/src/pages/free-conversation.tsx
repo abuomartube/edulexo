@@ -77,11 +77,9 @@ interface FeedbackPayload {
 
 function getAuthHeaders(): Record<string, string> {
   try {
-    const raw = localStorage.getItem("4ielts_email");
-    if (raw) {
-      const { email, token } = JSON.parse(raw) as { email?: string; token?: string };
-      if (email && token) return { "x-student-email": email, "x-student-token": token };
-    }
+    // Use ONLY the intro-specific auth keys. Do NOT fall back to "4ielts_email"
+    // because that key is shared by advance/complete tier users, which would cause
+    // verifyIntroTier to 403 even for legitimate intro students.
     const email = localStorage.getItem("lexo-ielts:intro_email");
     const token = localStorage.getItem("lexo-ielts:intro_token");
     if (email && token) return { "x-student-email": email, "x-student-token": token };

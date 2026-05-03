@@ -27,6 +27,7 @@ import ChatDmThread from "@/pages/ChatDmThread";
 import ChatLeaderboard from "@/pages/ChatLeaderboard";
 import ChatShowcase from "@/pages/ChatShowcase";
 import ChatScreenMockup from "@/pages/ChatScreenMockup";
+import RoomSelectionMockup from "@/pages/RoomSelectionMockup";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -127,6 +128,7 @@ export default function App() {
         </Route>
         <Route path="/chat-showcase" component={ChatShowcase} />
         <Route path="/chat-screen" component={ChatScreenMockup} />
+        <Route path="/room-selection" component={RoomSelectionMockup} />
         <Route path="/chat/leaderboard">
           <ProtectedRoute>
             <ChatLeaderboard />

@@ -1,6 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 import { bootstrapAdminFromEnv } from "./lib/admin-bootstrap";
+import { bootstrapTierPrices } from "./lib/price-bootstrap";
 
 const rawPort = process.env["PORT"];
 
@@ -25,4 +26,5 @@ app.listen(port, (err) => {
   logger.info({ port }, "Server listening");
 
   void bootstrapAdminFromEnv();
+  void bootstrapTierPrices();
 });

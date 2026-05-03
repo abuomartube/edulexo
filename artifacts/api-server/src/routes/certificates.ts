@@ -6,6 +6,7 @@ import {
   usersTable,
   certificatesTable,
   CERTIFICATE_COURSE_VALUES,
+  ISSUABLE_CERTIFICATE_COURSE_VALUES,
 } from "@workspace/db";
 import { requireAuth, requireAdmin, getUserById } from "../lib/auth";
 import { generateCertificatePdf } from "../lib/certificate-pdf";
@@ -68,7 +69,7 @@ async function allocateCertificateId(): Promise<string> {
 
 const IssueBody = z.object({
   userId: z.string().uuid(),
-  course: z.enum(CERTIFICATE_COURSE_VALUES),
+  course: z.enum(ISSUABLE_CERTIFICATE_COURSE_VALUES),
   tier: z
     .string()
     .trim()

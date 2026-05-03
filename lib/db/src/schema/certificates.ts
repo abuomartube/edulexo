@@ -14,6 +14,10 @@ import { usersTable } from "./users";
 export const CERTIFICATE_COURSE_VALUES = ["intro", "english"] as const;
 export type CertificateCourse = (typeof CERTIFICATE_COURSE_VALUES)[number];
 
+export const ISSUABLE_CERTIFICATE_COURSE_VALUES = ["english"] as const;
+export type IssuableCertificateCourse =
+  (typeof ISSUABLE_CERTIFICATE_COURSE_VALUES)[number];
+
 export const certificatesTable = pgTable(
   "certificates",
   {

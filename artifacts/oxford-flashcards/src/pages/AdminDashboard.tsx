@@ -2932,8 +2932,8 @@ function IssueCertificateModal({
   const t = useT();
   const [studentSearch, setStudentSearch] = useState("");
   const [studentId, setStudentId] = useState<string>("");
-  const [course, setCourse] = useState<CertificateCourse>("intro");
-  const [tier, setTier] = useState<string>(CERT_COURSE_TIERS.intro[0]!);
+  const [course, setCourse] = useState<CertificateCourse>("english");
+  const [tier, setTier] = useState<string>(CERT_COURSE_TIERS.english[0]!);
   const [completionDate, setCompletionDate] = useState<string>(() =>
     new Date().toISOString().slice(0, 10),
   );
@@ -3051,7 +3051,6 @@ function IssueCertificateModal({
                 className="w-full rounded-xl border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 data-testid="cert-issue-course"
               >
-                <option value="intro">{t("admin.certs.course.intro")}</option>
                 <option value="english">{t("admin.certs.course.english")}</option>
               </select>
             </Field>

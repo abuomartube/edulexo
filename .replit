@@ -83,5 +83,8 @@ BANK_ACCOUNT_NAME_AR = "شركة الاختبار الملهم"
 BANK_IBAN = "SA4680000133608016497687"
 BANK_SWIFT = "RJHISARI"
 
+[userenv.production]
+ADMIN_EMAIL = "testlit2030@outlook.com"
+
 [nix]
 channel = "stable-25_05"

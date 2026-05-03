@@ -14,7 +14,7 @@ import {
   ChatScrollBg,
   Avatar,
 } from "@/components/chat-ui";
-import { MOCK_ROOMS, USERS, type RoomIconKey } from "@/data/chat";
+import { MOCK_ROOMS, ROOM_META, USERS, type RoomIconKey } from "@/data/chat";
 
 function roomIcon(key: RoomIconKey) {
   const cls = "text-white";
@@ -31,17 +31,6 @@ function roomIcon(key: RoomIconKey) {
       return <Mic size={18} className={cls} />;
   }
 }
-
-const ROOM_META: Record<
-  string,
-  { unread: number; lastActivity: string; peek: number[] }
-> = {
-  "1": { unread: 0, lastActivity: "now", peek: [7, 3, 0] },
-  "2": { unread: 12, lastActivity: "2m", peek: [0, 1, 2] },
-  "3": { unread: 0, lastActivity: "live", peek: [0, 1, 2] },
-  "4": { unread: 3, lastActivity: "8m", peek: [6, 8, 2] },
-  "5": { unread: 47, lastActivity: "1m", peek: [5, 9, 3] },
-};
 
 export function RoomSelectionTile() {
   const visible = MOCK_ROOMS.slice(0, 4);

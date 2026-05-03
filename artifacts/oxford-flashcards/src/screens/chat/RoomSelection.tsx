@@ -4,6 +4,7 @@ import {
   GraduationCap,
   MessageCircle,
   PenLine,
+  Bell,
 } from "lucide-react";
 import {
   Header,
@@ -14,10 +15,11 @@ import {
   PageBackdrop,
   BottomNav,
   ChatScrollBg,
+  Avatar,
 } from "@/components/chat-ui";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import type { RoomIconKey } from "@/data/chat";
+import { ROOM_META, USERS, type RoomIconKey } from "@/data/chat";
 import { getRooms, joinRoom, type Room } from "@/data/chatApi";
 
 type RoomFilter = "all" | "speaking" | "voice" | "ielts";
@@ -79,8 +81,17 @@ export default function RoomSelection() {
           title="اختيار الغرفة"
           subtitle={
             <span className="text-[10px] text-slate-400">
-              اختر نوع الغرفة الذي تريد الانضمام إليها
+              {rooms.length} غرف نشطة ·{" "}
+              {rooms.reduce((sum, r) => sum + r.online, 0)} متصل الآن
             </span>
+          }
+          controls={
+            <button className="relative w-9 h-9 rounded-full bg-white/5 ring-1 ring-white/10 flex items-center justify-center text-slate-300 hover:bg-white/10 transition-colors">
+              <Bell size={14} />
+              <span className="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] px-1 rounded-full bg-rose-500 ring-2 ring-slate-950 text-[8.5px] font-extrabold text-white flex items-center justify-center">
+                5
+              </span>
+            </button>
           }
         />
 
@@ -105,19 +116,34 @@ export default function RoomSelection() {
         </div>
 
         <ChatScrollBg className="px-4 pt-2.5 pb-2 space-y-2">
-          {visible.map((r) => (
-            <RoomCard
-              key={r.id}
-              icon={roomIcon(r.iconKey)}
-              tone={r.tone}
-              title={r.title}
-              desc={r.desc}
-              online={r.online}
-              joinLabel="انضمام"
-              onClick={() => openDetails(r)}
-              onJoin={() => handleJoin(r)}
-            />
-          ))}
+          {visible.map((r) => {
+            const meta = ROOM_META[r.id];
+            const peek = meta?.peek.map((idx) => USERS[idx]) ?? [];
+            return (
+              <RoomCard
+                key={r.id}
+                icon={roomIcon(r.iconKey)}
+                tone={r.tone}
+                title={r.title}
+                desc={r.desc}
+                online={r.online}
+                unread={meta?.unread}
+                lastActivity={meta?.lastActivity}
+                peekAvatars={peek.map((u) => (
+                  <Avatar
+                    key={u.id}
+                    letter={u.letter}
+                    tone={u.tone}
+                    size={16}
+                    ring
+                  />
+                ))}
+                joinLabel="انضمام"
+                onClick={() => openDetails(r)}
+                onJoin={() => handleJoin(r)}
+              />
+            );
+          })}
           {visible.length === 0 && (
             <div className="text-center text-[12px] text-slate-500 py-10">
               لم يتم العثور على غرف

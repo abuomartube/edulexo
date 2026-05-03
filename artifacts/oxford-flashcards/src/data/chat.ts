@@ -111,6 +111,82 @@ export function getRoomById(id: string | undefined): MockRoom | undefined {
   return MOCK_ROOMS.find((r) => r.id === id);
 }
 
+// ---- Per-room "live" metadata (used by both showcase + live screens) -------
+
+export type RoomMeta = {
+  unread: number;
+  lastActivity: string;
+  peek: number[]; // indexes into USERS for the peek-avatar stack
+};
+
+export const ROOM_META: Record<string, RoomMeta> = {
+  "1": { unread: 0, lastActivity: "now", peek: [7, 3, 0] },
+  "2": { unread: 12, lastActivity: "2m", peek: [0, 1, 2] },
+  "3": { unread: 0, lastActivity: "live", peek: [0, 1, 2] },
+  "4": { unread: 3, lastActivity: "8m", peek: [6, 8, 2] },
+  "5": { unread: 47, lastActivity: "1m", peek: [5, 9, 3] },
+};
+
+// ---- Recent activity feed (for room details "what's happening" card) -------
+
+export type RoomActivity = {
+  id: string;
+  userId: string;
+  kind: "joined" | "voice" | "reply" | "topic" | "reaction";
+  text: string;
+  ago: string;
+};
+
+export const ROOM_ACTIVITY: Record<string, RoomActivity[]> = {
+  "1": [
+    { id: "a1", userId: "u8", kind: "joined", text: "joined the room", ago: "1m" },
+    { id: "a2", userId: "u4", kind: "voice", text: "shared a voice note", ago: "3m" },
+    { id: "a3", userId: "u1", kind: "reply", text: "replied to Nora", ago: "5m" },
+  ],
+  "2": [
+    { id: "a1", userId: "u7", kind: "voice", text: "shared a voice note", ago: "2m" },
+    { id: "a2", userId: "u3", kind: "joined", text: "joined the room", ago: "4m" },
+    { id: "a3", userId: "u2", kind: "reaction", text: "reacted with 🔥", ago: "6m" },
+    { id: "a4", userId: "u10", kind: "reply", text: "asked about grammar", ago: "8m" },
+  ],
+  "3": [
+    { id: "a1", userId: "u1", kind: "voice", text: "is speaking now", ago: "live" },
+    { id: "a2", userId: "u5", kind: "joined", text: "joined the room", ago: "30s" },
+  ],
+  "4": [
+    { id: "a1", userId: "u7", kind: "voice", text: "did Part 2 (1:48)", ago: "5m" },
+    { id: "a2", userId: "u3", kind: "reply", text: "gave Kenza feedback", ago: "7m" },
+    { id: "a3", userId: "u9", kind: "voice", text: "answered Part 3", ago: "9m" },
+  ],
+  "5": [
+    { id: "a1", userId: "u4", kind: "reaction", text: "got 6 reactions", ago: "1m" },
+    { id: "a2", userId: "u3", kind: "topic", text: "started a topic", ago: "4m" },
+    { id: "a3", userId: "u5", kind: "voice", text: "shared a voice note", ago: "6m" },
+  ],
+};
+
+// ---- Phrases used by the activity simulator (random new messages) ----------
+
+export const AMBIENT_PHRASES: string[] = [
+  "Totally agree with that 👍",
+  "Can you say that one more time?",
+  "I think it depends on the context honestly",
+  "haha same here 😂",
+  "Wait, can someone explain?",
+  "Let me try — give me a sec ✍️",
+  "That's a really good point",
+  "I had the same problem last week",
+  "Where are you from originally?",
+  "Sorry I lost connection for a moment",
+  "Could you repeat the last sentence please?",
+  "Nice pronunciation 🔥",
+  "I'll write it out, easier for me",
+  "Anyone up for a quick role-play?",
+  "What does 'eventually' actually mean?",
+  "I'm a beginner, sorry if I'm slow 🙏",
+  "That joke killed me 😂😂",
+];
+
 // ---- Participants / voice room sub-data ------------------------------------
 
 export const PARTICIPANTS = USERS.slice(0, 7).map((u) => ({

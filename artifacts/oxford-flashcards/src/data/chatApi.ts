@@ -11,13 +11,17 @@
 
 import {
   MOCK_ROOMS,
+  USERS,
+  AMBIENT_PHRASES,
   getRoomById,
   seedMessages,
   nowTime,
   randomDuration,
   nextMessageId,
+  pickRandom,
   type MockRoom,
   type ChatMsg,
+  type User,
 } from "./chat";
 
 // ---- types exposed to screens (kept stable across mock/real swap) -------
@@ -146,4 +150,88 @@ export function postSystemMessage(
   };
   getOrSeed(roomId).push(msg);
   return fake({ ok: true as const, data: msg });
+}
+
+// ---- Activity / presence simulator ---------------------------------------
+// In production this becomes a websocket / polling subscription.
+
+export type RoomActivityEvent =
+  | { type: "typing"; user: User }
+  | { type: "typing-stop" }
+  | { type: "message"; message: Message }
+  | { type: "presence"; online: number };
+
+type ActivityHandler = (e: RoomActivityEvent) => void;
+
+/**
+ * Subscribe to live activity in a room: typing indicators, ambient incoming
+ * messages from other users, and online-count fluctuations. Returns an
+ * unsubscribe function. TODO: replace with a websocket subscription.
+ */
+export function subscribeToRoom(
+  roomId: string,
+  onEvent: ActivityHandler,
+): () => void {
+  const room = getRoomById(roomId);
+  if (!room) return () => {};
+
+  let cancelled = false;
+  let online = room.online;
+  const timers: ReturnType<typeof setTimeout>[] = [];
+
+  function schedule(fn: () => void, ms: number) {
+    if (cancelled) return;
+    timers.push(setTimeout(fn, ms));
+  }
+
+  function pickOther(): User {
+    return pickRandom(USERS.slice(0, 8));
+  }
+
+  function loop() {
+    if (cancelled) return;
+    const user = pickOther();
+    onEvent({ type: "typing", user });
+    schedule(() => {
+      if (cancelled) return;
+      onEvent({ type: "typing-stop" });
+      const sendVoice = Math.random() < 0.25;
+      const msg: Message = sendVoice
+        ? {
+            id: nextMessageId(),
+            kind: "voice-in",
+            name: user.name,
+            letter: user.letter,
+            tone: user.tone,
+            time: nowTime(),
+            duration: randomDuration(),
+          }
+        : {
+            id: nextMessageId(),
+            kind: "incoming",
+            name: user.name,
+            letter: user.letter,
+            tone: user.tone,
+            time: nowTime(),
+            text: pickRandom(AMBIENT_PHRASES),
+          };
+      getOrSeed(roomId).push(msg);
+      onEvent({ type: "message", message: msg });
+
+      // jitter the online count by ±1
+      const delta = Math.random() < 0.5 ? -1 : 1;
+      online = Math.max(3, online + delta);
+      onEvent({ type: "presence", online });
+
+      schedule(loop, 6000 + Math.random() * 7000);
+    }, 1500 + Math.random() * 1800);
+  }
+
+  // first event slightly after subscribe
+  schedule(loop, 2500 + Math.random() * 2000);
+
+  return () => {
+    cancelled = true;
+    for (const t of timers) clearTimeout(t);
+  };
 }

@@ -23,13 +23,20 @@ import {
 } from "@/components/chat-ui";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import { MOCK_ROOMS, pickRandom, ICE_BREAKERS, TOPICS } from "@/data/chat";
+import {
+  MOCK_ROOMS,
+  pickRandom,
+  ICE_BREAKERS,
+  TOPICS,
+  type User,
+} from "@/data/chat";
 import {
   getRoom,
   getMessages,
   sendMessage,
   sendVoiceMessage,
   postSystemMessage,
+  subscribeToRoom,
   type Room,
   type Message,
 } from "@/data/chatApi";
@@ -84,13 +91,18 @@ export default function ChatScreen() {
   const [room, setRoom] = useState<Room>(MOCK_ROOMS[1]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
+  const [onlineCount, setOnlineCount] = useState<number>(MOCK_ROOMS[1].online);
+  const [typingUser, setTypingUser] = useState<User | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([getRoom(roomId), getMessages(roomId)]).then(([r, msgs]) => {
       if (cancelled) return;
-      if (r) setRoom(r);
+      if (r) {
+        setRoom(r);
+        setOnlineCount(r.online);
+      }
       setMessages(msgs);
     });
     return () => {
@@ -99,9 +111,20 @@ export default function ChatScreen() {
   }, [roomId]);
 
   useEffect(() => {
+    const unsub = subscribeToRoom(roomId, (e) => {
+      if (e.type === "typing") setTypingUser(e.user);
+      else if (e.type === "typing-stop") setTypingUser(null);
+      else if (e.type === "message")
+        setMessages((prev) => [...prev, e.message]);
+      else if (e.type === "presence") setOnlineCount(e.online);
+    });
+    return unsub;
+  }, [roomId]);
+
+  useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [messages, typingUser]);
 
   async function sendText() {
     const text = draft.trim();
@@ -142,7 +165,7 @@ export default function ChatScreen() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
                 </span>
-                {room.online} online
+                {onlineCount} online
               </span>
               <div className="flex -space-x-1.5">
                 <Avatar letter="O" tone="blue" size={18} ring />
@@ -183,6 +206,35 @@ export default function ChatScreen() {
               <MessageItem m={m} />
             </div>
           ))}
+          {typingUser && (
+            <div className="animate-fade-in-up flex items-center gap-2 pl-1 pt-0.5">
+              <Avatar
+                letter={typingUser.letter}
+                tone={typingUser.tone}
+                size={20}
+                ring
+              />
+              <div className="px-3 py-2 rounded-2xl rounded-bl-md bg-white/[0.06] ring-1 ring-white/10 flex items-center gap-1">
+                <span className="text-[10.5px] text-slate-400 mr-1">
+                  {typingUser.name} is typing
+                </span>
+                <span className="flex items-end gap-0.5 h-3">
+                  <span
+                    className="w-1 h-1 rounded-full bg-slate-300/80 animate-bounce"
+                    style={{ animationDelay: "0ms" }}
+                  />
+                  <span
+                    className="w-1 h-1 rounded-full bg-slate-300/80 animate-bounce"
+                    style={{ animationDelay: "120ms" }}
+                  />
+                  <span
+                    className="w-1 h-1 rounded-full bg-slate-300/80 animate-bounce"
+                    style={{ animationDelay: "240ms" }}
+                  />
+                </span>
+              </div>
+            </div>
+          )}
         </ChatScrollBg>
 
         <div className="relative z-10 px-4 pt-2 pb-1 border-t border-white/5 bg-slate-950/40 backdrop-blur">

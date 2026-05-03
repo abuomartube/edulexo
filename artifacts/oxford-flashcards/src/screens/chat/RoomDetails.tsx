@@ -7,6 +7,12 @@ import {
   Info,
   ShieldCheck,
   Check,
+  Activity,
+  UserPlus,
+  Mic2,
+  MessageSquare,
+  Sparkles,
+  Heart,
 } from "lucide-react";
 import {
   Header,
@@ -23,7 +29,13 @@ import {
 } from "@/components/chat-ui";
 import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import { MOCK_ROOMS, PARTICIPANTS, ROOM_RULES } from "@/data/chat";
+import {
+  MOCK_ROOMS,
+  PARTICIPANTS,
+  ROOM_RULES,
+  ROOM_ACTIVITY,
+  userById,
+} from "@/data/chat";
 import { getRoom, joinRoom, type Room } from "@/data/chatApi";
 
 export default function RoomDetails() {
@@ -116,6 +128,73 @@ export default function RoomDetails() {
               ))}
               <span>...</span>
             </div>
+          </Card>
+
+          <Card
+            title={
+              <span className="flex items-center gap-2">
+                النشاط الحي
+                <span className="flex items-center gap-1 text-[9.5px] font-bold text-emerald-400 px-1.5 py-0.5 rounded-full bg-emerald-500/10 ring-1 ring-emerald-500/30">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                  </span>
+                  LIVE
+                </span>
+              </span>
+            }
+            icon={<Activity size={13} />}
+          >
+            <ul dir="ltr" className="space-y-2">
+              {(ROOM_ACTIVITY[room.id] ?? []).map((a) => {
+                const u = userById(a.userId);
+                if (!u) return null;
+                const Icon =
+                  a.kind === "joined"
+                    ? UserPlus
+                    : a.kind === "voice"
+                      ? Mic2
+                      : a.kind === "reply"
+                        ? MessageSquare
+                        : a.kind === "topic"
+                          ? Sparkles
+                          : Heart;
+                const tint =
+                  a.kind === "joined"
+                    ? "text-emerald-400 bg-emerald-500/15 ring-emerald-500/25"
+                    : a.kind === "voice"
+                      ? "text-purple-300 bg-purple-500/15 ring-purple-500/25"
+                      : a.kind === "reply"
+                        ? "text-sky-300 bg-sky-500/15 ring-sky-500/25"
+                        : a.kind === "topic"
+                          ? "text-amber-300 bg-amber-500/15 ring-amber-500/25"
+                          : "text-rose-300 bg-rose-500/15 ring-rose-500/25";
+                return (
+                  <li key={a.id} className="flex items-center gap-2">
+                    <Avatar
+                      letter={u.letter}
+                      tone={u.tone}
+                      size={22}
+                      ring
+                    />
+                    <div className="flex-1 min-w-0 text-[11px] text-slate-300 leading-tight">
+                      <span className="font-semibold text-white">
+                        {u.name}
+                      </span>{" "}
+                      <span className="text-slate-400">{a.text}</span>
+                    </div>
+                    <span
+                      className={`shrink-0 w-5 h-5 rounded-full ring-1 flex items-center justify-center ${tint}`}
+                    >
+                      <Icon size={10} />
+                    </span>
+                    <span className="shrink-0 text-[9.5px] text-slate-500 font-medium w-7 text-right">
+                      {a.ago}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </Card>
 
           <Card title="قواعد الغرفة" icon={<ShieldCheck size={13} />}>

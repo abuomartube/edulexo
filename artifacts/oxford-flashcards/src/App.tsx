@@ -26,6 +26,7 @@ import ChatMessages from "@/pages/ChatMessages";
 import ChatDmThread from "@/pages/ChatDmThread";
 import ChatLeaderboard from "@/pages/ChatLeaderboard";
 import ChatShowcase from "@/pages/ChatShowcase";
+import ChatScreenMockup from "@/pages/ChatScreenMockup";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -125,6 +126,7 @@ export default function App() {
           </ProtectedRoute>
         </Route>
         <Route path="/chat-showcase" component={ChatShowcase} />
+        <Route path="/chat-screen" component={ChatScreenMockup} />
         <Route path="/chat/leaderboard">
           <ProtectedRoute>
             <ChatLeaderboard />

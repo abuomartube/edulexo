@@ -3,20 +3,19 @@ import { Loader2, RefreshCw, X } from "lucide-react";
 import { fetchTopic } from "@/lib/chat-api";
 
 const CATEGORIES = [
-  { key: "all", labelEn: "All", labelAr: "الكل" },
-  { key: "travel", labelEn: "Travel", labelAr: "السفر" },
-  { key: "work", labelEn: "Work", labelAr: "العمل" },
-  { key: "daily", labelEn: "Daily Life", labelAr: "الحياة اليومية" },
-  { key: "ielts", labelEn: "IELTS", labelAr: "آيلتس" },
-  { key: "study", labelEn: "Study", labelAr: "الدراسة" },
+  { key: "all", label: "All" },
+  { key: "travel", label: "Travel" },
+  { key: "work", label: "Work" },
+  { key: "daily", label: "Daily Life" },
+  { key: "ielts", label: "IELTS" },
+  { key: "study", label: "Study" },
 ];
 
 export default function TopicGenerator({
-  lang,
   onClose,
   onUseAsMessage,
 }: {
-  lang: "en" | "ar";
+  lang?: "en" | "ar";
   onClose: () => void;
   onUseAsMessage: (text: string) => void;
 }) {
@@ -40,11 +39,14 @@ export default function TopicGenerator({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div
+      dir="ltr"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+    >
       <div className="w-full max-w-md rounded-3xl bg-gradient-to-br from-purple-900 via-indigo-900 to-slate-900 text-white p-5 shadow-2xl border border-purple-500/30">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold flex items-center gap-2">
-            🎯 {lang === "ar" ? "اختر موضوعاً" : "Choose Topic"}
+            🎯 Choose Topic
           </h3>
           <button
             onClick={onClose}
@@ -69,7 +71,7 @@ export default function TopicGenerator({
               }`}
               type="button"
             >
-              {lang === "ar" ? c.labelAr : c.labelEn}
+              {c.label}
             </button>
           ))}
         </div>
@@ -77,9 +79,7 @@ export default function TopicGenerator({
           {loading ? (
             <Loader2 className="animate-spin text-purple-300" size={24} />
           ) : topic ? (
-            <p className="text-base leading-relaxed">
-              {lang === "ar" ? topic.ar : topic.en}
-            </p>
+            <p className="text-base leading-relaxed">{topic.en}</p>
           ) : null}
         </div>
         <div className="mt-4 flex gap-2">
@@ -88,13 +88,12 @@ export default function TopicGenerator({
             type="button"
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-white/10 hover:bg-white/20 px-4 py-2.5 text-sm font-semibold"
           >
-            <RefreshCw size={14} />{" "}
-            {lang === "ar" ? "موضوع جديد" : "New Topic"}
+            <RefreshCw size={14} /> New Topic
           </button>
           <button
             onClick={() => {
               if (topic) {
-                onUseAsMessage(lang === "ar" ? topic.ar : topic.en);
+                onUseAsMessage(topic.en);
                 onClose();
               }
             }}
@@ -102,7 +101,7 @@ export default function TopicGenerator({
             disabled={!topic}
             className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-purple-500 hover:bg-purple-600 px-4 py-2.5 text-sm font-semibold disabled:opacity-50"
           >
-            ✨ {lang === "ar" ? "استخدم" : "Use it"}
+            ✨ Use it
           </button>
         </div>
       </div>

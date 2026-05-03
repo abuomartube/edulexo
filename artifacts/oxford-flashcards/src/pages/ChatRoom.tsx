@@ -269,7 +269,7 @@ export default function ChatRoomPage() {
   async function handleIceBreaker() {
     try {
       const r = await fetchIceBreaker();
-      setInput(lang === "ar" ? r.icebreaker.ar : r.icebreaker.en);
+      setInput(r.icebreaker.en);
     } catch (e) {
       toast({ title: (e as Error).message, variant: "destructive" });
     }
@@ -486,11 +486,11 @@ export default function ChatRoomPage() {
         <div className="max-w-3xl mx-auto mt-2.5 flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-bold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            {lang === "ar" ? "إنجليزية فقط" : "English Only"}
+            English Only
           </span>
           <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
             <Mic size={11} />
-            {lang === "ar" ? "اضغط للتسجيل" : "Hold mic to record"}
+            Hold mic to record
           </div>
         </div>
       </header>
@@ -537,28 +537,28 @@ export default function ChatRoomPage() {
               icon={<Sparkles size={13} />}
               tone="purple"
             >
-              {lang === "ar" ? "موضوع" : "Topic"}
+              Topic
             </ToolPill>
             <ToolPill
               onClick={handleIceBreaker}
               icon={<Lightbulb size={13} />}
               tone="amber"
             >
-              {lang === "ar" ? "كاسر الجمود" : "Ice Breaker"}
+              Ice Breaker
             </ToolPill>
             <ToolPill
               onClick={handleIceBreaker}
               icon={<RefreshCw size={13} />}
               tone="cyan"
             >
-              {lang === "ar" ? "تبديل" : "Rotate"}
+              Rotate
             </ToolPill>
             <ToolPill
               onClick={() => fileInputRef.current?.click()}
               icon={<ImageIcon size={13} />}
               tone="rose"
             >
-              {lang === "ar" ? "صورة" : "Image Talk"}
+              Image Talk
             </ToolPill>
           </div>
           <input
@@ -576,15 +576,14 @@ export default function ChatRoomPage() {
           ) : (
             <form
               onSubmit={handleSendText}
+              dir="ltr"
               className="flex items-center gap-2 rounded-full bg-slate-900 border border-slate-800 ps-3 pe-1.5 py-1.5"
             >
               <span className="text-lg select-none">😊</span>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={
-                  lang === "ar" ? "اكتب رسالة..." : "Type a message…"
-                }
+                placeholder="Type a message…"
                 className="flex-1 bg-transparent border-none focus:outline-none text-sm text-slate-100 placeholder:text-slate-500"
                 maxLength={2000}
               />
@@ -618,7 +617,6 @@ export default function ChatRoomPage() {
 
       {showTopic && (
         <TopicGenerator
-          lang={lang}
           onClose={() => setShowTopic(false)}
           onUseAsMessage={(t) => setInput(t)}
         />

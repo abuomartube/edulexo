@@ -2,6 +2,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { bootstrapAdminFromEnv } from "./lib/admin-bootstrap";
 import { bootstrapTierPrices } from "./lib/price-bootstrap";
+import { bootstrapChatRooms } from "./lib/chat-rooms-bootstrap";
 
 const rawPort = process.env["PORT"];
 
@@ -27,4 +28,5 @@ app.listen(port, (err) => {
 
   void bootstrapAdminFromEnv();
   void bootstrapTierPrices();
+  void bootstrapChatRooms();
 });

@@ -11,6 +11,9 @@ export { InputBar } from "./InputBar";
 export { SearchBar } from "./SearchBar";
 export { Tabs, FilterChip } from "./Tabs";
 export { RoomCard } from "./RoomCard";
+export { PrimaryButton, SecondaryButton } from "./Button";
+export { Card } from "./Card";
+export { HeroCard } from "./HeroCard";
 export {
   chatUI,
   AVATAR_GRAD,

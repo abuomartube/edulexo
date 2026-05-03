@@ -54,13 +54,25 @@ function Frame({
 }) {
   const dims =
     size === "lg"
-      ? "w-[300px] h-[620px] rounded-[32px] p-[18px]"
-      : "w-[230px] h-[420px] rounded-[24px] p-3";
+      ? "w-[310px] h-[640px] rounded-[44px] p-4"
+      : "w-[238px] h-[440px] rounded-[34px] p-3";
   return (
     <div
-      className={`${dims} relative bg-gradient-to-b from-[rgba(15,23,42,0.98)] to-[rgba(2,6,23,0.98)] border border-white/[0.18] shadow-[0_25px_70px_rgba(0,0,0,0.50)] overflow-hidden flex flex-col ${className}`}
+      className={`${dims} relative bg-gradient-to-b from-[#0b1428] via-[#070d1c] to-[#02050d] overflow-hidden flex flex-col ${className}`}
+      style={{
+        boxShadow:
+          "0 40px 90px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08), 0 0 60px -20px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.10)",
+      }}
     >
-      {children}
+      {/* notch */}
+      {size === "lg" && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-1.5 rounded-full bg-black/70 z-20" />
+      )}
+      {/* subtle gradient border ring */}
+      <div className="pointer-events-none absolute inset-0 rounded-[inherit] border border-white/10" />
+      {/* inner top sheen */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white/[0.04] to-transparent" />
+      <div className="relative z-10 flex-1 flex flex-col min-h-0">{children}</div>
     </div>
   );
 }
@@ -186,10 +198,10 @@ function Screen1() {
             <div
               key={c.t}
               dir="rtl"
-              className="rounded-2xl bg-white/[0.04] border border-white/10 p-2.5 flex items-center gap-2"
+              className="rounded-2xl bg-white/[0.04] backdrop-blur border border-white/10 p-3 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition"
             >
               <div
-                className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0`}
+                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center shrink-0 shadow-lg ring-1 ring-white/20`}
               >
                 {c.color === "purple" ? (
                   <Star size={16} className="text-white" />
@@ -341,10 +353,10 @@ function Screen2() {
             <div
               key={r.n}
               dir="rtl"
-              className="rounded-2xl bg-white/[0.04] border border-white/10 p-2.5 flex items-center gap-2"
+              className="rounded-2xl bg-white/[0.04] backdrop-blur border border-white/10 p-3 flex items-center gap-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] hover:bg-white/[0.06] transition"
             >
               <div
-                className={`w-9 h-9 rounded-xl bg-gradient-to-br ${r.from} ${r.to} flex items-center justify-center shrink-0`}
+                className={`w-10 h-10 rounded-xl bg-gradient-to-br ${r.from} ${r.to} flex items-center justify-center shrink-0 shadow-lg ring-1 ring-white/20`}
               >
                 <Icon size={15} className="text-white" />
               </div>
@@ -358,7 +370,7 @@ function Screen2() {
                   {r.online} online
                 </div>
               </div>
-              <button className="px-2.5 py-1 rounded-lg bg-purple-500 text-white text-[10px] font-bold">
+              <button className="px-3 py-1.5 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 text-white text-[10px] font-bold shadow-[0_4px_12px_-2px_rgba(124,58,237,0.6),inset_0_1px_0_rgba(255,255,255,0.2)] ring-1 ring-white/10">
                 انضمام
               </button>
             </div>
@@ -382,19 +394,20 @@ function Screen3() {
         <ArrowRight size={16} className="text-slate-400" />
       </div>
 
-      <div className="rounded-2xl p-4 bg-gradient-to-br from-purple-600 to-blue-600 relative overflow-hidden">
-        <div className="absolute right-2 top-3 flex items-end gap-0.5 opacity-50">
-          {[8, 14, 20, 12, 18, 10].map((h, i) => (
+      <div className="rounded-2xl p-4 bg-gradient-to-br from-fuchsia-600 via-purple-600 to-blue-600 relative overflow-hidden shadow-[0_20px_50px_-10px_rgba(124,58,237,0.6),inset_0_1px_0_rgba(255,255,255,0.2)] border border-white/10">
+        <div className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute right-2 top-3 flex items-end gap-0.5 opacity-60">
+          {[8, 14, 20, 12, 18, 10, 16].map((h, i) => (
             <span
               key={i}
-              className="w-0.5 bg-white rounded-full"
+              className="w-[3px] bg-white rounded-full"
               style={{ height: h }}
             />
           ))}
         </div>
-        <div className="flex flex-col items-center text-center text-white">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center mb-2">
-            <Mic size={22} />
+        <div className="flex flex-col items-center text-center text-white relative">
+          <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mb-2 ring-1 ring-white/30 shadow-lg">
+            <Mic size={24} />
           </div>
           <div className="text-[13px] font-bold">Speaking Room -</div>
           <div className="text-[13px] font-bold">Intermediate</div>
@@ -473,7 +486,7 @@ function Screen3() {
         </div>
       </div>
 
-      <button className="mt-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[12px] font-bold flex items-center justify-center gap-2">
+      <button className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-fuchsia-600 via-purple-600 to-blue-600 text-white text-[12px] font-bold flex items-center justify-center gap-2 shadow-[0_10px_30px_-5px_rgba(124,58,237,0.6),inset_0_1px_0_rgba(255,255,255,0.2)] ring-1 ring-white/15">
         <Headphones size={13} /> الانضمام إلى الغرفة
       </button>
       <button
@@ -693,12 +706,15 @@ function Screen4() {
       </div>
 
       {/* Floating mic */}
-      <div className="flex flex-col items-center mt-1.5">
-        <Bars count={18} color="bg-purple-400/40" />
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center -mt-2 shadow-[0_0_24px_rgba(124,58,237,0.7)]">
-          <Mic size={18} className="text-white" />
+      <div className="flex flex-col items-center mt-2">
+        <Bars count={20} color="bg-purple-400/50" />
+        <div className="relative -mt-3">
+          <div className="absolute inset-0 -m-2 rounded-full bg-purple-500/40 blur-xl animate-pulse" />
+          <div className="relative w-[58px] h-[58px] rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_8px_24px_rgba(99,102,241,0.55),0_0_40px_rgba(168,85,247,0.55),inset_0_1px_0_rgba(255,255,255,0.35)] ring-2 ring-white/15">
+            <Mic size={22} className="text-white drop-shadow" />
+          </div>
         </div>
-        <div className="text-[9px] text-slate-400 mt-0.5">Tap to speak</div>
+        <div className="text-[10px] text-slate-300 font-semibold mt-1">Tap to speak</div>
       </div>
     </Frame>
   );
@@ -712,17 +728,24 @@ function VoiceOnlyScreen() {
       <div className="flex items-center justify-between mb-2">
         <ChevronLeft size={14} className="text-slate-400" />
         <div className="text-white text-[11px] font-bold">Voice Only Room</div>
-        <span className="text-[8px] text-slate-400">10 online</span>
+        <span className="text-[8px] text-slate-400 flex items-center gap-1">
+          <span className="w-1 h-1 rounded-full bg-emerald-400" /> 10 online
+        </span>
       </div>
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="relative">
-          <div className="absolute inset-0 -m-3 rounded-full bg-blue-500/30 blur-xl animate-pulse" />
-          <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.7)]">
-            <Mic size={32} className="text-white" />
+          <div className="absolute inset-0 -m-6 rounded-full bg-purple-500/30 blur-2xl animate-pulse" />
+          <div className="absolute inset-0 -m-3 rounded-full bg-blue-500/40 blur-xl animate-pulse" />
+          <div className="absolute inset-0 -m-1 rounded-full ring-2 ring-purple-400/40 animate-ping" />
+          <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.7),inset_0_2px_0_rgba(255,255,255,0.3)] ring-2 ring-white/15">
+            <Mic size={36} className="text-white drop-shadow" />
           </div>
         </div>
-        <div className="mt-3 text-white text-[11px] font-bold">You are Live</div>
-        <div className="text-emerald-300 text-[10px] font-mono mt-0.5">00:45</div>
+        <div className="mt-4 text-white text-[12px] font-bold">You are Live</div>
+        <div className="text-emerald-300 text-[11px] font-mono mt-0.5 flex items-center gap-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          00:45
+        </div>
       </div>
       <div className="text-slate-400 text-[9px] mb-1">Listeners</div>
       <div className="flex -space-x-1.5 rtl:space-x-reverse mb-2">
@@ -792,7 +815,7 @@ function TopicGenScreen() {
           </div>
         ))}
       </div>
-      <button className="mt-2 w-full py-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 text-white text-[10px] font-bold">
+      <button className="mt-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-fuchsia-600 via-purple-600 to-blue-600 text-white text-[10px] font-bold shadow-[0_8px_20px_-4px_rgba(124,58,237,0.6),inset_0_1px_0_rgba(255,255,255,0.2)] ring-1 ring-white/15">
         ✨ Surprise me
       </button>
     </Frame>
@@ -1001,11 +1024,14 @@ function ToolBarCard() {
         })}
       </div>
       <div className="flex-1 flex flex-col items-center justify-end">
-        <Bars count={20} color="bg-blue-400/50" />
-        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center -mt-2 shadow-[0_0_28px_rgba(59,130,246,0.7)]">
-          <Mic size={20} className="text-white" />
+        <Bars count={22} color="bg-blue-400/60" />
+        <div className="relative -mt-3">
+          <div className="absolute inset-0 -m-3 rounded-full bg-blue-500/40 blur-xl animate-pulse" />
+          <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_0_36px_rgba(99,102,241,0.7),inset_0_1px_0_rgba(255,255,255,0.3)] ring-2 ring-white/15">
+            <Mic size={22} className="text-white" />
+          </div>
         </div>
-        <div className="text-[9px] text-slate-400 mt-1">Tap to speak</div>
+        <div className="text-[10px] text-slate-300 mt-1.5 font-semibold">Tap to speak</div>
       </div>
     </Frame>
   );
@@ -1034,7 +1060,7 @@ function Sidebar() {
         من جميع أنحاء العالم.
       </p>
 
-      <div className="rounded-2xl bg-[rgba(15,23,42,0.68)] backdrop-blur border border-white/10 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div dir="rtl" className="text-white text-[12px] font-bold mb-2 text-right">
           المميزات الرئيسية
         </div>
@@ -1060,7 +1086,7 @@ function Sidebar() {
         </ul>
       </div>
 
-      <div className="rounded-2xl bg-[rgba(15,23,42,0.68)] backdrop-blur border border-white/10 p-3">
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div dir="rtl" className="text-white text-[12px] font-bold mb-2 text-right">
           مستويات اللغة
         </div>
@@ -1087,7 +1113,7 @@ function Sidebar() {
         </ul>
       </div>
 
-      <div className="rounded-2xl bg-[rgba(15,23,42,0.68)] backdrop-blur border border-white/10 p-3">
+      <div className="rounded-2xl bg-white/[0.04] backdrop-blur-2xl border border-white/10 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div dir="rtl" className="text-white text-[12px] font-bold mb-2 text-right">
           باقاتنا التدريبية
         </div>
@@ -1122,19 +1148,24 @@ export default function ChatShowcase() {
   return (
     <div
       dir="ltr"
-      className="min-h-screen text-white p-7"
+      className="min-h-screen text-white p-8 relative overflow-hidden"
       style={{
         background:
-          "radial-gradient(circle at top, #10213a 0%, #07111f 45%, #030712 100%)",
+          "radial-gradient(ellipse 80% 60% at 30% -10%, #1a1444 0%, #0a1126 25%, #050816 55%, #02030a 100%)",
         fontFamily:
           'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
-      <div className="flex gap-6">
+      {/* ambient glows */}
+      <div className="pointer-events-none absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-purple-700/20 blur-[140px]" />
+      <div className="pointer-events-none absolute top-40 right-0 w-[500px] h-[500px] rounded-full bg-blue-700/20 blur-[140px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 w-[600px] h-[400px] rounded-full bg-indigo-700/15 blur-[160px]" />
+
+      <div className="relative flex gap-6">
         <Sidebar />
-        <main className="flex-1 min-w-0 space-y-6">
+        <main className="flex-1 min-w-0 space-y-8">
           {/* Top row: 4 main flow screens */}
-          <div className="flex gap-4 items-start overflow-x-auto pb-3">
+          <div className="flex gap-5 items-start overflow-x-auto pb-3">
             <div>
               <StepHeader n={1} title="اختيار الدورة" sub="اختر الباقة المناسبة لمستواك وهدفك" />
               <Screen1 />
@@ -1157,7 +1188,7 @@ export default function ChatShowcase() {
           </div>
 
           {/* Bottom row: 6 small screens */}
-          <div className="flex flex-wrap gap-4 items-start">
+          <div className="flex flex-wrap gap-5 items-start">
             <VoiceOnlyScreen />
             <TopicGenScreen />
             <ProfileScreen />

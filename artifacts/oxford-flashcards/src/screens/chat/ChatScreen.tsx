@@ -127,25 +127,84 @@ function MessageItem({ m }: { m: Message }) {
   return null;
 }
 
-type OnboardingStage = "off" | "intro" | "turn" | "fading" | "done";
+type OnboardingStage =
+  | "off"
+  | "intro"
+  | "prompt"
+  | "hint"
+  | "success"
+  | "fading"
+  | "done";
 
 const ONBOARDING_DEMOS: Message[] = [
   {
     id: "demo-1",
     kind: "incoming",
+    name: "Omar",
+    letter: "O",
+    tone: "blue",
+    time: "now",
+    text: "Hi everyone! How was your weekend?",
+  },
+  {
+    id: "demo-2",
+    kind: "incoming",
     name: "Sara",
     letter: "S",
     tone: "pink",
     time: "now",
-    text: "Hi everyone! Where's the best café near campus? ☕",
-  },
-  {
-    id: "demo-2",
-    kind: "outgoing",
-    time: "now",
-    text: "Try Brew & Books on 5th — quiet and great wifi 👌",
+    text: "It was great! I went hiking 😊",
   },
 ];
+
+function DemoPill({
+  tone,
+  label,
+  children,
+}: {
+  tone: "purple" | "amber" | "emerald";
+  label: string;
+  children: React.ReactNode;
+}) {
+  const styles =
+    tone === "amber"
+      ? {
+          ring: "ring-amber-400/40",
+          bg: "linear-gradient(135deg, rgba(251,191,36,0.20), rgba(245,158,11,0.10))",
+          chip: "text-amber-200",
+          body: "text-amber-50",
+        }
+      : tone === "emerald"
+        ? {
+            ring: "ring-emerald-400/40",
+            bg: "linear-gradient(135deg, rgba(52,211,153,0.22), rgba(16,185,129,0.10))",
+            chip: "text-emerald-200",
+            body: "text-emerald-50",
+          }
+        : {
+            ring: "ring-purple-400/30",
+            bg: "linear-gradient(135deg, rgba(168,85,247,0.22), rgba(124,58,237,0.10))",
+            chip: "text-purple-200",
+            body: "text-purple-50",
+          };
+  return (
+    <div className="flex justify-center animate-fade-in-up">
+      <div
+        className={`rounded-full px-3.5 py-1.5 ring-1 ${styles.ring} shadow-md inline-flex items-center gap-2 max-w-[90%]`}
+        style={{ background: styles.bg }}
+      >
+        <span
+          className={`text-[9px] font-bold uppercase tracking-wide ${styles.chip}`}
+        >
+          {label}
+        </span>
+        <span className={`text-[11px] leading-snug ${styles.body}`}>
+          {children}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 export default function ChatScreen() {
   const [, params] = useRoute("/chat-screen/:id");
@@ -203,22 +262,30 @@ export default function ChatScreen() {
   }, [roomId]);
 
   useEffect(() => {
-    if (onboardStage !== "intro") return;
-    const t1 = setTimeout(() => setOnboardStage("turn"), 4000);
-    const t2 = setTimeout(() => setOnboardStage("fading"), 6500);
-    const t3 = setTimeout(() => {
-      setOnboardStage("done");
-      try {
-        localStorage.setItem(`lexo-chat-onboarded-${roomId}`, "1");
-      } catch {
-        // ignore
-      }
-    }, 8000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    if (onboardStage === "intro") {
+      const t = setTimeout(() => setOnboardStage("prompt"), 3500);
+      return () => clearTimeout(t);
+    }
+    if (onboardStage === "prompt") {
+      const t = setTimeout(() => setOnboardStage("hint"), 5000);
+      return () => clearTimeout(t);
+    }
+    if (onboardStage === "success") {
+      const t1 = setTimeout(() => setOnboardStage("fading"), 2000);
+      const t2 = setTimeout(() => {
+        setOnboardStage("done");
+        try {
+          localStorage.setItem(`lexo-chat-onboarded-${roomId}`, "1");
+        } catch {
+          // ignore
+        }
+      }, 3500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+    return undefined;
   }, [onboardStage, roomId]);
 
   useEffect(() => {
@@ -237,6 +304,9 @@ export default function ChatScreen() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, typingUser]);
 
+  const micHighlight =
+    onboardStage === "prompt" || onboardStage === "hint";
+
   async function sendText() {
     const text = draft.trim();
     if (!text) return;
@@ -247,7 +317,13 @@ export default function ChatScreen() {
   }
 
   async function sendVoice() {
-    dismissOnboarding();
+    const wasOnboarding =
+      onboardStage !== "off" &&
+      onboardStage !== "done" &&
+      onboardStage !== "fading";
+    if (wasOnboarding) {
+      setOnboardStage("success");
+    }
     const res = await sendVoiceMessage(roomId);
     if (res.ok) setMessages((prev) => [...prev, res.data]);
   }
@@ -320,29 +396,14 @@ export default function ChatScreen() {
                 onboardStage === "fading" ? "opacity-0" : "opacity-100"
               }`}
             >
-              <div className="flex justify-center">
-                <div
-                  className="rounded-full px-3.5 py-1.5 ring-1 ring-purple-400/30 shadow-md inline-flex items-center gap-2"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(168,85,247,0.20), rgba(124,58,237,0.10))",
-                  }}
-                >
-                  <span className="text-[9px] font-bold text-purple-200 uppercase tracking-wide">
-                    Demo
-                  </span>
-                  <span className="text-[11px] text-purple-100">
-                    {onboardStage === "turn"
-                      ? "Now it's your turn. Start the conversation! ✨"
-                      : "Welcome 👋 Here's how conversations work:"}
-                  </span>
-                </div>
-              </div>
+              <DemoPill tone="purple" label="Demo">
+                Welcome 👋 Here's how conversations work:
+              </DemoPill>
               {ONBOARDING_DEMOS.map((m, i) => (
                 <div
                   key={m.id}
                   className="animate-fade-in-up relative opacity-90"
-                  style={{ animationDelay: `${(i + 1) * 600}ms` }}
+                  style={{ animationDelay: `${(i + 1) * 500}ms` }}
                 >
                   <span className="absolute -top-1.5 left-9 z-10 px-1.5 py-[1px] rounded-full bg-purple-500/25 ring-1 ring-purple-400/40 text-purple-100 text-[8.5px] font-extrabold tracking-wide uppercase shadow-[0_0_10px_rgba(168,85,247,0.3)]">
                     Example
@@ -350,6 +411,26 @@ export default function ChatScreen() {
                   <MessageItem m={m} />
                 </div>
               ))}
+              {(onboardStage === "prompt" ||
+                onboardStage === "hint" ||
+                onboardStage === "success" ||
+                onboardStage === "fading") && (
+                <DemoPill tone="purple" label="Your turn">
+                  Now it's your turn 👇 Tap the mic and introduce yourself 🎙️
+                </DemoPill>
+              )}
+              {(onboardStage === "hint" ||
+                onboardStage === "success" ||
+                onboardStage === "fading") && (
+                <DemoPill tone="amber" label="Try this">
+                  My name is ___. I'm learning English because ___.
+                </DemoPill>
+              )}
+              {(onboardStage === "success" || onboardStage === "fading") && (
+                <DemoPill tone="emerald" label="Nice">
+                  Great job 👏 Keep going!
+                </DemoPill>
+              )}
             </div>
           )}
           {messages.map((m) => (
@@ -428,15 +509,26 @@ export default function ChatScreen() {
           <div className="flex items-center justify-center gap-2 mt-1.5 mb-0.5">
             <Waves />
             <div className="relative">
-              <div className="absolute inset-0 -m-1.5 rounded-full bg-purple-500/40 blur-lg animate-pulse" />
+              {micHighlight && (
+                <>
+                  <span className="pointer-events-none absolute inset-0 -m-3 rounded-full ring-2 ring-purple-300/70 animate-ping" />
+                  <span className="pointer-events-none absolute inset-0 -m-5 rounded-full ring-1 ring-purple-300/40 animate-ping [animation-delay:300ms]" />
+                </>
+              )}
+              <div
+                className={`absolute inset-0 -m-1.5 rounded-full blur-lg animate-pulse ${
+                  micHighlight ? "bg-purple-400/70" : "bg-purple-500/40"
+                }`}
+              />
               <button
                 onClick={sendVoice}
                 className="relative w-10 h-10 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:brightness-110 active:brightness-95 active:scale-90 animate-mic-breathe transition-[transform,filter] duration-150"
                 style={{
                   background:
                     "linear-gradient(135deg, #60a5fa 0%, #818cf8 35%, #a855f7 100%)",
-                  boxShadow:
-                    "0 6px 18px -3px rgba(99,102,241,0.7), 0 0 28px -6px rgba(168,85,247,0.65), inset 0 1px 0 rgba(255,255,255,0.4)",
+                  boxShadow: micHighlight
+                    ? "0 8px 26px -2px rgba(168,85,247,0.95), 0 0 44px -4px rgba(192,132,252,0.85), inset 0 1px 0 rgba(255,255,255,0.45)"
+                    : "0 6px 18px -3px rgba(99,102,241,0.7), 0 0 28px -6px rgba(168,85,247,0.65), inset 0 1px 0 rgba(255,255,255,0.4)",
                 }}
               >
                 <Mic size={15} className="text-white drop-shadow" />

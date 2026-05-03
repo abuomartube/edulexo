@@ -15,9 +15,10 @@ import {
   BottomNav,
   ChatScrollBg,
 } from "@/components/chat-ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { MOCK_ROOMS, type MockRoom, type RoomIconKey } from "@/data/chat";
+import type { RoomIconKey } from "@/data/chat";
+import { getRooms, joinRoom, type Room } from "@/data/chatApi";
 
 type RoomFilter = "all" | "speaking" | "voice" | "ielts";
 
@@ -40,9 +41,20 @@ function roomIcon(key: RoomIconKey) {
 export default function RoomSelection() {
   const [filter, setFilter] = useState<RoomFilter>("all");
   const [search, setSearch] = useState("");
+  const [rooms, setRooms] = useState<Room[]>([]);
   const [, setLocation] = useLocation();
 
-  const visible = MOCK_ROOMS.filter(
+  useEffect(() => {
+    let cancelled = false;
+    getRooms().then((res) => {
+      if (!cancelled) setRooms(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const visible = rooms.filter(
     (r) =>
       (filter === "all" || r.cat === filter) &&
       (search === "" ||
@@ -50,11 +62,13 @@ export default function RoomSelection() {
         r.desc.includes(search)),
   );
 
-  function openDetails(r: MockRoom) {
+  function openDetails(r: Room) {
     setLocation(r.cat === "voice" ? "/voice-room" : `/room-details/${r.id}`);
   }
 
-  function joinRoom(r: MockRoom) {
+  async function handleJoin(r: Room) {
+    const res = await joinRoom(r.id);
+    if (!res.ok) return;
     setLocation(r.cat === "voice" ? "/voice-room" : `/chat-screen/${r.id}`);
   }
 
@@ -101,7 +115,7 @@ export default function RoomSelection() {
               online={r.online}
               joinLabel="انضمام"
               onClick={() => openDetails(r)}
-              onJoin={() => joinRoom(r)}
+              onJoin={() => handleJoin(r)}
             />
           ))}
           {visible.length === 0 && (

@@ -11,6 +11,9 @@ import {
 } from "@/components/chat-ui";
 import { useLocation } from "wouter";
 import { VOICE_SPEAKERS, VOICE_LISTENERS } from "@/data/chat";
+import { leaveRoom } from "@/data/chatApi";
+
+const VOICE_ROOM_ID = "3";
 
 function SpeakerTile({
   letter,
@@ -65,7 +68,10 @@ function ListenerTile({
 
 export default function VoiceOnlyRoom() {
   const [, setLocation] = useLocation();
-  const leave = () => setLocation("/room-selection");
+  const leave = async () => {
+    await leaveRoom(VOICE_ROOM_ID);
+    setLocation("/room-selection");
+  };
   return (
     <PageBackdrop>
       <PhoneFrame>

@@ -23,20 +23,18 @@ import {
 } from "@/components/chat-ui";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useRoute } from "wouter";
+import { MOCK_ROOMS, pickRandom, ICE_BREAKERS, TOPICS } from "@/data/chat";
 import {
-  getRoomById,
-  MOCK_ROOMS,
-  seedMessages,
-  nowTime,
-  randomDuration,
-  nextMessageId,
-  pickRandom,
-  ICE_BREAKERS,
-  TOPICS,
-  type ChatMsg,
-} from "@/data/chat";
+  getRoom,
+  getMessages,
+  sendMessage,
+  sendVoiceMessage,
+  postSystemMessage,
+  type Room,
+  type Message,
+} from "@/data/chatApi";
 
-function MessageItem({ m }: { m: ChatMsg }) {
+function MessageItem({ m }: { m: Message }) {
   if (m.kind === "incoming" && m.name && m.letter && m.tone) {
     return (
       <IncomingBubble
@@ -69,37 +67,55 @@ function MessageItem({ m }: { m: ChatMsg }) {
 export default function ChatScreen() {
   const [, params] = useRoute("/chat-screen/:id");
   const [, setLocation] = useLocation();
-  const room = getRoomById(params?.id) ?? MOCK_ROOMS[1];
+  const roomId = params?.id ?? MOCK_ROOMS[1].id;
 
-  const [messages, setMessages] = useState<ChatMsg[]>(() => seedMessages());
+  const [room, setRoom] = useState<Room>(MOCK_ROOMS[1]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([getRoom(roomId), getMessages(roomId)]).then(([r, msgs]) => {
+      if (cancelled) return;
+      if (r) setRoom(r);
+      setMessages(msgs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId]);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  function append(msg: Omit<ChatMsg, "id" | "time"> & Partial<Pick<ChatMsg, "time">>) {
-    setMessages((prev) => [
-      ...prev,
-      { id: nextMessageId(), time: nowTime(), ...msg } as ChatMsg,
-    ]);
-  }
-
-  function sendText() {
+  async function sendText() {
     const text = draft.trim();
     if (!text) return;
-    append({ kind: "outgoing", text });
     setDraft("");
+    const res = await sendMessage(roomId, text);
+    if (res.ok) setMessages((prev) => [...prev, res.data]);
   }
 
-  const sendVoice = () =>
-    append({ kind: "voice-out", duration: randomDuration() });
-  const addTopic = () =>
-    append({ kind: "system", text: `Topic suggestion: ${pickRandom(TOPICS)} 💡` });
-  const addIceBreaker = () =>
-    append({ kind: "system", text: pickRandom(ICE_BREAKERS) });
+  async function sendVoice() {
+    const res = await sendVoiceMessage(roomId);
+    if (res.ok) setMessages((prev) => [...prev, res.data]);
+  }
+
+  async function addTopic() {
+    const res = await postSystemMessage(
+      roomId,
+      `Topic suggestion: ${pickRandom(TOPICS)} 💡`,
+    );
+    if (res.ok) setMessages((prev) => [...prev, res.data]);
+  }
+
+  async function addIceBreaker() {
+    const res = await postSystemMessage(roomId, pickRandom(ICE_BREAKERS));
+    if (res.ok) setMessages((prev) => [...prev, res.data]);
+  }
 
   return (
     <PageBackdrop>

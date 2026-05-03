@@ -21,19 +21,31 @@ import {
   ChatScrollBg,
   HeroBadge,
 } from "@/components/chat-ui";
+import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
-import {
-  getRoomById,
-  MOCK_ROOMS,
-  PARTICIPANTS,
-  ROOM_RULES,
-} from "@/data/chat";
+import { MOCK_ROOMS, PARTICIPANTS, ROOM_RULES } from "@/data/chat";
+import { getRoom, joinRoom, type Room } from "@/data/chatApi";
 
 export default function RoomDetails() {
   const [, params] = useRoute("/room-details/:id");
   const [, setLocation] = useLocation();
-  const room = getRoomById(params?.id) ?? MOCK_ROOMS[1];
-  const goChat = () => setLocation(`/chat-screen/${room.id}`);
+  const [room, setRoom] = useState<Room>(MOCK_ROOMS[1]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getRoom(params?.id).then((r) => {
+      if (!cancelled && r) setRoom(r);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [params?.id]);
+
+  async function goChat() {
+    const res = await joinRoom(room.id);
+    if (!res.ok) return;
+    setLocation(`/chat-screen/${room.id}`);
+  }
 
   return (
     <PageBackdrop>

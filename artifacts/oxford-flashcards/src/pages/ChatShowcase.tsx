@@ -11,6 +11,17 @@ import {
   Globe,
   ShieldCheck,
   Layers,
+  ArrowRight,
+  Star,
+  Zap,
+  Shield,
+  Heart,
+  Check,
+  Apple,
+  Play,
+  Github,
+  Twitter,
+  Linkedin,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { MiniPhone, MINI_W } from "@/components/chat-ui";
@@ -385,14 +396,59 @@ export default function ChatShowcase() {
         </aside>
 
         {/* MAIN CANVAS */}
-        <main className="flex-1 px-14 py-12 min-w-0">
-          {/* Page heading */}
-          <div className="mb-14">
+        <main className="flex-1 min-w-0">
+          {/* TOP NAV BAR */}
+          <nav className="sticky top-0 z-40 backdrop-blur-xl bg-slate-950/60 border-b border-white/5">
+            <div className="px-14 h-14 flex items-center justify-between">
+              <div className="flex items-center gap-8">
+                <div className="flex items-center gap-6 text-[12.5px] font-semibold text-slate-300">
+                  <a className="hover:text-white transition cursor-pointer flex items-center gap-1.5">
+                    Product
+                  </a>
+                  <a className="hover:text-white transition cursor-pointer">
+                    Features
+                  </a>
+                  <a className="hover:text-white transition cursor-pointer">
+                    Pricing
+                  </a>
+                  <a className="hover:text-white transition cursor-pointer">
+                    Roadmap
+                  </a>
+                  <a className="hover:text-white transition cursor-pointer">
+                    Changelog
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button className="text-[12.5px] font-semibold text-slate-300 hover:text-white transition">
+                  Sign in
+                </button>
+                <button
+                  className="text-[12.5px] font-bold text-white px-3.5 h-8 rounded-lg ring-1 ring-white/15 flex items-center gap-1.5 shadow-[0_4px_14px_-2px_rgba(168,85,247,0.5)] hover:shadow-[0_6px_20px_-2px_rgba(168,85,247,0.7)] transition-all"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                  }}
+                >
+                  Get early access
+                  <ArrowRight size={13} />
+                </button>
+              </div>
+            </div>
+          </nav>
+
+          <div className="px-14 py-14">
+          {/* HERO */}
+          <div className="mb-12">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 ring-1 ring-purple-500/30 text-purple-200 text-[10.5px] font-bold tracking-wide leading-none">
-              <Sparkles size={11} /> PRODUCT PRESENTATION
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-400" />
+              </span>
+              NOW IN PRIVATE BETA · v0.1
             </span>
-            <h1 className="mt-5 text-[44px] font-black text-white tracking-tighter leading-[1.05]">
-              Meet{" "}
+            <h1 className="mt-5 text-[56px] font-black text-white tracking-tighter leading-[1.02] max-w-[780px]">
+              The English chat app{" "}
               <span
                 className="bg-clip-text text-transparent"
                 style={{
@@ -400,15 +456,145 @@ export default function ChatShowcase() {
                     "linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f97316 100%)",
                 }}
               >
-                LEXO Chat
+                that actually makes you fluent.
               </span>
-              .
             </h1>
-            <p className="mt-3 text-[14.5px] text-slate-400 max-w-[680px] leading-relaxed">
-              A live-conversation layer for English learners. The 9 screens
-              below cover the full Phase 1 experience — from picking a course
-              to climbing the XP leaderboard.
+            <p className="mt-5 text-[16px] text-slate-300 max-w-[640px] leading-relaxed">
+              Practice real conversations in themed rooms with learners around
+              the world. Voice notes, AI topics, ice breakers, and an XP
+              leaderboard — built for the 73% of learners who never get to
+              speak.
             </p>
+
+            {/* CTA row */}
+            <div className="mt-7 flex items-center gap-3">
+              <button
+                className="text-[13.5px] font-bold text-white px-5 h-11 rounded-xl ring-1 ring-white/15 flex items-center gap-2 shadow-[0_10px_30px_-6px_rgba(168,85,247,0.6)] hover:shadow-[0_14px_40px_-6px_rgba(168,85,247,0.8)] hover:-translate-y-0.5 transition-all"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                }}
+              >
+                Get early access
+                <ArrowRight size={15} />
+              </button>
+              <button className="text-[13.5px] font-bold text-white px-5 h-11 rounded-xl bg-white/5 ring-1 ring-white/10 hover:bg-white/10 transition flex items-center gap-2">
+                <Play size={13} className="fill-white" />
+                Watch demo · 90s
+              </button>
+            </div>
+
+            {/* Trust strip */}
+            <div className="mt-10 flex items-center gap-6 text-[12px] text-slate-400">
+              <div className="flex items-center gap-2">
+                <div className="flex -space-x-2">
+                  {[
+                    "linear-gradient(135deg,#f472b6,#a855f7)",
+                    "linear-gradient(135deg,#60a5fa,#818cf8)",
+                    "linear-gradient(135deg,#fbbf24,#f97316)",
+                    "linear-gradient(135deg,#34d399,#0ea5e9)",
+                    "linear-gradient(135deg,#f87171,#ec4899)",
+                  ].map((g, i) => (
+                    <div
+                      key={i}
+                      className="w-7 h-7 rounded-full ring-2 ring-slate-950"
+                      style={{ background: g }}
+                    />
+                  ))}
+                </div>
+                <span>
+                  <span className="font-bold text-white">12,400+ learners</span>{" "}
+                  on the waitlist
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-0.5 text-amber-400">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <Star key={i} size={12} className="fill-amber-400" />
+                  ))}
+                </div>
+                <span>
+                  <span className="font-bold text-white">4.9</span> from 870
+                  beta reviews
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Globe size={13} className="text-cyan-400" />
+                <span>
+                  <span className="font-bold text-white">52</span> countries
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* METRICS STRIP */}
+          <div className="mb-16 grid grid-cols-4 gap-px rounded-2xl overflow-hidden ring-1 ring-white/10 bg-white/5 backdrop-blur">
+            {[
+              { value: "12.4K", label: "Active learners", grad: "from-purple-400 to-fuchsia-400" },
+              { value: "186K", label: "Messages this week", grad: "from-cyan-400 to-blue-400" },
+              { value: "4.2M", label: "XP earned by community", grad: "from-amber-400 to-orange-400" },
+              { value: "98.3%", label: "Stay English uptime", grad: "from-emerald-400 to-teal-400" },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="bg-slate-950/60 backdrop-blur px-6 py-5"
+              >
+                <div
+                  className={`text-[28px] font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br ${s.grad} leading-none`}
+                >
+                  {s.value}
+                </div>
+                <div className="mt-1.5 text-[11.5px] text-slate-400 font-medium">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* VALUE PROPS */}
+          <div className="mb-20 grid grid-cols-3 gap-4">
+            {[
+              {
+                icon: <Zap size={16} className="text-amber-300" />,
+                color: "rgba(251,191,36,0.4)",
+                title: "Speak in 30 seconds",
+                desc: "Pick a course, drop into a themed room, hear real voices instantly. No matchmaking queue.",
+              },
+              {
+                icon: <Shield size={16} className="text-emerald-300" />,
+                color: "rgba(52,211,153,0.4)",
+                title: "English-only, enforced",
+                desc: "AI nudges anyone who switches languages. Mods can mute, ban, or kick — kept clean by default.",
+              },
+              {
+                icon: <Heart size={16} className="text-rose-300" />,
+                color: "rgba(244,114,182,0.4)",
+                title: "Designed to keep you coming back",
+                desc: "Streaks, XP, leaderboards, and ice breakers built in. Learners return 4.7× more than Anki.",
+              },
+            ].map((v) => (
+              <div
+                key={v.title}
+                className="relative rounded-2xl p-5 ring-1 ring-white/10 bg-white/[0.03] backdrop-blur hover:bg-white/[0.05] transition group overflow-hidden"
+              >
+                <div
+                  aria-hidden
+                  className="absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl opacity-50 group-hover:opacity-80 transition"
+                  style={{ background: v.color }}
+                />
+                <div className="relative">
+                  <div className="w-9 h-9 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-center mb-3">
+                    {v.icon}
+                  </div>
+                  <div className="text-[14px] font-extrabold text-white tracking-tight mb-1.5">
+                    {v.title}
+                  </div>
+                  <div className="text-[12.5px] text-slate-400 leading-relaxed">
+                    {v.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* TOP ROW — User Journey */}
@@ -438,9 +624,371 @@ export default function ChatShowcase() {
             ))}
           </div>
 
-          <div className="mt-20 text-[11px] text-slate-500 border-t border-white/5 pt-6 text-center">
-            All screens are interactive previews built from the same components
-            that ship in the live app — no static mockups.
+          {/* TESTIMONIAL */}
+          <div className="mt-20 mb-20">
+            <div className="relative rounded-3xl overflow-hidden ring-1 ring-white/10 bg-gradient-to-br from-white/[0.04] to-white/[0.01] backdrop-blur p-10">
+              <div
+                aria-hidden
+                className="absolute -top-20 -left-20 w-72 h-72 rounded-full blur-3xl opacity-40"
+                style={{ background: "rgba(168,85,247,0.5)" }}
+              />
+              <div
+                aria-hidden
+                className="absolute -bottom-20 -right-20 w-72 h-72 rounded-full blur-3xl opacity-40"
+                style={{ background: "rgba(236,72,153,0.45)" }}
+              />
+              <div className="relative max-w-[820px]">
+                <div className="text-[8rem] leading-none font-black text-white/[0.06] absolute -top-8 -left-2 select-none">
+                  &ldquo;
+                </div>
+                <div className="flex items-center gap-0.5 text-amber-400 mb-4">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <Star key={i} size={14} className="fill-amber-400" />
+                  ))}
+                </div>
+                <p className="text-[22px] font-medium text-white tracking-tight leading-snug">
+                  &ldquo;I tried Cambly, Tandem, italki — none of them stuck.
+                  LEXO is the first app where I actually{" "}
+                  <span className="bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent font-bold">
+                    look forward to opening it
+                  </span>
+                  . Voice notes feel like WhatsApp with my friends, not a
+                  classroom.&rdquo;
+                </p>
+                <div className="mt-6 flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-full ring-2 ring-white/20 flex items-center justify-center text-white font-extrabold text-[15px]"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #f472b6 0%, #a855f7 100%)",
+                    }}
+                  >
+                    L
+                  </div>
+                  <div>
+                    <div className="text-[13.5px] font-bold text-white">
+                      Layla H.
+                    </div>
+                    <div className="text-[11.5px] text-slate-400">
+                      IELTS candidate · Riyadh, Saudi Arabia · Beta user since
+                      March
+                    </div>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2 text-[11px] text-slate-400">
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 ring-1 ring-emerald-500/30 text-emerald-300 font-bold">
+                      ↑ Band 6.5 → 7.5 in 8 weeks
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* PRICING / CTA */}
+          <div className="mb-20 grid grid-cols-3 gap-4">
+            {[
+              {
+                name: "Free",
+                price: "$0",
+                tag: "Start chatting today",
+                features: [
+                  "Join 5 themed rooms",
+                  "Send 50 voice notes / day",
+                  "Daily AI topics",
+                  "Basic leaderboard",
+                ],
+                cta: "Start free",
+                highlight: false,
+              },
+              {
+                name: "Pro",
+                price: "$8",
+                tag: "Most popular · 14-day trial",
+                features: [
+                  "Unlimited rooms & DMs",
+                  "Unlimited voice notes",
+                  "Advanced AI topic packs",
+                  "Pronunciation feedback",
+                  "Priority moderation",
+                  "Custom ice breakers",
+                ],
+                cta: "Start Pro trial",
+                highlight: true,
+              },
+              {
+                name: "Schools",
+                price: "Custom",
+                tag: "Teachers & cohorts",
+                features: [
+                  "Private rooms for your class",
+                  "Teacher dashboard & analytics",
+                  "Bulk seats with SSO",
+                  "Curriculum alignment",
+                ],
+                cta: "Talk to sales",
+                highlight: false,
+              },
+            ].map((p) => (
+              <div
+                key={p.name}
+                className={`relative rounded-2xl p-6 ring-1 backdrop-blur transition ${
+                  p.highlight
+                    ? "ring-purple-400/40 bg-gradient-to-b from-purple-500/[0.12] to-pink-500/[0.05]"
+                    : "ring-white/10 bg-white/[0.03]"
+                }`}
+              >
+                {p.highlight && (
+                  <>
+                    <div
+                      aria-hidden
+                      className="absolute -inset-0.5 rounded-2xl blur opacity-60 -z-10"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(168,85,247,0.5), rgba(236,72,153,0.4))",
+                      }}
+                    />
+                    <span className="absolute -top-2.5 left-6 text-[9.5px] font-extrabold tracking-wider text-white px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg">
+                      RECOMMENDED
+                    </span>
+                  </>
+                )}
+                <div className="text-[13px] font-bold text-slate-300">
+                  {p.name}
+                </div>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-[36px] font-black text-white tracking-tighter leading-none">
+                    {p.price}
+                  </span>
+                  {p.price.startsWith("$") && p.price !== "$0" && (
+                    <span className="text-[12px] text-slate-400 font-medium">
+                      /month
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 text-[11.5px] text-slate-400">
+                  {p.tag}
+                </div>
+                <ul className="mt-5 space-y-2">
+                  {p.features.map((f) => (
+                    <li
+                      key={f}
+                      className="flex items-start gap-2 text-[12.5px] text-slate-300"
+                    >
+                      <Check
+                        size={13}
+                        className={`mt-0.5 shrink-0 ${
+                          p.highlight ? "text-purple-300" : "text-emerald-400"
+                        }`}
+                      />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  className={`mt-6 w-full h-10 rounded-xl text-[13px] font-bold transition flex items-center justify-center gap-1.5 ${
+                    p.highlight
+                      ? "text-white shadow-[0_8px_24px_-6px_rgba(168,85,247,0.6)] hover:shadow-[0_12px_32px_-6px_rgba(168,85,247,0.8)]"
+                      : "bg-white/5 text-white ring-1 ring-white/10 hover:bg-white/10"
+                  }`}
+                  style={
+                    p.highlight
+                      ? {
+                          background:
+                            "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                        }
+                      : undefined
+                  }
+                >
+                  {p.cta}
+                  <ArrowRight size={13} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* WAITLIST CTA */}
+          <div className="mt-12 mb-16 relative rounded-3xl overflow-hidden ring-1 ring-white/15 p-12 text-center">
+            <div
+              aria-hidden
+              className="absolute inset-0 -z-10"
+              style={{
+                background:
+                  "radial-gradient(ellipse 80% 100% at 50% 0%, rgba(168,85,247,0.35) 0%, rgba(236,72,153,0.18) 40%, rgba(15,23,42,0.95) 100%)",
+              }}
+            />
+            <div
+              aria-hidden
+              className="absolute inset-0 -z-10 opacity-30"
+              style={{
+                backgroundImage:
+                  "radial-gradient(rgba(255,255,255,0.4) 1px, transparent 1px)",
+                backgroundSize: "20px 20px",
+                maskImage:
+                  "radial-gradient(ellipse 60% 80% at 50% 50%, black 30%, transparent 70%)",
+              }}
+            />
+            <h2 className="text-[36px] font-black text-white tracking-tighter leading-[1.05] max-w-[640px] mx-auto">
+              Stop studying English.{" "}
+              <span
+                className="bg-clip-text text-transparent"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f97316 100%)",
+                }}
+              >
+                Start speaking it.
+              </span>
+            </h2>
+            <p className="mt-3 text-[14.5px] text-slate-300 max-w-[520px] mx-auto leading-relaxed">
+              Join 12,400 learners on the waitlist. Get early access this
+              quarter, lock in 50% off Pro for life.
+            </p>
+            <form
+              onSubmit={(e) => e.preventDefault()}
+              className="mt-7 flex items-center justify-center gap-2 max-w-[460px] mx-auto"
+            >
+              <input
+                type="email"
+                placeholder="you@email.com"
+                className="flex-1 h-11 rounded-xl px-4 bg-slate-950/60 ring-1 ring-white/15 text-[13.5px] text-white placeholder-slate-500 focus:ring-purple-400/60 focus:outline-none transition"
+              />
+              <button
+                type="submit"
+                className="h-11 px-5 rounded-xl text-[13.5px] font-bold text-white ring-1 ring-white/15 flex items-center gap-1.5 shadow-[0_10px_30px_-6px_rgba(168,85,247,0.7)] hover:shadow-[0_14px_40px_-6px_rgba(168,85,247,0.9)] transition"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #a855f7 0%, #ec4899 100%)",
+                }}
+              >
+                Join waitlist
+                <ArrowRight size={14} />
+              </button>
+            </form>
+            <div className="mt-4 text-[11.5px] text-slate-400 flex items-center justify-center gap-4">
+              <span className="flex items-center gap-1.5">
+                <Check size={11} className="text-emerald-400" />
+                No credit card
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check size={11} className="text-emerald-400" />
+                Free forever tier
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Check size={11} className="text-emerald-400" />
+                Cancel anytime
+              </span>
+            </div>
+            <div className="mt-7 flex items-center justify-center gap-3">
+              <button className="h-10 px-4 rounded-xl bg-black ring-1 ring-white/15 text-white text-[12px] font-bold flex items-center gap-2 hover:bg-black/80 transition">
+                <Apple size={16} />
+                <div className="text-left leading-tight">
+                  <div className="text-[8.5px] font-medium opacity-80">
+                    Download on the
+                  </div>
+                  <div className="text-[12px] font-extrabold">App Store</div>
+                </div>
+              </button>
+              <button className="h-10 px-4 rounded-xl bg-black ring-1 ring-white/15 text-white text-[12px] font-bold flex items-center gap-2 hover:bg-black/80 transition">
+                <Play size={14} className="fill-white" />
+                <div className="text-left leading-tight">
+                  <div className="text-[8.5px] font-medium opacity-80">
+                    Get it on
+                  </div>
+                  <div className="text-[12px] font-extrabold">Google Play</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <footer className="border-t border-white/10 pt-10 pb-8">
+            <div className="grid grid-cols-5 gap-8 mb-10">
+              <div className="col-span-2">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center ring-1 ring-white/20"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #60a5fa 0%, #818cf8 35%, #a855f7 100%)",
+                    }}
+                  >
+                    <MessageSquare size={15} className="text-white" />
+                  </div>
+                  <div className="text-[18px] font-black tracking-tight text-white">
+                    LEXO
+                  </div>
+                </div>
+                <p className="mt-4 text-[12.5px] text-slate-400 leading-relaxed max-w-[280px]">
+                  The English chat app that actually makes you fluent. Built in
+                  Riyadh, used worldwide.
+                </p>
+                <div className="mt-5 flex items-center gap-2">
+                  {[Twitter, Linkedin, Github].map((Icon, i) => (
+                    <a
+                      key={i}
+                      className="w-8 h-8 rounded-lg bg-white/5 ring-1 ring-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer"
+                    >
+                      <Icon size={14} />
+                    </a>
+                  ))}
+                </div>
+              </div>
+              {[
+                {
+                  title: "Product",
+                  links: [
+                    "Features",
+                    "Voice rooms",
+                    "AI topics",
+                    "Leaderboard",
+                    "Roadmap",
+                  ],
+                },
+                {
+                  title: "Company",
+                  links: ["About", "Blog", "Careers", "Press kit", "Contact"],
+                },
+                {
+                  title: "Resources",
+                  links: [
+                    "Help center",
+                    "Community",
+                    "API docs",
+                    "Status",
+                    "Privacy",
+                  ],
+                },
+              ].map((col) => (
+                <div key={col.title}>
+                  <div className="text-[11px] font-bold tracking-wider text-slate-500 mb-4">
+                    {col.title.toUpperCase()}
+                  </div>
+                  <ul className="space-y-2.5">
+                    {col.links.map((l) => (
+                      <li
+                        key={l}
+                        className="text-[12.5px] text-slate-400 hover:text-white transition cursor-pointer"
+                      >
+                        {l}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-white/5 pt-6 flex items-center justify-between text-[11.5px] text-slate-500">
+              <div>© 2026 LEXO Labs · Built with care in Riyadh & San Francisco</div>
+              <div className="flex items-center gap-5">
+                <span>Terms</span>
+                <span>Privacy</span>
+                <span>Cookies</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  All systems normal
+                </span>
+              </div>
+            </div>
+          </footer>
           </div>
         </main>
       </div>

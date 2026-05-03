@@ -41,7 +41,7 @@ export function InputBar({
       </button>
       <button
         onClick={onSend}
-        className="w-8 h-8 rounded-full flex items-center justify-center ring-1 ring-white/15"
+        className="w-8 h-8 rounded-full flex items-center justify-center ring-1 ring-white/15 hover:brightness-110 active:scale-90 transition-[transform,filter] duration-150"
         style={{
           background: chatUI.gradient.purpleSimple,
           boxShadow: chatUI.shadow.purpleBtn,

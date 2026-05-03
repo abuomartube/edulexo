@@ -316,6 +316,12 @@
   .animate-fade-in { animation: fade-in 460ms cubic-bezier(0.4, 0, 0.2, 1) both; }
   .animate-fade-in-up { animation: fade-in-up 560ms cubic-bezier(0.4, 0, 0.2, 1) both; }
 
+  @keyframes mic-breathe {
+    0%, 100% { transform: scale(1); box-shadow: 0 6px 18px -3px rgba(99,102,241,0.7), 0 0 28px -6px rgba(168,85,247,0.65), inset 0 1px 0 rgba(255,255,255,0.4); }
+    50% { transform: scale(1.06); box-shadow: 0 8px 24px -3px rgba(99,102,241,0.85), 0 0 40px -4px rgba(168,85,247,0.85), inset 0 1px 0 rgba(255,255,255,0.5); }
+  }
+  .animate-mic-breathe { animation: mic-breathe 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
   /* Card glow + hover lift. Always-on subtle glow that intensifies on hover.
      Uses existing --primary token, no new colors. */
   .glow-card {
@@ -413,6 +419,7 @@
     #root,
     .animate-fade-in,
     .animate-fade-in-up,
+    .animate-mic-breathe,
     .glow-card,
     .glow-button {
       animation: none !important;

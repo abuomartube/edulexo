@@ -43,7 +43,7 @@ export function RoomCard({
   return (
     <div
       onClick={onClick}
-      className={`${chatUI.radius.card} ${chatUI.surface.card} p-3 flex items-center gap-3 hover:border-white/[0.12] transition ${onClick ? "cursor-pointer" : ""}`}
+      className={`${chatUI.radius.card} ${chatUI.surface.card} p-3 flex items-center gap-3 hover:border-white/[0.12] transition-[transform,border-color,background] duration-150 ${onClick ? "cursor-pointer active:scale-[0.985]" : ""}`}
     >
       <div className="relative shrink-0">
         <div
@@ -76,7 +76,7 @@ export function RoomCard({
           e.stopPropagation();
           onJoin?.();
         }}
-        className="relative shrink-0 px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-white ring-1 ring-white/20 overflow-hidden"
+        className="relative shrink-0 px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-white ring-1 ring-white/20 overflow-hidden hover:brightness-110 active:scale-[0.95] transition-[transform,filter] duration-150"
         style={{
           background: chatUI.gradient.purpleSimple,
           boxShadow: chatUI.shadow.purpleBtn,

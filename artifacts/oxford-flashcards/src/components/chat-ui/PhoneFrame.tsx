@@ -27,7 +27,7 @@ export function PhoneFrame({
     >
       <div
         dir={dir}
-        className="relative w-full h-full rounded-[42px] overflow-hidden flex flex-col text-white"
+        className="relative w-full h-full rounded-[42px] overflow-hidden flex flex-col text-white animate-fade-in"
         style={{
           background: chatUI.ambient.sceneBg,
           boxShadow:

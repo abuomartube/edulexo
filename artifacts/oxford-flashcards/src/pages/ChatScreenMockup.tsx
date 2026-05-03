@@ -165,10 +165,10 @@ export default function ChatScreenMockup() {
           }}
         >
           {messages.map((m) => {
+            let inner: React.ReactNode = null;
             if (m.kind === "incoming" && m.name && m.letter && m.tone) {
-              return (
+              inner = (
                 <IncomingBubble
-                  key={m.id}
                   name={m.name}
                   tone={m.tone}
                   letter={m.letter}
@@ -178,17 +178,11 @@ export default function ChatScreenMockup() {
                   {m.text}
                 </IncomingBubble>
               );
-            }
-            if (m.kind === "outgoing") {
-              return (
-                <OutgoingBubble key={m.id} time={m.time}>
-                  {m.text}
-                </OutgoingBubble>
-              );
-            }
-            if (m.kind === "voice-out") {
-              return (
-                <OutgoingBubble key={m.id} time={m.time}>
+            } else if (m.kind === "outgoing") {
+              inner = <OutgoingBubble time={m.time}>{m.text}</OutgoingBubble>;
+            } else if (m.kind === "voice-out") {
+              inner = (
+                <OutgoingBubble time={m.time}>
                   <VoiceMessage
                     duration={m.duration ?? "0:10"}
                     played={0.5}
@@ -196,11 +190,14 @@ export default function ChatScreenMockup() {
                   />
                 </OutgoingBubble>
               );
+            } else if (m.kind === "system") {
+              inner = <SystemBubble>{m.text}</SystemBubble>;
             }
-            if (m.kind === "system") {
-              return <SystemBubble key={m.id}>{m.text}</SystemBubble>;
-            }
-            return null;
+            return (
+              <div key={m.id} className="animate-fade-in-up">
+                {inner}
+              </div>
+            );
           })}
         </div>
 
@@ -246,7 +243,7 @@ export default function ChatScreenMockup() {
               <div className="absolute inset-0 -m-1.5 rounded-full bg-purple-500/40 blur-lg animate-pulse" />
               <button
                 onClick={sendVoice}
-                className="relative w-10 h-10 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:brightness-110 active:brightness-95 transition"
+                className="relative w-10 h-10 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:brightness-110 active:brightness-95 active:scale-90 animate-mic-breathe transition-[transform,filter] duration-150"
                 style={{
                   background:
                     "linear-gradient(135deg, #60a5fa 0%, #818cf8 35%, #a855f7 100%)",

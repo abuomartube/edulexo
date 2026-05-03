@@ -75,7 +75,7 @@ export function IconButton({
           </span>
         )}
         <div
-          className={`relative rounded-full ring-1 backdrop-blur-xl flex items-center justify-center group-hover:brightness-110 group-active:brightness-95 transition overflow-hidden ${t.btn}`}
+          className={`relative rounded-full ring-1 backdrop-blur-xl flex items-center justify-center group-hover:brightness-110 group-active:brightness-95 group-active:scale-[0.92] transition-[transform,filter] duration-150 overflow-hidden ${t.btn}`}
           style={{ width: size, height: size, ...t.style }}
         >
           {/* glossy top sheen */}

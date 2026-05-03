@@ -25,7 +25,7 @@ export function PrimaryButton({
   return (
     <button
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center gap-2 rounded-xl font-bold text-white ring-1 ring-white/20 hover:brightness-110 active:brightness-95 transition overflow-hidden ${SIZE[size]} ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 rounded-xl font-bold text-white ring-1 ring-white/20 hover:brightness-110 active:brightness-95 active:scale-[0.97] transition-[transform,filter,background] duration-150 overflow-hidden ${SIZE[size]} ${className}`}
       style={{
         background: chatUI.gradient.purpleSimple,
         boxShadow: chatUI.shadow.purpleBtn,
@@ -63,7 +63,7 @@ export function SecondaryButton({
   return (
     <button
       onClick={onClick}
-      className={`relative inline-flex items-center justify-center gap-2 rounded-xl font-bold text-slate-100 ring-1 ring-white/15 hover:bg-white/[0.08] active:bg-white/[0.04] transition overflow-hidden ${SIZE[size]} ${className}`}
+      className={`relative inline-flex items-center justify-center gap-2 rounded-xl font-bold text-slate-100 ring-1 ring-white/15 hover:bg-white/[0.08] active:bg-white/[0.04] active:scale-[0.97] transition-[transform,background] duration-150 overflow-hidden ${SIZE[size]} ${className}`}
       style={{
         background:
           "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",

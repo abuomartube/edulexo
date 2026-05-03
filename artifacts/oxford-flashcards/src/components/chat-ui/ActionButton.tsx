@@ -26,7 +26,7 @@ export function ActionButton({
   return (
     <button
       onClick={onClick}
-      className={`flex-1 rounded-xl ${TONES[tone]} ring-1 backdrop-blur flex flex-col items-center justify-center py-1.5 gap-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:brightness-110 transition`}
+      className={`flex-1 rounded-xl ${TONES[tone]} ring-1 backdrop-blur flex flex-col items-center justify-center py-1.5 gap-0.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] hover:brightness-110 active:scale-[0.95] transition-[transform,filter] duration-150`}
     >
       <div className="opacity-90">{icon}</div>
       <span className="text-[10px] font-semibold tracking-tight">{label}</span>

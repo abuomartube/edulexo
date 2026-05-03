@@ -39,9 +39,15 @@ function VoiceOnlyComingSoon({ slug }: { slug: string }) {
   const { lang } = useLanguage();
   void slug;
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 text-white">
+    <div
+      className="min-h-screen text-white relative"
+      style={{
+        background:
+          "radial-gradient(ellipse 80% 60% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 55%, #02040e 100%)",
+      }}
+    >
       <Header />
-      <main className="max-w-md mx-auto px-4 py-10 text-center">
+      <main className="relative max-w-md mx-auto px-4 py-10 text-center">
         <Link
           href="/chat"
           className="inline-flex items-center gap-1 text-purple-300 text-sm mb-8"
@@ -49,8 +55,8 @@ function VoiceOnlyComingSoon({ slug }: { slug: string }) {
           <ArrowLeft size={16} className="rtl:rotate-180" />{" "}
           {lang === "ar" ? "رجوع" : "Back"}
         </Link>
-        <div className="rounded-3xl bg-gradient-to-br from-purple-700/40 via-indigo-700/40 to-purple-900/40 border border-purple-500/30 p-8 shadow-2xl">
-          <div className="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-700 flex items-center justify-center mb-6 shadow-2xl ring-8 ring-purple-500/20">
+        <div className="rounded-[28px] bg-gradient-to-br from-slate-800/55 to-slate-900/65 backdrop-blur-2xl ring-1 ring-white/10 p-8 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85),0_8px_24px_-8px_rgba(124,58,237,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-700 flex items-center justify-center mb-6 shadow-[0_0_60px_rgba(124,58,237,0.55)] ring-8 ring-purple-500/20">
             <Headphones size={56} />
           </div>
           <h1 className="text-2xl font-extrabold mb-2">
@@ -77,7 +83,7 @@ function VoiceOnlyComingSoon({ slug }: { slug: string }) {
 }
 function Feature({ label }: { label: string }) {
   return (
-    <div className="rounded-xl bg-black/20 border border-purple-500/20 px-3 py-2 text-center">
+    <div className="rounded-xl bg-white/[0.05] backdrop-blur-xl ring-1 ring-white/10 px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
       {label}
     </div>
   );
@@ -329,9 +335,22 @@ export default function ChatRoomPage() {
   // ───────────── PREVIEW STAGE ─────────────
   if (stage === "preview") {
     return (
-      <div className="dark min-h-screen bg-slate-950 text-slate-100">
+      <div
+        className="dark min-h-screen text-slate-100 relative"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 55%, #02040e 100%)",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at top, rgba(124,58,237,0.18), transparent 60%)",
+          }}
+        />
         <Header />
-        <main className="max-w-xl mx-auto px-4 sm:px-6 py-6">
+        <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-6">
           <Link
             href="/chat"
             className="inline-flex items-center gap-1 text-purple-300 text-sm mb-4 font-semibold"
@@ -340,12 +359,12 @@ export default function ChatRoomPage() {
             {lang === "ar" ? "رجوع" : "Back"}
           </Link>
 
-          <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl shadow-black/20">
-            <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/20 to-slate-900 p-6">
+          <div className="rounded-[28px] bg-gradient-to-br from-slate-800/55 to-slate-900/65 backdrop-blur-2xl ring-1 ring-white/10 overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85),0_8px_24px_-8px_rgba(124,58,237,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/15 to-transparent p-6">
               <div className="flex flex-col items-center text-center">
                 <div className="relative flex items-center justify-center mb-3">
                   <SoundWaves side="left" />
-                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-4xl shadow-2xl shadow-purple-900/40 mx-3">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-4xl shadow-[0_0_50px_rgba(124,58,237,0.55)] mx-3">
                     {room.emoji ?? "💬"}
                   </div>
                   <SoundWaves side="right" />
@@ -382,7 +401,7 @@ export default function ChatRoomPage() {
             )}
 
             {rules.length > 0 && (
-              <div className="px-6 pb-5 border-t border-slate-800 pt-5">
+              <div className="px-6 pb-5 border-t border-white/10 pt-5">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
                   <ShieldAlert size={12} className="text-purple-400" />
                   {lang === "ar" ? "قواعد الغرفة" : "Room Rules"}
@@ -404,7 +423,7 @@ export default function ChatRoomPage() {
             )}
 
             {(roomQ.data?.activeUsers?.length ?? 0) > 0 && (
-              <div className="px-6 pb-6 border-t border-slate-800 pt-5">
+              <div className="px-6 pb-6 border-t border-white/10 pt-5">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
                   {lang === "ar" ? "الموجودون الآن" : "People inside now"}
                 </h3>
@@ -429,10 +448,14 @@ export default function ChatRoomPage() {
             )}
           </div>
 
-          <div className="mt-5 flex flex-col gap-2">
+          <div className="mt-6 flex flex-col gap-3">
             <button
               onClick={() => setStage("chat")}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-xl shadow-purple-900/40"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-white font-bold transition hover:brightness-110 active:scale-[0.99] shadow-[0_18px_44px_-10px_rgba(124,58,237,0.7),0_4px_14px_-2px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.18)]"
+              style={{
+                background:
+                  "linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #4f46e5 100%)",
+              }}
               type="button"
             >
               <Headphones size={18} />{" "}
@@ -454,12 +477,18 @@ export default function ChatRoomPage() {
   // ───────────── CHAT STAGE ─────────────
   const insiders = roomQ.data?.activeUsers ?? [];
   return (
-    <div className="dark min-h-screen flex flex-col bg-slate-950 text-slate-100">
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-slate-950/85 border-b border-slate-800 px-3 sm:px-5 py-3">
+    <div
+      className="dark min-h-screen flex flex-col text-slate-100"
+      style={{
+        background:
+          "radial-gradient(ellipse 90% 70% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 60%, #02040e 100%)",
+      }}
+    >
+      <header className="sticky top-0 z-30 backdrop-blur-2xl bg-slate-950/60 border-b border-white/10 px-3 sm:px-5 py-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.7)]">
         <div className="max-w-3xl mx-auto flex items-center gap-2">
           <button
             onClick={() => navigate("/chat")}
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-300"
+            className="p-2 rounded-full hover:bg-white/10 text-slate-200 transition"
             aria-label="Back"
             type="button"
           >
@@ -493,7 +522,7 @@ export default function ChatRoomPage() {
           </div>
           <button
             type="button"
-            className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-purple-300 flex items-center justify-center"
+            className="w-9 h-9 rounded-full bg-white/[0.08] backdrop-blur-xl ring-1 ring-white/10 hover:bg-white/[0.14] text-purple-200 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition"
             aria-label="Raise hand"
             title={lang === "ar" ? "رفع اليد" : "Raise hand"}
           >
@@ -501,7 +530,7 @@ export default function ChatRoomPage() {
           </button>
           <button
             type="button"
-            className="w-9 h-9 rounded-full hover:bg-slate-800 text-slate-300 flex items-center justify-center"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.1] text-slate-200 flex items-center justify-center transition"
             aria-label="Menu"
           >
             <MoreVertical size={16} />
@@ -544,7 +573,7 @@ export default function ChatRoomPage() {
 
       {arabicWarn && (
         <div className="max-w-3xl mx-auto w-full px-3 sm:px-5">
-          <div className="mb-2 px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-900/60 text-amber-200 text-xs flex items-center gap-2">
+          <div className="mb-2 px-3 py-2 rounded-xl bg-amber-500/10 backdrop-blur-xl ring-1 ring-amber-400/30 text-amber-200 text-xs flex items-center gap-2 shadow-[0_8px_24px_-10px_rgba(251,191,36,0.4)]">
             <ShieldAlert size={14} />
             {lang === "ar"
               ? "حاول استخدام الإنجليزية فقط للحصول على أفضل ممارسة 💪"
@@ -553,7 +582,7 @@ export default function ChatRoomPage() {
         </div>
       )}
 
-      <footer className="sticky bottom-0 backdrop-blur-md bg-slate-950/95 border-t border-slate-800 px-3 sm:px-5 py-3">
+      <footer className="sticky bottom-0 backdrop-blur-2xl bg-slate-950/70 border-t border-white/10 px-3 sm:px-5 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.7)]">
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-2 mb-2.5 overflow-x-auto pb-1">
             <ToolPill
@@ -601,7 +630,7 @@ export default function ChatRoomPage() {
             <form
               onSubmit={handleSendText}
               dir="ltr"
-              className="flex items-center gap-2 rounded-full bg-slate-900 border border-slate-800 ps-3 pe-1.5 py-1.5"
+              className="flex items-center gap-2 rounded-full bg-white/[0.05] backdrop-blur-xl ring-1 ring-white/10 ps-3 pe-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_24px_-12px_rgba(0,0,0,0.7)]"
             >
               <span className="text-lg select-none">😊</span>
               <input
@@ -615,7 +644,11 @@ export default function ChatRoomPage() {
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center disabled:opacity-50 shadow-md shadow-purple-900/40"
+                  className="w-9 h-9 rounded-full text-white flex items-center justify-center disabled:opacity-50 transition hover:brightness-110 active:scale-95 shadow-[0_8px_22px_-6px_rgba(124,58,237,0.7)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                  }}
                   aria-label="Send"
                 >
                   {sending ? (
@@ -628,7 +661,11 @@ export default function ChatRoomPage() {
                 <button
                   type="button"
                   onClick={() => setRecording(true)}
-                  className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center shadow-md shadow-purple-900/40"
+                  className="w-9 h-9 rounded-full text-white flex items-center justify-center transition hover:brightness-110 active:scale-95 shadow-[0_8px_22px_-6px_rgba(124,58,237,0.7)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                  }}
                   aria-label="Record voice note"
                 >
                   <Mic size={16} />
@@ -676,16 +713,20 @@ function ToolPill({
   tone: "purple" | "amber" | "cyan" | "rose";
 }) {
   const toneClasses: Record<typeof tone, string> = {
-    purple: "bg-purple-500/15 text-purple-300 hover:bg-purple-500/25",
-    amber: "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25",
-    cyan: "bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25",
-    rose: "bg-rose-500/15 text-rose-300 hover:bg-rose-500/25",
+    purple:
+      "bg-purple-500/15 text-purple-200 hover:bg-purple-500/25 ring-purple-400/25 shadow-[0_6px_16px_-8px_rgba(168,85,247,0.6)]",
+    amber:
+      "bg-amber-500/15 text-amber-200 hover:bg-amber-500/25 ring-amber-400/25 shadow-[0_6px_16px_-8px_rgba(251,191,36,0.5)]",
+    cyan:
+      "bg-cyan-500/15 text-cyan-200 hover:bg-cyan-500/25 ring-cyan-400/25 shadow-[0_6px_16px_-8px_rgba(34,211,238,0.5)]",
+    rose:
+      "bg-rose-500/15 text-rose-200 hover:bg-rose-500/25 ring-rose-400/25 shadow-[0_6px_16px_-8px_rgba(244,63,94,0.5)]",
   };
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition ${toneClasses[tone]}`}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition ring-1 backdrop-blur-xl ${toneClasses[tone]}`}
     >
       {icon}
       {children}

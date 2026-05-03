@@ -122,23 +122,29 @@ export default function ChatDmThreadPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-100 via-purple-50/30 to-slate-100 dark:from-gray-950 dark:via-purple-950/30 dark:to-slate-950 text-slate-900 dark:text-slate-100">
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-gray-950/85 border-b border-slate-200/80 dark:border-gray-800/80 px-3 sm:px-5 py-3">
+    <div
+      className="dark min-h-screen flex flex-col text-slate-100"
+      style={{
+        background:
+          "radial-gradient(ellipse 90% 70% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 60%, #02040e 100%)",
+      }}
+    >
+      <header className="sticky top-0 z-30 backdrop-blur-2xl bg-slate-950/60 border-b border-white/10 px-3 sm:px-5 py-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.7)]">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate("/chat/messages")}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-800"
+            className="p-2 rounded-full hover:bg-white/10 text-slate-200 transition"
             type="button"
             aria-label="Back"
           >
             <ArrowLeft size={18} className="rtl:rotate-180" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center font-bold ring-2 ring-white/10 shadow-[0_8px_18px_-6px_rgba(124,58,237,0.6)]">
             {(other?.name ?? "?").slice(0, 2).toUpperCase()}
           </div>
           <div className="flex-1">
-            <p className="font-bold text-sm">{other?.name ?? "User"}</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="font-bold text-sm text-white">{other?.name ?? "User"}</p>
+            <p className="text-[11px] text-slate-400">
               {lang === "ar" ? "محادثة خاصة" : "Direct message"}
             </p>
           </div>
@@ -150,11 +156,11 @@ export default function ChatDmThreadPage() {
       >
         {loading && (
           <div className="flex justify-center py-10">
-            <Loader2 className="animate-spin text-purple-500" />
+            <Loader2 className="animate-spin text-purple-300" />
           </div>
         )}
         {!loading && messages.length === 0 && (
-          <div className="text-center py-10 text-slate-500 dark:text-slate-400 text-sm">
+          <div className="text-center py-10 text-slate-400 text-sm">
             {lang === "ar"
               ? "ابدأ المحادثة بقول مرحباً 👋"
               : "Say hi to start the conversation 👋"}
@@ -168,11 +174,19 @@ export default function ChatDmThreadPage() {
               className={`flex my-2 ${isMine ? "justify-end" : "justify-start"}`}
             >
               <div
-                className={`max-w-[78%] px-3.5 py-2 rounded-2xl shadow-sm ${
+                className={`max-w-[78%] px-3.5 py-2 rounded-[20px] ${
                   isMine
-                    ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-br-sm"
-                    : "bg-white dark:bg-gray-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-gray-700 rounded-bl-sm"
+                    ? "text-white rounded-br-md shadow-[0_10px_28px_-10px_rgba(124,58,237,0.65),inset_0_1px_0_rgba(255,255,255,0.18)]"
+                    : "bg-white/[0.06] backdrop-blur-xl text-slate-100 ring-1 ring-white/10 rounded-bl-md shadow-[0_8px_22px_-12px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.04)]"
                 }`}
+                style={
+                  isMine
+                    ? {
+                        background:
+                          "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                      }
+                    : undefined
+                }
               >
                 {m.deleted ? (
                   <span className="italic opacity-70 text-sm">
@@ -199,9 +213,7 @@ export default function ChatDmThreadPage() {
                 ) : null}
                 <div
                   className={`mt-1 text-[10px] ${
-                    isMine
-                      ? "text-white/70 text-end"
-                      : "text-slate-400 dark:text-slate-500"
+                    isMine ? "text-white/75 text-end" : "text-slate-400"
                   }`}
                 >
                   {new Date(m.createdAt).toLocaleTimeString(
@@ -214,7 +226,7 @@ export default function ChatDmThreadPage() {
           );
         })}
       </div>
-      <footer className="sticky bottom-0 backdrop-blur-md bg-white/90 dark:bg-gray-950/90 border-t border-slate-200 dark:border-gray-800 px-3 sm:px-5 py-2.5">
+      <footer className="sticky bottom-0 backdrop-blur-2xl bg-slate-950/70 border-t border-white/10 px-3 sm:px-5 py-2.5 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.7)]">
         <div className="max-w-2xl mx-auto">
           {recording ? (
             <VoiceRecorder
@@ -229,14 +241,18 @@ export default function ChatDmThreadPage() {
                 placeholder={
                   lang === "ar" ? "اكتب رسالة..." : "Type a message…"
                 }
-                className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-gray-800 border border-transparent focus:border-purple-500 focus:outline-none text-sm"
+                className="flex-1 px-4 py-2.5 rounded-2xl bg-white/[0.05] backdrop-blur-xl ring-1 ring-white/10 focus:ring-2 focus:ring-purple-400/60 focus:outline-none text-sm text-slate-100 placeholder:text-slate-500"
                 maxLength={2000}
               />
               {input.trim() ? (
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center disabled:opacity-50"
+                  className="w-11 h-11 rounded-full text-white flex items-center justify-center disabled:opacity-50 transition hover:brightness-110 active:scale-95 shadow-[0_10px_24px_-6px_rgba(124,58,237,0.7)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                  }}
                   aria-label="Send"
                 >
                   {sending ? (
@@ -249,7 +265,11 @@ export default function ChatDmThreadPage() {
                 <button
                   type="button"
                   onClick={() => setRecording(true)}
-                  className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center"
+                  className="w-11 h-11 rounded-full text-white flex items-center justify-center transition hover:brightness-110 active:scale-95 shadow-[0_10px_24px_-6px_rgba(124,58,237,0.7)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                  }}
                   aria-label="Record voice note"
                 >
                   <Mic size={18} />

@@ -14,57 +14,12 @@ import {
   Tabs,
   RoomCard,
   chatUI,
+  PhoneFrame,
+  PageBackdrop,
 } from "@/components/chat-ui";
 import { useState } from "react";
 
 type RoomFilter = "all" | "speaking" | "voice" | "ielts";
-
-function PhoneFrame({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="relative w-[390px] h-[844px] rounded-[44px] p-[6px]"
-      style={{
-        background:
-          "linear-gradient(180deg, #1f2937 0%, #0f172a 50%, #020617 100%)",
-        boxShadow:
-          "0 60px 120px -20px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.08), 0 0 80px -20px rgba(124,58,237,0.45)",
-      }}
-    >
-      <div
-        dir="rtl"
-        className="relative w-full h-full rounded-[38px] overflow-hidden flex flex-col text-white"
-        style={{
-          background:
-            "linear-gradient(180deg, #0b1224 0%, #060b1a 50%, #02050d 100%)",
-        }}
-      >
-        <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-32 h-7 rounded-full bg-black z-30" />
-        <div
-          dir="ltr"
-          className="relative z-10 flex items-center justify-between px-7 pt-3 pb-1 text-[12px] font-semibold text-white/90"
-        >
-          <span>9:41</span>
-          <span className="flex items-center gap-1">
-            <span className="flex items-end gap-[2px]">
-              <span className="w-[3px] h-[5px] bg-white rounded-sm" />
-              <span className="w-[3px] h-[7px] bg-white rounded-sm" />
-              <span className="w-[3px] h-[9px] bg-white rounded-sm" />
-              <span className="w-[3px] h-[11px] bg-white rounded-sm" />
-            </span>
-            <span className="ml-1 text-[10px]">5G</span>
-            <span className="ml-1 inline-flex items-center">
-              <span className="w-5 h-2.5 rounded-[3px] border border-white/80 relative">
-                <span className="absolute inset-0.5 rounded-sm bg-white" />
-              </span>
-              <span className="w-0.5 h-1 bg-white/80 rounded-r-sm" />
-            </span>
-          </span>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
 
 function NavTab({
   icon,
@@ -177,21 +132,7 @@ export default function RoomSelectionMockup() {
   );
 
   return (
-    <div
-      dir="ltr"
-      className="min-h-screen w-full flex items-center justify-center p-8 relative overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(ellipse 80% 60% at 50% -10%, #1a1444 0%, #0a1126 30%, #050816 60%, #02030a 100%)",
-        fontFamily:
-          'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute top-1/4 left-1/3 w-[500px] h-[500px] rounded-full bg-purple-700/25 blur-[140px]" />
-        <div className="absolute bottom-1/4 right-1/3 w-[500px] h-[500px] rounded-full bg-blue-700/25 blur-[140px]" />
-      </div>
-
+    <PageBackdrop>
       <PhoneFrame>
         <Header
           title="اختيار الغرفة"
@@ -266,6 +207,6 @@ export default function RoomSelectionMockup() {
           </div>
         </div>
       </PhoneFrame>
-    </div>
+    </PageBackdrop>
   );
 }

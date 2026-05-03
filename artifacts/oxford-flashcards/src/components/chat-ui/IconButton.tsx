@@ -8,11 +8,17 @@ const TONE: Record<
   { btn: string; label: string; style?: React.CSSProperties }
 > = {
   neutral: {
-    btn: "bg-white/8 ring-white/15 text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+    btn: "ring-white/15 text-slate-100",
     label: "text-slate-300",
+    style: {
+      background:
+        "linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 100%)",
+      boxShadow:
+        "inset 0 1px 0 rgba(255,255,255,0.10), inset 0 -1px 0 rgba(0,0,0,0.2), 0 6px 18px -6px rgba(0,0,0,0.5)",
+    },
   },
   accent: {
-    btn: "ring-white/20 text-white",
+    btn: "ring-white/25 text-white",
     label: "text-purple-200",
     style: {
       background: chatUI.gradient.purpleSimple,
@@ -20,12 +26,24 @@ const TONE: Record<
     },
   },
   warning: {
-    btn: "bg-amber-500/15 ring-amber-400/30 text-amber-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+    btn: "ring-amber-400/40 text-amber-100",
     label: "text-amber-200",
+    style: {
+      background:
+        "linear-gradient(180deg, rgba(251,191,36,0.30) 0%, rgba(245,158,11,0.18) 100%)",
+      boxShadow:
+        "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 22px -8px rgba(245,158,11,0.55)",
+    },
   },
   danger: {
-    btn: "bg-rose-500/15 ring-rose-400/40 text-rose-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]",
+    btn: "ring-rose-400/45 text-rose-100",
     label: "text-rose-200",
+    style: {
+      background:
+        "linear-gradient(180deg, rgba(244,63,94,0.32) 0%, rgba(225,29,72,0.18) 100%)",
+      boxShadow:
+        "inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -1px 0 rgba(0,0,0,0.2), 0 8px 22px -8px rgba(244,63,94,0.55)",
+    },
   },
 };
 
@@ -52,19 +70,29 @@ export function IconButton({
     >
       <div className="relative">
         {badge && (
-          <span className="absolute -top-1 -right-1 z-10 min-w-4 h-4 px-1 rounded-full bg-amber-400 text-slate-900 text-[9px] font-extrabold flex items-center justify-center ring-2 ring-slate-950">
+          <span className="absolute -top-1 -right-1 z-10 min-w-4 h-4 px-1 rounded-full bg-amber-400 text-slate-900 text-[9px] font-extrabold flex items-center justify-center ring-2 ring-slate-950 shadow-[0_4px_10px_-2px_rgba(251,191,36,0.6)]">
             {badge}
           </span>
         )}
         <div
-          className={`rounded-full ring-1 backdrop-blur flex items-center justify-center group-hover:brightness-110 transition ${t.btn}`}
+          className={`relative rounded-full ring-1 backdrop-blur-xl flex items-center justify-center group-hover:brightness-110 group-active:brightness-95 transition overflow-hidden ${t.btn}`}
           style={{ width: size, height: size, ...t.style }}
         >
-          {icon}
+          {/* glossy top sheen */}
+          <span
+            className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+          <span className="relative">{icon}</span>
         </div>
       </div>
       {label && (
-        <span className={`text-[10.5px] font-semibold ${t.label}`}>{label}</span>
+        <span className={`text-[10.5px] font-semibold tracking-tight ${t.label}`}>
+          {label}
+        </span>
       )}
     </button>
   );

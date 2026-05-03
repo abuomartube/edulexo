@@ -2,23 +2,23 @@ import type { ReactNode } from "react";
 import { chatUI, type AvatarTone } from "./tokens";
 
 const TONE_GRAD: Record<AvatarTone, string> = {
-  blue: "from-blue-400 via-blue-500 to-indigo-600",
-  purple: "from-fuchsia-500 via-purple-500 to-indigo-600",
-  emerald: "from-emerald-400 via-emerald-500 to-teal-600",
-  pink: "from-pink-500 via-rose-500 to-rose-600",
-  rose: "from-rose-500 via-red-500 to-orange-600",
-  indigo: "from-sky-400 via-blue-500 to-indigo-600",
-  amber: "from-amber-400 via-orange-500 to-rose-500",
+  blue: "from-sky-400 via-blue-500 to-indigo-600",
+  purple: "from-fuchsia-400 via-purple-500 to-indigo-600",
+  emerald: "from-emerald-300 via-emerald-500 to-teal-600",
+  pink: "from-pink-400 via-rose-500 to-rose-700",
+  rose: "from-rose-400 via-red-500 to-orange-600",
+  indigo: "from-sky-400 via-indigo-500 to-indigo-700",
+  amber: "from-amber-300 via-orange-500 to-rose-500",
 };
 
 const TONE_GLOW: Record<AvatarTone, string> = {
-  blue: "rgba(59,130,246,0.55)",
-  purple: "rgba(168,85,247,0.55)",
-  emerald: "rgba(16,185,129,0.55)",
-  pink: "rgba(244,63,94,0.55)",
-  rose: "rgba(249,115,22,0.55)",
-  indigo: "rgba(99,102,241,0.55)",
-  amber: "rgba(251,146,60,0.55)",
+  blue: "rgba(59,130,246,0.65)",
+  purple: "rgba(168,85,247,0.65)",
+  emerald: "rgba(16,185,129,0.6)",
+  pink: "rgba(244,63,94,0.6)",
+  rose: "rgba(249,115,22,0.6)",
+  indigo: "rgba(99,102,241,0.6)",
+  amber: "rgba(251,146,60,0.6)",
 };
 
 export function RoomCard({
@@ -40,21 +40,21 @@ export function RoomCard({
 }) {
   return (
     <div
-      className={`${chatUI.radius.card} ${chatUI.surface.card} ${chatUI.spacing.cardPad} flex items-center gap-3`}
+      className={`${chatUI.radius.card} ${chatUI.surface.card} p-3 flex items-center gap-3 hover:border-white/[0.12] transition`}
     >
       <div className="relative shrink-0">
         <div
-          className="absolute inset-0 -m-1 rounded-2xl blur-md opacity-70"
+          className="absolute inset-0 -m-2 rounded-2xl blur-xl opacity-80"
           style={{ background: TONE_GLOW[tone] }}
         />
         <div
-          className={`relative w-10 h-10 ${chatUI.radius.icon} bg-gradient-to-br ${TONE_GRAD[tone]} flex items-center justify-center ring-1 ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]`}
+          className={`relative w-11 h-11 ${chatUI.radius.icon} bg-gradient-to-br ${TONE_GRAD[tone]} flex items-center justify-center ring-1 ring-white/25 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),inset_0_-1px_0_rgba(0,0,0,0.2),0_6px_16px_-4px_rgba(0,0,0,0.5)]`}
         >
           {icon}
         </div>
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[12.5px] font-bold text-white truncate leading-tight">
+        <div className="text-[12.5px] font-bold text-white truncate leading-tight tracking-tight">
           {title}
         </div>
         <div className="text-[10.5px] text-slate-400 truncate mt-0.5 leading-tight">
@@ -70,13 +70,20 @@ export function RoomCard({
       </div>
       <button
         onClick={onJoin}
-        className="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-white ring-1 ring-white/15"
+        className="relative shrink-0 px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-white ring-1 ring-white/20 overflow-hidden"
         style={{
           background: chatUI.gradient.purpleSimple,
           boxShadow: chatUI.shadow.purpleBtn,
         }}
       >
-        {joinLabel}
+        <span
+          className="pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-xl"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 100%)",
+          }}
+        />
+        <span className="relative">{joinLabel}</span>
       </button>
     </div>
   );

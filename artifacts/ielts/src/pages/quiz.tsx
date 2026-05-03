@@ -30,13 +30,28 @@ type Level = "ALL" | "A2" | "B1" | "B2" | "C1";
 
 interface SessionResult { total: number; correct: number; wrong: number }
 
-function speak(text: string) {
-  if ("speechSynthesis" in window) {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = "en-GB";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
-  }
+// Module-level cache so repeated plays of the same word are instant.
+const ttsAudioCache = new Map<string, string>();
+
+async function speak(text: string) {
+  const key = text.toLowerCase().trim();
+  if (!key) return;
+  try {
+    let url = ttsAudioCache.get(key);
+    if (!url) {
+      const res = await fetch("/api-ielts/speaking/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, voice: "fable", model: "tts-1-hd", speed: 1.0 }),
+      });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      url = URL.createObjectURL(blob);
+      ttsAudioCache.set(key, url);
+    }
+    const audio = new Audio(url);
+    void audio.play().catch(() => { /* ignore — user gesture or network issue */ });
+  } catch { /* swallow — silent fail keeps quiz UX smooth */ }
 }
 
 export default function Quiz() {

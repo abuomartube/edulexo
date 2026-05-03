@@ -85,7 +85,7 @@ async function fetchAndDecodeTts(word: string, scriptText: string): Promise<Audi
   const res = await fetch(`${API_BASE}/api-ielts/speaking/tts`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text: scriptText, voice: "onyx", model: "tts-1", speed: 1.0 }),
+    body: JSON.stringify({ text: scriptText, voice: "fable", model: "tts-1", speed: 1.0 }),
   });
   if (!res.ok) throw new Error("tts_failed");
   const arrayBuf = await res.arrayBuffer();

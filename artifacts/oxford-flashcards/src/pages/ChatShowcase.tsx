@@ -157,8 +157,8 @@ function FlowArrow() {
 function TileCard({ tile }: { tile: Tile }) {
   return (
     <div className="flex flex-col items-center" style={{ width: MINI_W }}>
-      <div className="flex items-center gap-1.5 mb-2.5">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 ring-1 ring-white/10 backdrop-blur text-[9.5px] font-bold text-slate-300 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)]">
+      <div className="flex items-center justify-center gap-1.5 mb-3 h-5">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 ring-1 ring-white/10 backdrop-blur text-[10px] font-bold text-slate-300 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)] leading-none">
           {tile.icon}
           {tile.badge}
         </span>
@@ -208,8 +208,8 @@ function TileCard({ tile }: { tile: Tile }) {
         />
       </div>
 
-      <div className="mt-7 text-center">
-        <div className="text-[12.5px] font-bold text-white tracking-tight">
+      <div className="mt-8 text-center h-5 flex items-center justify-center">
+        <div className="text-[12.5px] font-bold text-white tracking-tight leading-none">
           {tile.label}
         </div>
       </div>
@@ -227,9 +227,9 @@ function SectionHeading({
   desc: string;
 }) {
   return (
-    <div className="flex items-end gap-3 mb-6">
+    <div className="flex items-center gap-3.5 mb-8">
       <div
-        className="text-[44px] leading-none font-black tracking-tighter bg-clip-text text-transparent"
+        className="text-[40px] leading-none font-black tracking-tighter bg-clip-text text-transparent"
         style={{
           backgroundImage:
             "linear-gradient(135deg, #a855f7 0%, #ec4899 60%, #f97316 100%)",
@@ -237,11 +237,11 @@ function SectionHeading({
       >
         {number}
       </div>
-      <div>
-        <div className="text-[18px] font-extrabold text-white tracking-tight">
+      <div className="flex flex-col gap-1">
+        <div className="text-[18px] font-extrabold text-white tracking-tight leading-none">
           {title}
         </div>
-        <div className="text-[12px] text-slate-400">{desc}</div>
+        <div className="text-[12.5px] text-slate-400 leading-none">{desc}</div>
       </div>
     </div>
   );
@@ -316,7 +316,7 @@ export default function ChatShowcase() {
         }}
       />
 
-      <div className="relative flex min-w-[1480px]">
+      <div className="relative flex min-w-[1520px]">
         {/* SIDEBAR */}
         <aside className="w-[300px] shrink-0 border-r border-white/10 bg-slate-950/40 backdrop-blur-md p-7 flex flex-col gap-7 sticky top-0 self-start min-h-screen">
           <div>
@@ -385,13 +385,13 @@ export default function ChatShowcase() {
         </aside>
 
         {/* MAIN CANVAS */}
-        <main className="flex-1 px-12 py-10 min-w-0">
+        <main className="flex-1 px-14 py-12 min-w-0">
           {/* Page heading */}
-          <div className="mb-12">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 ring-1 ring-purple-500/30 text-purple-200 text-[10.5px] font-bold tracking-wide">
+          <div className="mb-14">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/15 ring-1 ring-purple-500/30 text-purple-200 text-[10.5px] font-bold tracking-wide leading-none">
               <Sparkles size={11} /> PRODUCT PRESENTATION
             </span>
-            <h1 className="mt-4 text-[40px] font-black text-white tracking-tighter leading-[1.05]">
+            <h1 className="mt-5 text-[44px] font-black text-white tracking-tighter leading-[1.05]">
               Meet{" "}
               <span
                 className="bg-clip-text text-transparent"
@@ -404,7 +404,7 @@ export default function ChatShowcase() {
               </span>
               .
             </h1>
-            <p className="mt-2 text-[15px] text-slate-400 max-w-[680px]">
+            <p className="mt-3 text-[14.5px] text-slate-400 max-w-[680px] leading-relaxed">
               A live-conversation layer for English learners. The 9 screens
               below cover the full Phase 1 experience — from picking a course
               to climbing the XP leaderboard.
@@ -417,7 +417,7 @@ export default function ChatShowcase() {
             title="User Journey"
             desc="From course → room → live conversation."
           />
-          <div className="flex items-start gap-2 mb-24">
+          <div className="flex items-start justify-center gap-1 mb-28">
             {TOP_ROW.map((tile, i) => (
               <div key={tile.label} className="flex items-stretch">
                 <TileCard tile={tile} />
@@ -432,13 +432,13 @@ export default function ChatShowcase() {
             title="Features"
             desc="Everything that makes the room feel alive."
           />
-          <div className="flex items-start gap-10 mb-20 flex-wrap">
+          <div className="flex items-start justify-center gap-6 mb-20">
             {BOTTOM_ROW.map((tile) => (
               <TileCard key={tile.label} tile={tile} />
             ))}
           </div>
 
-          <div className="mt-16 text-[11px] text-slate-500 border-t border-white/5 pt-6">
+          <div className="mt-20 text-[11px] text-slate-500 border-t border-white/5 pt-6 text-center">
             All screens are interactive previews built from the same components
             that ship in the live app — no static mockups.
           </div>

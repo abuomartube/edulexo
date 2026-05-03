@@ -11,7 +11,11 @@ export default function Login() {
   const t = useT();
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/dashboard", { replace: true });
+    if (!isAuthenticated) return;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("next") ?? "";
+    const safe = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+    navigate(safe, { replace: true });
   }, [isAuthenticated, navigate]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

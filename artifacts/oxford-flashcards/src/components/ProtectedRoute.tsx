@@ -14,7 +14,8 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Props
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
-      navigate("/login");
+      const next = window.location.pathname + window.location.search;
+      navigate(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
     if (requireAdmin && !isAdmin) {

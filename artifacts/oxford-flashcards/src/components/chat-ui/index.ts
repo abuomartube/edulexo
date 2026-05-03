@@ -14,6 +14,7 @@ export { RoomCard } from "./RoomCard";
 export { PrimaryButton, SecondaryButton } from "./Button";
 export { Card } from "./Card";
 export { HeroCard } from "./HeroCard";
+export { IconButton, type IconButtonTone } from "./IconButton";
 export {
   chatUI,
   AVATAR_GRAD,

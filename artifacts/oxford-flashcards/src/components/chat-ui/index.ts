@@ -8,6 +8,9 @@ export {
 export { VoiceMessage } from "./VoiceMessage";
 export { ActionButton, type ActionTone } from "./ActionButton";
 export { InputBar } from "./InputBar";
+export { SearchBar } from "./SearchBar";
+export { Tabs, FilterChip } from "./Tabs";
+export { RoomCard } from "./RoomCard";
 export {
   chatUI,
   AVATAR_GRAD,

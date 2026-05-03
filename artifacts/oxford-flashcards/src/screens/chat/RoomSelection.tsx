@@ -4,65 +4,24 @@ import {
   GraduationCap,
   MessageCircle,
   PenLine,
-  GraduationCap as Course,
-  MessageSquare,
-  User,
 } from "lucide-react";
 import {
   Header,
   SearchBar,
   Tabs,
   RoomCard,
-  chatUI,
   PhoneFrame,
   PageBackdrop,
+  BottomNav,
+  ChatScrollBg,
 } from "@/components/chat-ui";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { MOCK_ROOMS, type MockRoom } from "@/lib/chatMock";
+import { MOCK_ROOMS, type MockRoom, type RoomIconKey } from "@/data/chat";
 
 type RoomFilter = "all" | "speaking" | "voice" | "ielts";
 
-function NavTab({
-  icon,
-  label,
-  active = false,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <button className="flex-1 flex flex-col items-center gap-0.5 py-1.5">
-      <div className={`relative ${active ? "" : "opacity-60"}`}>
-        {active && (
-          <div className="absolute inset-0 -m-1.5 rounded-full bg-purple-500/40 blur-md" />
-        )}
-        <div
-          className={`relative w-9 h-9 rounded-xl flex items-center justify-center ${
-            active
-              ? "ring-1 ring-white/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
-              : ""
-          }`}
-          style={
-            active ? { background: chatUI.gradient.purpleSimple } : undefined
-          }
-        >
-          {icon}
-        </div>
-      </div>
-      <span
-        className={`text-[10px] font-semibold ${
-          active ? "text-white" : "text-slate-400"
-        }`}
-      >
-        {label}
-      </span>
-    </button>
-  );
-}
-
-function roomIcon(key: MockRoom["iconKey"]) {
+function roomIcon(key: RoomIconKey) {
   const cls = "text-white";
   switch (key) {
     case "mic":
@@ -78,7 +37,7 @@ function roomIcon(key: MockRoom["iconKey"]) {
   }
 }
 
-export default function RoomSelectionMockup() {
+export default function RoomSelection() {
   const [filter, setFilter] = useState<RoomFilter>("all");
   const [search, setSearch] = useState("");
   const [, setLocation] = useLocation();
@@ -92,19 +51,11 @@ export default function RoomSelectionMockup() {
   );
 
   function openDetails(r: MockRoom) {
-    if (r.cat === "voice") {
-      setLocation("/voice-room");
-    } else {
-      setLocation(`/room-details/${r.id}`);
-    }
+    setLocation(r.cat === "voice" ? "/voice-room" : `/room-details/${r.id}`);
   }
 
   function joinRoom(r: MockRoom) {
-    if (r.cat === "voice") {
-      setLocation("/voice-room");
-    } else {
-      setLocation(`/chat-screen/${r.id}`);
-    }
+    setLocation(r.cat === "voice" ? "/voice-room" : `/chat-screen/${r.id}`);
   }
 
   return (
@@ -119,7 +70,6 @@ export default function RoomSelectionMockup() {
           }
         />
 
-        {/* search + tabs */}
         <div className="relative z-10 px-4 pt-2.5 pb-2 space-y-2.5 border-b border-white/5">
           <SearchBar
             placeholder="ابحث عن غرفة..."
@@ -140,14 +90,7 @@ export default function RoomSelectionMockup() {
           />
         </div>
 
-        {/* room list */}
-        <div
-          className="relative z-10 flex-1 overflow-y-auto px-4 pt-2.5 pb-2 space-y-2"
-          style={{
-            background:
-              "radial-gradient(ellipse at top, rgba(124,58,237,0.06), transparent 60%)",
-          }}
-        >
+        <ChatScrollBg className="px-4 pt-2.5 pb-2 space-y-2">
           {visible.map((r) => (
             <RoomCard
               key={r.id}
@@ -166,29 +109,9 @@ export default function RoomSelectionMockup() {
               لم يتم العثور على غرف
             </div>
           )}
-        </div>
+        </ChatScrollBg>
 
-        {/* bottom nav */}
-        <div className="relative z-10 px-3 pt-1 pb-1 border-t border-white/5 bg-slate-950/40 backdrop-blur">
-          <div dir="ltr" className="flex items-stretch">
-            <NavTab
-              icon={<Course size={16} className="text-slate-300" />}
-              label="الدورات"
-            />
-            <NavTab
-              icon={<MessageSquare size={16} className="text-white" />}
-              label="الشات"
-              active
-            />
-            <NavTab
-              icon={<User size={16} className="text-slate-300" />}
-              label="الملف الشخصي"
-            />
-          </div>
-          <div className="flex justify-center pt-0.5 pb-1">
-            <div className="w-28 h-1 rounded-full bg-white/40" />
-          </div>
-        </div>
+        <BottomNav active="chat" />
       </PhoneFrame>
     </PageBackdrop>
   );

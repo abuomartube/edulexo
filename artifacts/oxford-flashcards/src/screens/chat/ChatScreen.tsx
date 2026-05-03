@@ -17,6 +17,9 @@ import {
   InputBar,
   PhoneFrame,
   PageBackdrop,
+  ChatScrollBg,
+  HomeIndicator,
+  Waves,
 } from "@/components/chat-ui";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useRoute } from "wouter";
@@ -26,25 +29,44 @@ import {
   seedMessages,
   nowTime,
   randomDuration,
+  nextMessageId,
+  pickRandom,
+  ICE_BREAKERS,
+  TOPICS,
   type ChatMsg,
-} from "@/lib/chatMock";
+} from "@/data/chat";
 
-const ICE_BREAKERS = [
-  "What was the best part of your week?",
-  "If you could travel anywhere right now, where would you go?",
-  "What's a small thing that made you smile today?",
-  "What's your favorite way to learn English?",
-];
+function MessageItem({ m }: { m: ChatMsg }) {
+  if (m.kind === "incoming" && m.name && m.letter && m.tone) {
+    return (
+      <IncomingBubble
+        name={m.name}
+        tone={m.tone}
+        letter={m.letter}
+        time={m.time}
+        reactions={m.reactions}
+      >
+        {m.text}
+      </IncomingBubble>
+    );
+  }
+  if (m.kind === "outgoing") {
+    return <OutgoingBubble time={m.time}>{m.text}</OutgoingBubble>;
+  }
+  if (m.kind === "voice-out") {
+    return (
+      <OutgoingBubble time={m.time}>
+        <VoiceMessage duration={m.duration ?? "0:10"} played={0.5} bars={22} />
+      </OutgoingBubble>
+    );
+  }
+  if (m.kind === "system") {
+    return <SystemBubble>{m.text}</SystemBubble>;
+  }
+  return null;
+}
 
-const TOPICS = [
-  "Travel & Cultures",
-  "Daily Routines",
-  "Food & Cooking",
-  "Movies & Books",
-  "Future Goals",
-];
-
-export default function ChatScreenMockup() {
+export default function ChatScreen() {
   const [, params] = useRoute("/chat-screen/:id");
   const [, setLocation] = useLocation();
   const room = getRoomById(params?.id) ?? MOCK_ROOMS[1];
@@ -58,57 +80,26 @@ export default function ChatScreenMockup() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  function nextId() {
-    return `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  function append(msg: Omit<ChatMsg, "id" | "time"> & Partial<Pick<ChatMsg, "time">>) {
+    setMessages((prev) => [
+      ...prev,
+      { id: nextMessageId(), time: nowTime(), ...msg } as ChatMsg,
+    ]);
   }
 
   function sendText() {
     const text = draft.trim();
     if (!text) return;
-    setMessages((prev) => [
-      ...prev,
-      { id: nextId(), kind: "outgoing", text, time: nowTime() },
-    ]);
+    append({ kind: "outgoing", text });
     setDraft("");
   }
 
-  function sendVoice() {
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: nextId(),
-        kind: "voice-out",
-        duration: randomDuration(),
-        time: nowTime(),
-      },
-    ]);
-  }
-
-  function addTopic() {
-    const t = TOPICS[Math.floor(Math.random() * TOPICS.length)];
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: nextId(),
-        kind: "system",
-        text: `Topic suggestion: ${t} 💡`,
-        time: nowTime(),
-      },
-    ]);
-  }
-
-  function addIceBreaker() {
-    const t = ICE_BREAKERS[Math.floor(Math.random() * ICE_BREAKERS.length)];
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: nextId(),
-        kind: "system",
-        text: t,
-        time: nowTime(),
-      },
-    ]);
-  }
+  const sendVoice = () =>
+    append({ kind: "voice-out", duration: randomDuration() });
+  const addTopic = () =>
+    append({ kind: "system", text: `Topic suggestion: ${pickRandom(TOPICS)} 💡` });
+  const addIceBreaker = () =>
+    append({ kind: "system", text: pickRandom(ICE_BREAKERS) });
 
   return (
     <PageBackdrop>
@@ -155,53 +146,17 @@ export default function ChatScreenMockup() {
           }
         />
 
-        {/* MESSAGES */}
-        <div
-          ref={scrollRef}
-          className="relative z-10 flex-1 overflow-y-auto px-4 pt-3 pb-2 space-y-2.5"
-          style={{
-            background:
-              "radial-gradient(ellipse at top, rgba(124,58,237,0.06), transparent 60%)",
-          }}
+        <ChatScrollBg
+          scrollRef={scrollRef}
+          className="px-4 pt-3 pb-2 space-y-2.5"
         >
-          {messages.map((m) => {
-            let inner: React.ReactNode = null;
-            if (m.kind === "incoming" && m.name && m.letter && m.tone) {
-              inner = (
-                <IncomingBubble
-                  name={m.name}
-                  tone={m.tone}
-                  letter={m.letter}
-                  time={m.time}
-                  reactions={m.reactions}
-                >
-                  {m.text}
-                </IncomingBubble>
-              );
-            } else if (m.kind === "outgoing") {
-              inner = <OutgoingBubble time={m.time}>{m.text}</OutgoingBubble>;
-            } else if (m.kind === "voice-out") {
-              inner = (
-                <OutgoingBubble time={m.time}>
-                  <VoiceMessage
-                    duration={m.duration ?? "0:10"}
-                    played={0.5}
-                    bars={22}
-                  />
-                </OutgoingBubble>
-              );
-            } else if (m.kind === "system") {
-              inner = <SystemBubble>{m.text}</SystemBubble>;
-            }
-            return (
-              <div key={m.id} className="animate-fade-in-up">
-                {inner}
-              </div>
-            );
-          })}
-        </div>
+          {messages.map((m) => (
+            <div key={m.id} className="animate-fade-in-up">
+              <MessageItem m={m} />
+            </div>
+          ))}
+        </ChatScrollBg>
 
-        {/* ACTION BAR */}
         <div className="relative z-10 px-4 pt-2 pb-1 border-t border-white/5 bg-slate-950/40 backdrop-blur">
           <div className="flex items-center gap-1.5 mb-1.5">
             <ActionButton
@@ -230,13 +185,8 @@ export default function ChatScreenMockup() {
             />
           </div>
 
-          <InputBar
-            value={draft}
-            onChange={setDraft}
-            onSend={sendText}
-          />
+          <InputBar value={draft} onChange={setDraft} onSend={sendText} />
 
-          {/* Floating mic row */}
           <div className="flex items-center justify-center gap-2 mt-1.5 mb-0.5">
             <Waves />
             <div className="relative">
@@ -257,32 +207,9 @@ export default function ChatScreenMockup() {
             <Waves />
           </div>
 
-          <div className="flex justify-center pt-0.5 pb-1">
-            <div className="w-28 h-1 rounded-full bg-white/40" />
-          </div>
+          <HomeIndicator />
         </div>
       </PhoneFrame>
     </PageBackdrop>
-  );
-}
-
-function Waves() {
-  const heights = Array.from({ length: 10 }).map((_, i) => {
-    const v = Math.sin(i * 0.7) * 0.5 + Math.sin(i * 1.9) * 0.3 + 0.6;
-    return Math.max(0.2, Math.min(1, v));
-  });
-  return (
-    <div className="flex items-center gap-[3px]" style={{ height: 10 }}>
-      {heights.map((h, i) => (
-        <span
-          key={i}
-          className="w-[2.5px] rounded-full bg-purple-400/40 animate-pulse"
-          style={{
-            height: `${Math.round(h * 100)}%`,
-            animationDelay: `${i * 80}ms`,
-          }}
-        />
-      ))}
-    </div>
   );
 }

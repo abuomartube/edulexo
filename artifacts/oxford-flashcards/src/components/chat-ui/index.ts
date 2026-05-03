@@ -22,3 +22,11 @@ export {
   NAME_COLOR,
   type AvatarTone,
 } from "./tokens";
+export {
+  HomeIndicator,
+  BottomNav,
+  type BottomNavTab,
+  ChatScrollBg,
+  HeroBadge,
+  Waves,
+} from "./shared";

@@ -1,6 +1,12 @@
 import type { AvatarTone } from "@/components/chat-ui";
 
 export type RoomCategory = "speaking" | "voice" | "ielts";
+export type RoomIconKey =
+  | "mic"
+  | "headphones"
+  | "graduation"
+  | "message"
+  | "pen";
 
 export type MockRoom = {
   id: string;
@@ -9,7 +15,7 @@ export type MockRoom = {
   desc: string;
   online: number;
   tone: AvatarTone;
-  iconKey: "mic" | "headphones" | "graduation" | "message" | "pen";
+  iconKey: RoomIconKey;
   about: string;
 };
 
@@ -54,7 +60,8 @@ export const MOCK_ROOMS: MockRoom[] = [
     online: 16,
     tone: "pink",
     iconKey: "graduation",
-    about: "غرفة مخصصة للتحضير لاختبار IELTS Speaking مع أسئلة مشابهة للاختبار.",
+    about:
+      "غرفة مخصصة للتحضير لاختبار IELTS Speaking مع أسئلة مشابهة للاختبار.",
   },
   {
     id: "5",
@@ -82,6 +89,62 @@ export function getRoomById(id: string | undefined): MockRoom | undefined {
   if (!id) return undefined;
   return MOCK_ROOMS.find((r) => r.id === id);
 }
+
+export const PARTICIPANTS: { letter: string; tone: AvatarTone; name: string }[] =
+  [
+    { letter: "O", tone: "blue", name: "Omar" },
+    { letter: "S", tone: "pink", name: "Sara" },
+    { letter: "J", tone: "emerald", name: "James" },
+    { letter: "L", tone: "amber", name: "Lina" },
+    { letter: "M", tone: "purple", name: "Maya" },
+    { letter: "A", tone: "rose", name: "Ahmad" },
+    { letter: "K", tone: "indigo", name: "Kenza" },
+  ];
+
+export const ROOM_RULES = [
+  "تحدث بالإنجليزية فقط داخل الغرفة",
+  "احترم بقية المشاركين ولا تقاطعهم",
+  "لا تشارك معلومات شخصية",
+  "ممنوع الإعلانات أو الروابط الخارجية",
+];
+
+export const VOICE_SPEAKERS: {
+  letter: string;
+  tone: AvatarTone;
+  name: string;
+  speaking?: boolean;
+}[] = [
+  { letter: "O", tone: "blue", name: "Omar", speaking: true },
+  { letter: "S", tone: "pink", name: "Sara" },
+  { letter: "J", tone: "emerald", name: "James" },
+];
+
+export const VOICE_LISTENERS: { letter: string; tone: AvatarTone; name: string }[] =
+  [
+    { letter: "L", tone: "amber", name: "Lina" },
+    { letter: "M", tone: "purple", name: "Maya" },
+    { letter: "A", tone: "rose", name: "Ahmad" },
+    { letter: "K", tone: "indigo", name: "Kenza" },
+    { letter: "N", tone: "blue", name: "Nora" },
+    { letter: "Y", tone: "emerald", name: "Yusuf" },
+    { letter: "R", tone: "pink", name: "Rana" },
+    { letter: "H", tone: "purple", name: "Hadi" },
+  ];
+
+export const ICE_BREAKERS = [
+  "What was the best part of your week?",
+  "If you could travel anywhere right now, where would you go?",
+  "What's a small thing that made you smile today?",
+  "What's your favorite way to learn English?",
+];
+
+export const TOPICS = [
+  "Travel & Cultures",
+  "Daily Routines",
+  "Food & Cooking",
+  "Movies & Books",
+  "Future Goals",
+];
 
 export type ChatMsgKind = "incoming" | "outgoing" | "system" | "voice-out";
 
@@ -129,12 +192,7 @@ export function seedMessages(): ChatMsg[] {
       text: "It was great! I went hiking with my friends 😊",
       reactions: 1,
     },
-    {
-      id: "m3",
-      kind: "voice-out",
-      time: "10:22 AM",
-      duration: "0:18",
-    },
+    { id: "m3", kind: "voice-out", time: "10:22 AM", duration: "0:18" },
     {
       id: "m4",
       kind: "incoming",
@@ -158,4 +216,12 @@ export function randomDuration(): string {
   const m = Math.floor(sec / 60);
   const s = (sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
+}
+
+export function nextMessageId(): string {
+  return `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
+export function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
 }

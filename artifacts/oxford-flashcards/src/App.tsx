@@ -26,10 +26,12 @@ import ChatMessages from "@/pages/ChatMessages";
 import ChatDmThread from "@/pages/ChatDmThread";
 import ChatLeaderboard from "@/pages/ChatLeaderboard";
 import ChatShowcase from "@/pages/ChatShowcase";
-import ChatScreenMockup from "@/pages/ChatScreenMockup";
-import RoomSelectionMockup from "@/pages/RoomSelectionMockup";
-import RoomDetailsMockup from "@/pages/RoomDetailsMockup";
-import VoiceOnlyRoomMockup from "@/pages/VoiceOnlyRoomMockup";
+import {
+  ChatScreen as ChatScreenMockup,
+  RoomSelection as RoomSelectionMockup,
+  RoomDetails as RoomDetailsMockup,
+  VoiceOnlyRoom as VoiceOnlyRoomMockup,
+} from "@/screens/chat";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";

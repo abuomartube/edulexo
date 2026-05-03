@@ -16,6 +16,7 @@ export { Card } from "./Card";
 export { HeroCard } from "./HeroCard";
 export { IconButton, type IconButtonTone } from "./IconButton";
 export { PhoneFrame, PageBackdrop } from "./PhoneFrame";
+export { MiniPhone, MINI_W, MINI_H } from "./MiniPhone";
 export {
   chatUI,
   AVATAR_GRAD,

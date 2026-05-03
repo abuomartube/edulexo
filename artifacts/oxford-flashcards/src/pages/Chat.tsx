@@ -68,6 +68,73 @@ export default function ChatPage() {
       />
       <Header />
       <main className="relative max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* === VISIBLE TEST BANNER === */}
+        <div className="mb-4 px-4 py-3 rounded-2xl bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white text-center font-extrabold text-lg shadow-[0_10px_30px_-8px_rgba(168,85,247,0.6)] ring-2 ring-white/20">
+          TEST UI CHANGE
+        </div>
+
+        {/* === HARDCODED DEMO MESSAGES === */}
+        <div className="mb-6 p-4 rounded-2xl bg-white/[0.05] backdrop-blur-2xl ring-1 ring-white/10 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)] space-y-3">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-purple-300 mb-2">
+            Demo Conversation
+          </div>
+
+          {/* Message 1 — Omar */}
+          <div className="flex gap-2 items-end">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-[11px] font-bold ring-2 ring-white/10 shrink-0">
+              OM
+            </div>
+            <div className="max-w-[75%]">
+              <div className="text-[11px] font-bold text-purple-300 mb-1 px-1">
+                Omar
+              </div>
+              <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/[0.06] ring-1 ring-white/10 text-slate-100 backdrop-blur-xl">
+                <p className="text-sm">Hi everyone! 👋 How was your weekend?</p>
+                <div className="mt-1 text-[10px] text-slate-400">10:21 AM</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Message 2 — Sara */}
+          <div className="flex gap-2 items-end">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center text-[11px] font-bold ring-2 ring-white/10 shrink-0">
+              SA
+            </div>
+            <div className="max-w-[75%]">
+              <div className="text-[11px] font-bold text-rose-300 mb-1 px-1">
+                Sara
+              </div>
+              <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/[0.06] ring-1 ring-white/10 text-slate-100 backdrop-blur-xl">
+                <p className="text-sm">
+                  It was great! I went hiking with my friends 🏞️
+                </p>
+                <div className="mt-1 text-[10px] text-slate-400">10:22 AM</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Message 3 — You (outgoing) */}
+          <div className="flex gap-2 items-end flex-row-reverse">
+            <div className="max-w-[75%]">
+              <div className="text-[11px] font-bold text-purple-200 mb-1 px-1 text-right">
+                You
+              </div>
+              <div
+                className="px-3.5 py-2.5 rounded-2xl rounded-br-md text-white shadow-[0_10px_28px_-10px_rgba(124,58,237,0.65)]"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                }}
+              >
+                <p className="text-sm">Mine was awesome too! 🎉</p>
+                <div className="mt-1 text-[10px] text-white/80 text-right">
+                  10:23 AM ✓✓
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-start justify-between gap-3 mb-6">
           <div className="flex-1">
             <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-fuchsia-300 via-purple-300 to-indigo-300 bg-clip-text text-transparent drop-shadow-[0_2px_18px_rgba(168,85,247,0.45)]">

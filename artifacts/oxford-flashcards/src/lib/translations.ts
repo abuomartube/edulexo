@@ -1644,6 +1644,7 @@ export const translations = {
   "support.role.student": { en: "You", ar: "أنت" },
   "support.role.admin": { en: "Support team", ar: "فريق الدعم" },
   "header.support": { en: "Support", ar: "الدعم" },
+  "header.chat": { en: "LEXO Chat", ar: "دردشة لكسو" },
 
   // ───────────────────────── SUPPORT (admin) ─────────────────────────
   "admin.tab.support": { en: "Support", ar: "الدعم" },

@@ -15,6 +15,7 @@ import checkoutRouter from "./checkout";
 import storageRouter from "./storage";
 import liveSessionsRouter from "./live-sessions";
 import supportRouter from "./support";
+import chatRouter from "./chat";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(checkoutRouter);
 router.use(storageRouter);
 router.use(liveSessionsRouter);
 router.use(supportRouter);
+router.use(chatRouter);
 
 export default router;

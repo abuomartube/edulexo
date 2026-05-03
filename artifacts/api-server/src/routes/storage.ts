@@ -29,6 +29,13 @@ export const ALLOWED_UPLOAD_CONTENT_TYPES = new Set<string>([
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  // LEXO Chat voice notes — MediaRecorder default mime varies by browser.
+  "audio/webm",
+  "audio/ogg",
+  "audio/mp4",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/x-wav",
 ]);
 
 /**

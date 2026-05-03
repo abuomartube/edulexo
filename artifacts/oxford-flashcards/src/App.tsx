@@ -20,6 +20,11 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import LiveSessions from "@/pages/LiveSessions";
 import Support from "@/pages/Support";
 import SupportThread from "@/pages/SupportThread";
+import Chat from "@/pages/Chat";
+import ChatRoom from "@/pages/ChatRoom";
+import ChatMessages from "@/pages/ChatMessages";
+import ChatDmThread from "@/pages/ChatDmThread";
+import ChatLeaderboard from "@/pages/ChatLeaderboard";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -95,6 +100,32 @@ export default function App() {
         <Route path="/support/:id">
           <ProtectedRoute>
             <SupportThread />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/chat">
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/chat/r/:slug">
+          <ProtectedRoute>
+            <ChatRoom />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/chat/messages">
+          <ProtectedRoute>
+            <ChatMessages />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/chat/dm/:id">
+          <ProtectedRoute>
+            <ChatDmThread />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/chat/leaderboard">
+          <ProtectedRoute>
+            <ChatLeaderboard />
           </ProtectedRoute>
         </Route>
 

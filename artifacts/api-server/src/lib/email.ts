@@ -23,29 +23,66 @@ export type SendEmailOptions = {
 };
 
 /**
- * Stub email sender. Logs to the server console (SendGrid not yet wired)
- * AND records every attempt in the `emails_sent` table so the admin
- * dashboard can audit deliveries.
+ * Send an email via Resend if `RESEND_API_KEY` is configured.
+ * Falls back to a server-log stub when no provider is wired.
+ * Every attempt — sent, stubbed, or failed — is recorded in
+ * the `emails_sent` table for admin auditing.
  */
 export async function sendEmail(
   message: EmailMessage,
   opts: SendEmailOptions,
 ): Promise<void> {
+  const apiKey = process.env["RESEND_API_KEY"];
+  const from =
+    process.env["EMAIL_FROM"]?.trim() ||
+    "Abu Omar EduLexo <no-reply@edulexo.com>";
+
   let status: "sent" | "failed" = "sent";
   let errorMsg: string | null = null;
 
-  try {
+  if (!apiKey) {
     logger.info(
-      {
-        to: message.to,
-        subject: message.subject,
-        type: opts.emailType,
-      },
-      "[email-stub] Would send email (SendGrid not yet configured)",
+      { to: message.to, subject: message.subject, type: opts.emailType },
+      "[email-stub] Would send email (RESEND_API_KEY not set)",
     );
-  } catch (err) {
-    status = "failed";
-    errorMsg = err instanceof Error ? err.message : String(err);
+  } else {
+    try {
+      const resp = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to: [message.to],
+          subject: message.subject,
+          text: message.text,
+          ...(message.html ? { html: message.html } : {}),
+        }),
+      });
+      if (!resp.ok) {
+        const body = await resp.text().catch(() => "");
+        status = "failed";
+        errorMsg = `resend_${resp.status}: ${body.slice(0, 300)}`;
+        logger.error(
+          { to: message.to, type: opts.emailType, status: resp.status, body: body.slice(0, 300) },
+          "Resend send failed",
+        );
+      } else {
+        logger.info(
+          { to: message.to, type: opts.emailType },
+          "Email sent via Resend",
+        );
+      }
+    } catch (err) {
+      status = "failed";
+      errorMsg = err instanceof Error ? err.message : String(err);
+      logger.error(
+        { err, to: message.to, type: opts.emailType },
+        "Resend request threw",
+      );
+    }
   }
 
   // Record in DB. Never throw from here — the caller already handled the

@@ -82,6 +82,7 @@ BANK_ACCOUNT_NAME = "TEST LIT company"
 BANK_ACCOUNT_NAME_AR = "شركة الاختبار الملهم"
 BANK_IBAN = "SA4680000133608016497687"
 BANK_SWIFT = "RJHISARI"
+EMAIL_FROM = "Abu Omar EduLexo <no-reply@edulexo.com>"
 
 [userenv.production]
 ADMIN_EMAIL = "testlit2030@outlook.com"

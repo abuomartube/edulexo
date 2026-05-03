@@ -23,6 +23,8 @@ import {
   PhoneFrame,
   PageBackdrop,
 } from "@/components/chat-ui";
+import { useLocation, useRoute } from "wouter";
+import { getRoomById, MOCK_ROOMS } from "@/lib/chatMock";
 
 function HeroBadge({
   icon,
@@ -96,6 +98,10 @@ const RULES = [
 ];
 
 export default function RoomDetailsMockup() {
+  const [, params] = useRoute("/room-details/:id");
+  const [, setLocation] = useLocation();
+  const room = getRoomById(params?.id) ?? MOCK_ROOMS[1];
+
   return (
     <PageBackdrop>
       <PhoneFrame>
@@ -106,6 +112,7 @@ export default function RoomDetailsMockup() {
               تعرف على الغرفة قبل الانضمام
             </span>
           }
+          onBack={() => setLocation("/room-selection")}
         />
 
         {/* SCROLLABLE BODY */}
@@ -119,11 +126,11 @@ export default function RoomDetailsMockup() {
           {/* HERO */}
           <HeroCard
             icon={<Mic size={26} className="text-white" />}
-            title="Speaking Room - Intermediate"
-            subtitle="غرفة محادثة لتطوير الطلاقة وزيادة الثقة في التحدث"
+            title={room.title}
+            subtitle={room.desc}
             badges={
               <>
-                <HeroBadge icon={<Users size={11} />}>18 online</HeroBadge>
+                <HeroBadge icon={<Users size={11} />}>{room.online} online</HeroBadge>
                 <HeroBadge icon={<Globe size={11} />}>English Only</HeroBadge>
                 <HeroBadge icon={<Clock size={11} />}>متاحة الآن</HeroBadge>
               </>
@@ -133,8 +140,7 @@ export default function RoomDetailsMockup() {
           {/* DESCRIPTION */}
           <Card title="عن الغرفة" icon={<Info size={13} />}>
             <p className="text-[12px] text-slate-300 leading-relaxed">
-              غرفة مخصصة للمتحدثين بمستوى متوسط. تدرب على المحادثات اليومية، شارك
-              تجاربك، واستخدم مولّد المواضيع لكسر الجمود مع الأعضاء الآخرين.
+              {room.about}
             </p>
           </Card>
 
@@ -144,7 +150,7 @@ export default function RoomDetailsMockup() {
               <span className="flex items-center gap-2">
                 المشاركون
                 <span className="text-[10px] font-semibold text-emerald-400">
-                  18 online
+                  {room.online} online
                 </span>
               </span>
             }
@@ -161,7 +167,7 @@ export default function RoomDetailsMockup() {
                 />
               ))}
               <div className="w-8 h-8 rounded-full bg-slate-700 ring-2 ring-slate-950 flex items-center justify-center text-[10px] font-bold text-slate-200">
-                +12
+                +{Math.max(0, room.online - 6)}
               </div>
             </div>
             <div
@@ -204,6 +210,7 @@ export default function RoomDetailsMockup() {
               size="lg"
               icon={<Headphones size={14} />}
               className="flex-1"
+              onClick={() => setLocation(`/chat-screen/${room.id}`)}
             >
               استمع أولاً
             </SecondaryButton>
@@ -211,6 +218,7 @@ export default function RoomDetailsMockup() {
               size="lg"
               icon={<Mic size={14} />}
               className="flex-1"
+              onClick={() => setLocation(`/chat-screen/${room.id}`)}
             >
               انضمام للغرفة
             </PrimaryButton>

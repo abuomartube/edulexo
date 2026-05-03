@@ -15,6 +15,7 @@ import {
   PhoneFrame,
   PageBackdrop,
 } from "@/components/chat-ui";
+import { useLocation } from "wouter";
 
 const SPEAKERS: { letter: string; tone: AvatarTone; name: string; speaking?: boolean }[] = [
   { letter: "O", tone: "blue", name: "Omar", speaking: true },
@@ -85,10 +86,12 @@ function ListenerTile({
 }
 
 export default function VoiceOnlyRoomMockup() {
+  const [, setLocation] = useLocation();
   return (
     <PageBackdrop>
       <PhoneFrame>
         <Header
+          onBack={() => setLocation("/room-selection")}
           title="Voice Only Room"
           subtitle={
             <>
@@ -207,6 +210,7 @@ export default function VoiceOnlyRoomMockup() {
               icon={<PhoneOff size={20} />}
               label="Leave"
               tone="danger"
+              onClick={() => setLocation("/room-selection")}
             />
           </div>
           <div className="flex justify-center pt-2 pb-1">

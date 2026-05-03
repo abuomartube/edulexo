@@ -1,8 +1,6 @@
 import {
   Mic,
   Hand,
-  FileText,
-  Download,
   Sparkles,
   Lightbulb,
   RefreshCw,
@@ -20,13 +18,104 @@ import {
   PhoneFrame,
   PageBackdrop,
 } from "@/components/chat-ui";
+import { useEffect, useRef, useState } from "react";
+import { useLocation, useRoute } from "wouter";
+import {
+  getRoomById,
+  MOCK_ROOMS,
+  seedMessages,
+  nowTime,
+  randomDuration,
+  type ChatMsg,
+} from "@/lib/chatMock";
+
+const ICE_BREAKERS = [
+  "What was the best part of your week?",
+  "If you could travel anywhere right now, where would you go?",
+  "What's a small thing that made you smile today?",
+  "What's your favorite way to learn English?",
+];
+
+const TOPICS = [
+  "Travel & Cultures",
+  "Daily Routines",
+  "Food & Cooking",
+  "Movies & Books",
+  "Future Goals",
+];
 
 export default function ChatScreenMockup() {
+  const [, params] = useRoute("/chat-screen/:id");
+  const [, setLocation] = useLocation();
+  const room = getRoomById(params?.id) ?? MOCK_ROOMS[1];
+
+  const [messages, setMessages] = useState<ChatMsg[]>(() => seedMessages());
+  const [draft, setDraft] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
+
+  function nextId() {
+    return `m_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  }
+
+  function sendText() {
+    const text = draft.trim();
+    if (!text) return;
+    setMessages((prev) => [
+      ...prev,
+      { id: nextId(), kind: "outgoing", text, time: nowTime() },
+    ]);
+    setDraft("");
+  }
+
+  function sendVoice() {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId(),
+        kind: "voice-out",
+        duration: randomDuration(),
+        time: nowTime(),
+      },
+    ]);
+  }
+
+  function addTopic() {
+    const t = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId(),
+        kind: "system",
+        text: `Topic suggestion: ${t} 💡`,
+        time: nowTime(),
+      },
+    ]);
+  }
+
+  function addIceBreaker() {
+    const t = ICE_BREAKERS[Math.floor(Math.random() * ICE_BREAKERS.length)];
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: nextId(),
+        kind: "system",
+        text: t,
+        time: nowTime(),
+      },
+    ]);
+  }
+
   return (
     <PageBackdrop>
       <PhoneFrame dir="ltr">
         <Header
-          title="Speaking Room - Intermediate"
+          title={room.title}
+          onBack={() => setLocation(`/room-details/${room.id}`)}
           subtitle={
             <>
               <span className="flex items-center gap-1 text-[11px] text-slate-400">
@@ -34,7 +123,7 @@ export default function ChatScreenMockup() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
                 </span>
-                18 online
+                {room.online} online
               </span>
               <div className="flex -space-x-1.5">
                 <Avatar letter="O" tone="blue" size={18} ring />
@@ -68,86 +157,87 @@ export default function ChatScreenMockup() {
 
         {/* MESSAGES */}
         <div
+          ref={scrollRef}
           className="relative z-10 flex-1 overflow-y-auto px-4 pt-3 pb-2 space-y-2.5"
           style={{
             background:
               "radial-gradient(ellipse at top, rgba(124,58,237,0.06), transparent 60%)",
           }}
         >
-          <IncomingBubble
-            name="Omar"
-            tone="blue"
-            letter="O"
-            time="10:20 AM"
-            reactions={2}
-          >
-            Hi everyone! 👋 How was your weekend?
-          </IncomingBubble>
-
-          <IncomingBubble
-            name="Sara"
-            tone="pink"
-            letter="S"
-            time="10:21 AM"
-            reactions={1}
-          >
-            It was great! I went hiking with my friends 😊
-          </IncomingBubble>
-
-          <OutgoingBubble time="10:22 AM">
-            <VoiceMessage duration="0:18" played={0.5} bars={22} />
-          </OutgoingBubble>
-
-          <IncomingBubble name="James" tone="emerald" letter="J" time="10:23 AM">
-            <div className="flex items-center gap-2.5 -my-0.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500/30 to-rose-600/20 ring-1 ring-red-500/30 flex items-center justify-center shrink-0">
-                <FileText size={16} className="text-red-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[12px] font-semibold text-white truncate">
-                  Useful Phrases.pdf
-                </div>
-                <div className="text-[10px] text-slate-400">1.2 MB</div>
-              </div>
-              <button className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center shrink-0">
-                <Download size={12} className="text-slate-300" />
-              </button>
-            </div>
-          </IncomingBubble>
-
-          <IncomingBubble
-            name="Lina"
-            tone="amber"
-            letter="L"
-            time="10:28 AM"
-            reactions={3}
-          >
-            <div className="-mx-3.5 -my-2 overflow-hidden rounded-bl-md rounded-2xl">
-              <div className="relative h-16 bg-gradient-to-br from-amber-700 via-orange-700 to-rose-800 overflow-hidden">
-                <div className="absolute inset-0 opacity-40 mix-blend-overlay bg-[radial-gradient(circle_at_30%_60%,#fff_1.5px,transparent_1.5px),radial-gradient(circle_at_70%_30%,#fff_1.5px,transparent_1.5px),radial-gradient(circle_at_50%_80%,#fff_1px,transparent_1px)] bg-[length:18px_18px,22px_22px,12px_12px]" />
-                <div className="absolute bottom-1 left-2 text-[9px] text-white/80 font-semibold drop-shadow">
-                  café · library
-                </div>
-              </div>
-              <div className="px-3 py-1.5 text-[12px] text-white">
-                Let's talk about this picture! ☕
-              </div>
-            </div>
-          </IncomingBubble>
-
-          <SystemBubble>Please try to use English only 😊</SystemBubble>
+          {messages.map((m) => {
+            if (m.kind === "incoming" && m.name && m.letter && m.tone) {
+              return (
+                <IncomingBubble
+                  key={m.id}
+                  name={m.name}
+                  tone={m.tone}
+                  letter={m.letter}
+                  time={m.time}
+                  reactions={m.reactions}
+                >
+                  {m.text}
+                </IncomingBubble>
+              );
+            }
+            if (m.kind === "outgoing") {
+              return (
+                <OutgoingBubble key={m.id} time={m.time}>
+                  {m.text}
+                </OutgoingBubble>
+              );
+            }
+            if (m.kind === "voice-out") {
+              return (
+                <OutgoingBubble key={m.id} time={m.time}>
+                  <VoiceMessage
+                    duration={m.duration ?? "0:10"}
+                    played={0.5}
+                    bars={22}
+                  />
+                </OutgoingBubble>
+              );
+            }
+            if (m.kind === "system") {
+              return <SystemBubble key={m.id}>{m.text}</SystemBubble>;
+            }
+            return null;
+          })}
         </div>
 
         {/* ACTION BAR */}
         <div className="relative z-10 px-4 pt-2 pb-1 border-t border-white/5 bg-slate-950/40 backdrop-blur">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <ActionButton icon={<Sparkles size={14} />} label="Topic" tone="purple" />
-            <ActionButton icon={<Lightbulb size={14} />} label="Ice Breaker" tone="blue" />
-            <ActionButton icon={<RefreshCw size={14} />} label="Rotate" tone="green" />
-            <ActionButton icon={<ImageIcon size={14} />} label="Image Talk" tone="orange" />
+            <ActionButton
+              icon={<Sparkles size={14} />}
+              label="Topic"
+              tone="purple"
+              onClick={addTopic}
+            />
+            <ActionButton
+              icon={<Lightbulb size={14} />}
+              label="Ice Breaker"
+              tone="blue"
+              onClick={addIceBreaker}
+            />
+            <ActionButton
+              icon={<RefreshCw size={14} />}
+              label="Rotate"
+              tone="green"
+              onClick={addTopic}
+            />
+            <ActionButton
+              icon={<ImageIcon size={14} />}
+              label="Image Talk"
+              tone="orange"
+              onClick={addTopic}
+            />
           </div>
 
-          <InputBar />
+          <InputBar
+            value={draft}
+            onChange={setDraft}
+            onSend={sendText}
+          />
 
           {/* Floating mic row */}
           <div className="flex items-center justify-center gap-2 mt-1.5 mb-0.5">
@@ -155,7 +245,8 @@ export default function ChatScreenMockup() {
             <div className="relative">
               <div className="absolute inset-0 -m-1.5 rounded-full bg-purple-500/40 blur-lg animate-pulse" />
               <button
-                className="relative w-10 h-10 rounded-full flex items-center justify-center ring-2 ring-white/20"
+                onClick={sendVoice}
+                className="relative w-10 h-10 rounded-full flex items-center justify-center ring-2 ring-white/20 hover:brightness-110 active:brightness-95 transition"
                 style={{
                   background:
                     "linear-gradient(135deg, #60a5fa 0%, #818cf8 35%, #a855f7 100%)",
@@ -188,8 +279,11 @@ function Waves() {
       {heights.map((h, i) => (
         <span
           key={i}
-          className="w-[2.5px] rounded-full bg-purple-400/40"
-          style={{ height: `${Math.round(h * 100)}%` }}
+          className="w-[2.5px] rounded-full bg-purple-400/40 animate-pulse"
+          style={{
+            height: `${Math.round(h * 100)}%`,
+            animationDelay: `${i * 80}ms`,
+          }}
         />
       ))}
     </div>

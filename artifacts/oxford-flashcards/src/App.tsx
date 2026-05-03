@@ -132,6 +132,8 @@ export default function App() {
         <Route path="/chat-screen" component={ChatScreenMockup} />
         <Route path="/room-selection" component={RoomSelectionMockup} />
         <Route path="/room-details" component={RoomDetailsMockup} />
+        <Route path="/room-details/:id" component={RoomDetailsMockup} />
+        <Route path="/chat-screen/:id" component={ChatScreenMockup} />
         <Route path="/voice-room" component={VoiceOnlyRoomMockup} />
         <Route path="/chat/leaderboard">
           <ProtectedRoute>

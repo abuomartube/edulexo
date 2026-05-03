@@ -29,6 +29,7 @@ export function RoomCard({
   online,
   joinLabel = "Join",
   onJoin,
+  onClick,
 }: {
   icon: ReactNode;
   tone: AvatarTone;
@@ -37,10 +38,12 @@ export function RoomCard({
   online: number;
   joinLabel?: string;
   onJoin?: () => void;
+  onClick?: () => void;
 }) {
   return (
     <div
-      className={`${chatUI.radius.card} ${chatUI.surface.card} p-3 flex items-center gap-3 hover:border-white/[0.12] transition`}
+      onClick={onClick}
+      className={`${chatUI.radius.card} ${chatUI.surface.card} p-3 flex items-center gap-3 hover:border-white/[0.12] transition ${onClick ? "cursor-pointer" : ""}`}
     >
       <div className="relative shrink-0">
         <div
@@ -69,7 +72,10 @@ export function RoomCard({
         </div>
       </div>
       <button
-        onClick={onJoin}
+        onClick={(e) => {
+          e.stopPropagation();
+          onJoin?.();
+        }}
         className="relative shrink-0 px-3.5 py-1.5 rounded-xl text-[11px] font-bold text-white ring-1 ring-white/20 overflow-hidden"
         style={{
           background: chatUI.gradient.purpleSimple,

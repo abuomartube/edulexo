@@ -18,6 +18,8 @@ import {
   PageBackdrop,
 } from "@/components/chat-ui";
 import { useState } from "react";
+import { useLocation } from "wouter";
+import { MOCK_ROOMS, type MockRoom } from "@/lib/chatMock";
 
 type RoomFilter = "all" | "speaking" | "voice" | "ielts";
 
@@ -43,9 +45,7 @@ function NavTab({
               : ""
           }`}
           style={
-            active
-              ? { background: chatUI.gradient.purpleSimple }
-              : undefined
+            active ? { background: chatUI.gradient.purpleSimple } : undefined
           }
         >
           {icon}
@@ -62,74 +62,50 @@ function NavTab({
   );
 }
 
-const ALL_ROOMS = [
-  {
-    id: "1",
-    cat: "speaking" as const,
-    icon: <Mic size={18} className="text-white" />,
-    tone: "blue" as const,
-    title: "Speaking Room - Beginner",
-    desc: "تحدث وتدرب على المحادثة اليومية",
-    online: 18,
-  },
-  {
-    id: "2",
-    cat: "speaking" as const,
-    icon: <Mic size={18} className="text-white" />,
-    tone: "purple" as const,
-    title: "Speaking Room - Intermediate",
-    desc: "تطوير الطلاقة وزيادة الثقة",
-    online: 24,
-  },
-  {
-    id: "3",
-    cat: "voice" as const,
-    icon: <Headphones size={18} className="text-white" />,
-    tone: "emerald" as const,
-    title: "Voice Only Room",
-    desc: "تحدث بصوت فقط بدون كتابة",
-    online: 12,
-  },
-  {
-    id: "4",
-    cat: "ielts" as const,
-    icon: <GraduationCap size={18} className="text-white" />,
-    tone: "pink" as const,
-    title: "IELTS Speaking Room",
-    desc: "تدرب على أسئلة الـ Speaking خاصة بـ IELTS",
-    online: 16,
-  },
-  {
-    id: "5",
-    cat: "speaking" as const,
-    icon: <MessageCircle size={18} className="text-white" />,
-    tone: "rose" as const,
-    title: "Casual Chat",
-    desc: "دردشة حرة في أي موضوع",
-    online: 20,
-  },
-  {
-    id: "6",
-    cat: "speaking" as const,
-    icon: <PenLine size={18} className="text-white" />,
-    tone: "indigo" as const,
-    title: "Writing Help Room",
-    desc: "طور كتاباتك واطلب المراجعة",
-    online: 10,
-  },
-];
+function roomIcon(key: MockRoom["iconKey"]) {
+  const cls = "text-white";
+  switch (key) {
+    case "mic":
+      return <Mic size={18} className={cls} />;
+    case "headphones":
+      return <Headphones size={18} className={cls} />;
+    case "graduation":
+      return <GraduationCap size={18} className={cls} />;
+    case "message":
+      return <MessageCircle size={18} className={cls} />;
+    case "pen":
+      return <PenLine size={18} className={cls} />;
+  }
+}
 
 export default function RoomSelectionMockup() {
   const [filter, setFilter] = useState<RoomFilter>("all");
   const [search, setSearch] = useState("");
+  const [, setLocation] = useLocation();
 
-  const visible = ALL_ROOMS.filter(
+  const visible = MOCK_ROOMS.filter(
     (r) =>
       (filter === "all" || r.cat === filter) &&
       (search === "" ||
         r.title.toLowerCase().includes(search.toLowerCase()) ||
         r.desc.includes(search)),
   );
+
+  function openDetails(r: MockRoom) {
+    if (r.cat === "voice") {
+      setLocation("/voice-room");
+    } else {
+      setLocation(`/room-details/${r.id}`);
+    }
+  }
+
+  function joinRoom(r: MockRoom) {
+    if (r.cat === "voice") {
+      setLocation("/voice-room");
+    } else {
+      setLocation(`/chat-screen/${r.id}`);
+    }
+  }
 
   return (
     <PageBackdrop>
@@ -175,14 +151,21 @@ export default function RoomSelectionMockup() {
           {visible.map((r) => (
             <RoomCard
               key={r.id}
-              icon={r.icon}
+              icon={roomIcon(r.iconKey)}
               tone={r.tone}
               title={r.title}
               desc={r.desc}
               online={r.online}
               joinLabel="انضمام"
+              onClick={() => openDetails(r)}
+              onJoin={() => joinRoom(r)}
             />
           ))}
+          {visible.length === 0 && (
+            <div className="text-center text-[12px] text-slate-500 py-10">
+              لم يتم العثور على غرف
+            </div>
+          )}
         </div>
 
         {/* bottom nav */}

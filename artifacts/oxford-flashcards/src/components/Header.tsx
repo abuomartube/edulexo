@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Moon, Sun, LogOut, LayoutDashboard, Shield, ChevronDown } from "lucide-react";
+import { Menu, X, Moon, Sun, LogOut, LayoutDashboard, Shield, ChevronDown, Settings, UserCircle2 } from "lucide-react";
 import edulexoLogo from "@/assets/edulexo-logo.png";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/lib/auth-context";
@@ -227,6 +227,22 @@ export default function Header() {
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-gray-800 transition"
                   >
                     <LayoutDashboard size={16} /> {t("header.dashboard")}
+                  </Link>
+                  <Link
+                    href={`/u/${user.id}`}
+                    onClick={() => setMenuOpen(false)}
+                    data-testid="link-public-profile"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-gray-800 transition"
+                  >
+                    <UserCircle2 size={16} /> {t("header.publicProfile")}
+                  </Link>
+                  <Link
+                    href="/account-settings"
+                    onClick={() => setMenuOpen(false)}
+                    data-testid="link-account-settings"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-gray-800 transition"
+                  >
+                    <Settings size={16} /> {t("header.settings")}
                   </Link>
                   {isAdmin && (
                     <Link

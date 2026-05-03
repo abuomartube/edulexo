@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { UpdateProfileRequestPreferredLanguage } from "./updateProfileRequestPreferredLanguage";
 
 export interface UpdateProfileRequest {
   /**
@@ -21,4 +22,7 @@ the client uploaded a new avatar image. Server normalizes and
 sets the avatar ACL, then stores the resulting public URL.
  */
   avatarObjectPath?: string | null;
+  preferredLanguage?: UpdateProfileRequestPreferredLanguage;
+  notifyExpiry?: boolean;
+  notifyMarketing?: boolean;
 }

@@ -52,6 +52,9 @@ export const LoginResponse = zod.object({
     emailVerified: zod.boolean(),
     avatarUrl: zod.string().nullish(),
     bio: zod.string().nullish(),
+    preferredLanguage: zod.enum(["en", "ar"]),
+    notifyExpiry: zod.boolean(),
+    notifyMarketing: zod.boolean(),
     createdAt: zod.coerce.date(),
   }),
 });
@@ -70,6 +73,9 @@ export const GetCurrentUserResponse = zod.object({
       emailVerified: zod.boolean(),
       avatarUrl: zod.string().nullish(),
       bio: zod.string().nullish(),
+      preferredLanguage: zod.enum(["en", "ar"]),
+      notifyExpiry: zod.boolean(),
+      notifyMarketing: zod.boolean(),
       createdAt: zod.coerce.date(),
     }),
     zod.null(),
@@ -100,6 +106,9 @@ export const UpdateProfileBody = zod.object({
     .describe(
       "Object path returned from POST \/storage\/uploads\/request-url after\nthe client uploaded a new avatar image. Server normalizes and\nsets the avatar ACL, then stores the resulting public URL.\n",
     ),
+  preferredLanguage: zod.enum(["en", "ar"]).optional(),
+  notifyExpiry: zod.boolean().optional(),
+  notifyMarketing: zod.boolean().optional(),
 });
 
 export const UpdateProfileResponse = zod.object({
@@ -112,7 +121,60 @@ export const UpdateProfileResponse = zod.object({
     emailVerified: zod.boolean(),
     avatarUrl: zod.string().nullish(),
     bio: zod.string().nullish(),
+    preferredLanguage: zod.enum(["en", "ar"]),
+    notifyExpiry: zod.boolean(),
+    notifyMarketing: zod.boolean(),
     createdAt: zod.coerce.date(),
+  }),
+});
+
+/**
+ * @summary Change the current user's password (requires current password)
+ */
+export const changePasswordBodyCurrentPasswordMax = 128;
+
+export const changePasswordBodyNewPasswordMin = 8;
+export const changePasswordBodyNewPasswordMax = 128;
+
+export const ChangePasswordBody = zod.object({
+  currentPassword: zod
+    .string()
+    .min(1)
+    .max(changePasswordBodyCurrentPasswordMax),
+  newPassword: zod
+    .string()
+    .min(changePasswordBodyNewPasswordMin)
+    .max(changePasswordBodyNewPasswordMax),
+});
+
+export const ChangePasswordResponse = zod.object({
+  message: zod.string(),
+});
+
+/**
+ * @summary Get a user's public profile (avatar, name, bio, certificates)
+ */
+export const GetPublicProfileParams = zod.object({
+  userId: zod.coerce.string().uuid(),
+});
+
+export const GetPublicProfileResponse = zod.object({
+  profile: zod.object({
+    id: zod.string().uuid(),
+    name: zod.string(),
+    avatarUrl: zod.string().nullish(),
+    bio: zod.string().nullish(),
+    memberSince: zod.coerce.date(),
+    certificates: zod.array(
+      zod.object({
+        id: zod.string().uuid(),
+        course: zod.enum(["intro", "english"]),
+        tier: zod.string(),
+        certificateId: zod.string(),
+        completionDate: zod.string(),
+        issuedAt: zod.coerce.date(),
+      }),
+    ),
   }),
 });
 

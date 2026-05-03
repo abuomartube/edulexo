@@ -116,6 +116,57 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change the current user's password (requires current password)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordRequest"
+      responses:
+        "200":
+          description: Password changed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /users/{userId}/profile:
+    get:
+      operationId: getPublicProfile
+      tags: [auth]
+      summary: Get a user's public profile (avatar, name, bio, certificates)
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Public profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicProfileResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /auth/forgot-password:
     post:
       operationId: forgotPassword
@@ -259,6 +310,13 @@ components:
         bio:
           type: string
           nullable: true
+        preferredLanguage:
+          type: string
+          enum: [en, ar]
+        notifyExpiry:
+          type: boolean
+        notifyMarketing:
+          type: boolean
         createdAt:
           type: string
           format: date-time
@@ -268,6 +326,9 @@ components:
         - email
         - role
         - emailVerified
+        - preferredLanguage
+        - notifyExpiry
+        - notifyMarketing
         - createdAt
     AuthResponse:
       type: object
@@ -370,3 +431,86 @@ components:
             the client uploaded a new avatar image. Server normalizes and
             sets the avatar ACL, then stores the resulting public URL.
           nullable: true
+        preferredLanguage:
+          type: string
+          enum: [en, ar]
+        notifyExpiry:
+          type: boolean
+        notifyMarketing:
+          type: boolean
+
+    ChangePasswordRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          minLength: 1
+          maxLength: 128
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 128
+      required:
+        - currentPassword
+        - newPassword
+
+    PublicProfileResponse:
+      type: object
+      properties:
+        profile:
+          $ref: "#/components/schemas/PublicProfile"
+      required:
+        - profile
+
+    PublicProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        memberSince:
+          type: string
+          format: date-time
+        certificates:
+          type: array
+          items:
+            $ref: "#/components/schemas/PublicProfileCertificate"
+      required:
+        - id
+        - name
+        - memberSince
+        - certificates
+
+    PublicProfileCertificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        course:
+          type: string
+          enum: [intro, english]
+        tier:
+          type: string
+        certificateId:
+          type: string
+        completionDate:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - course
+        - tier
+        - certificateId
+        - completionDate
+        - issuedAt

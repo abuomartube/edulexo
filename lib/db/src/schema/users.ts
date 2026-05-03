@@ -25,6 +25,8 @@ export const usersTable = pgTable("users", {
     .default("en"),
   avatarUrl: text("avatar_url"),
   bio: text("bio"),
+  notifyExpiry: boolean("notify_expiry").notNull().default(true),
+  notifyMarketing: boolean("notify_marketing").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

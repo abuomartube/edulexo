@@ -25,6 +25,14 @@ export const PublicUserRole = {
   admin: "admin",
 } as const;
 
+export type PublicUserPreferredLanguage =
+  (typeof PublicUserPreferredLanguage)[keyof typeof PublicUserPreferredLanguage];
+
+export const PublicUserPreferredLanguage = {
+  en: "en",
+  ar: "ar",
+} as const;
+
 export interface PublicUser {
   id: string;
   name: string;
@@ -34,6 +42,9 @@ export interface PublicUser {
   emailVerified: boolean;
   avatarUrl?: string | null;
   bio?: string | null;
+  preferredLanguage: PublicUserPreferredLanguage;
+  notifyExpiry: boolean;
+  notifyMarketing: boolean;
   createdAt: string;
 }
 
@@ -86,6 +97,14 @@ export interface VerifyEmailRequest {
   token: string;
 }
 
+export type UpdateProfileRequestPreferredLanguage =
+  (typeof UpdateProfileRequestPreferredLanguage)[keyof typeof UpdateProfileRequestPreferredLanguage];
+
+export const UpdateProfileRequestPreferredLanguage = {
+  en: "en",
+  ar: "ar",
+} as const;
+
 export interface UpdateProfileRequest {
   /**
    * @minLength 2
@@ -101,6 +120,52 @@ the client uploaded a new avatar image. Server normalizes and
 sets the avatar ACL, then stores the resulting public URL.
  */
   avatarObjectPath?: string | null;
+  preferredLanguage?: UpdateProfileRequestPreferredLanguage;
+  notifyExpiry?: boolean;
+  notifyMarketing?: boolean;
+}
+
+export interface ChangePasswordRequest {
+  /**
+   * @minLength 1
+   * @maxLength 128
+   */
+  currentPassword: string;
+  /**
+   * @minLength 8
+   * @maxLength 128
+   */
+  newPassword: string;
+}
+
+export type PublicProfileCertificateCourse =
+  (typeof PublicProfileCertificateCourse)[keyof typeof PublicProfileCertificateCourse];
+
+export const PublicProfileCertificateCourse = {
+  intro: "intro",
+  english: "english",
+} as const;
+
+export interface PublicProfileCertificate {
+  id: string;
+  course: PublicProfileCertificateCourse;
+  tier: string;
+  certificateId: string;
+  completionDate: string;
+  issuedAt: string;
+}
+
+export interface PublicProfile {
+  id: string;
+  name: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+  memberSince: string;
+  certificates: PublicProfileCertificate[];
+}
+
+export interface PublicProfileResponse {
+  profile: PublicProfile;
 }
 
 /**

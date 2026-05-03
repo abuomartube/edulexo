@@ -18,12 +18,15 @@ import type {
 
 import type {
   AuthResponse,
+  ChangePasswordRequest,
   ConflictResponse,
+  ErrorResponse,
   ForgotPasswordRequest,
   HealthStatus,
   LoginRequest,
   MeResponse,
   MessageResponse,
+  PublicProfileResponse,
   ResetPasswordRequest,
   SignupRequest,
   UnauthorizedResponse,
@@ -534,6 +537,184 @@ export const useUpdateProfile = <
 > => {
   return useMutation(getUpdateProfileMutationOptions(options));
 };
+
+/**
+ * @summary Change the current user's password (requires current password)
+ */
+export const getChangePasswordUrl = () => {
+  return `/api/auth/change-password`;
+};
+
+export const changePassword = async (
+  changePasswordRequest: ChangePasswordRequest,
+  options?: RequestInit,
+): Promise<MessageResponse> => {
+  return customFetch<MessageResponse>(getChangePasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(changePasswordRequest),
+  });
+};
+
+export const getChangePasswordMutationOptions = <
+  TError = ErrorType<ValidationErrorResponse | UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePassword>>,
+    TError,
+    { data: BodyType<ChangePasswordRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  { data: BodyType<ChangePasswordRequest> },
+  TContext
+> => {
+  const mutationKey = ["changePassword"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof changePassword>>,
+    { data: BodyType<ChangePasswordRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return changePassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ChangePasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof changePassword>>
+>;
+export type ChangePasswordMutationBody = BodyType<ChangePasswordRequest>;
+export type ChangePasswordMutationError = ErrorType<
+  ValidationErrorResponse | UnauthorizedResponse
+>;
+
+/**
+ * @summary Change the current user's password (requires current password)
+ */
+export const useChangePassword = <
+  TError = ErrorType<ValidationErrorResponse | UnauthorizedResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof changePassword>>,
+    TError,
+    { data: BodyType<ChangePasswordRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof changePassword>>,
+  TError,
+  { data: BodyType<ChangePasswordRequest> },
+  TContext
+> => {
+  return useMutation(getChangePasswordMutationOptions(options));
+};
+
+/**
+ * @summary Get a user's public profile (avatar, name, bio, certificates)
+ */
+export const getGetPublicProfileUrl = (userId: string) => {
+  return `/api/users/${userId}/profile`;
+};
+
+export const getPublicProfile = async (
+  userId: string,
+  options?: RequestInit,
+): Promise<PublicProfileResponse> => {
+  return customFetch<PublicProfileResponse>(getGetPublicProfileUrl(userId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPublicProfileQueryKey = (userId: string) => {
+  return [`/api/users/${userId}/profile`] as const;
+};
+
+export const getGetPublicProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPublicProfile>>,
+  TError = ErrorType<UnauthorizedResponse | ErrorResponse>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPublicProfile>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetPublicProfileQueryKey(userId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPublicProfile>>
+  > = ({ signal }) => getPublicProfile(userId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!userId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPublicProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPublicProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPublicProfile>>
+>;
+export type GetPublicProfileQueryError = ErrorType<
+  UnauthorizedResponse | ErrorResponse
+>;
+
+/**
+ * @summary Get a user's public profile (avatar, name, bio, certificates)
+ */
+
+export function useGetPublicProfile<
+  TData = Awaited<ReturnType<typeof getPublicProfile>>,
+  TError = ErrorType<UnauthorizedResponse | ErrorResponse>,
+>(
+  userId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getPublicProfile>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPublicProfileQueryOptions(userId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Request a password reset link

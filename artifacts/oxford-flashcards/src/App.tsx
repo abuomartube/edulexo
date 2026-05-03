@@ -14,6 +14,8 @@ import Checkout from "@/pages/Checkout";
 import CourseDetail from "@/pages/CourseDetail";
 import EnglishCourseDetail from "@/pages/EnglishCourseDetail";
 import MyPayments from "@/pages/MyPayments";
+import AccountSettings from "@/pages/AccountSettings";
+import PublicProfile from "@/pages/PublicProfile";
 import AdminDashboard from "@/pages/AdminDashboard";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
@@ -61,6 +63,18 @@ export default function App() {
         <Route path="/payments">
           <ProtectedRoute>
             <MyPayments />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/account-settings">
+          <ProtectedRoute>
+            <AccountSettings />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/u/:userId">
+          <ProtectedRoute>
+            <PublicProfile />
           </ProtectedRoute>
         </Route>
 

@@ -719,7 +719,8 @@ export async function uploadAvatar(file: File): Promise<{ avatarUrl: string | nu
 }
 
 /**
- * PATCH the current user's profile (name / phone / bio / clear avatar).
+ * PATCH the current user's profile (name / phone / bio / clear avatar /
+ * preferred language / notification preferences).
  * Returns nothing — callers should invalidate the auth-me query to refresh.
  */
 export async function updateMyProfile(input: {
@@ -727,6 +728,9 @@ export async function updateMyProfile(input: {
   phone?: string | null;
   bio?: string | null;
   avatarObjectPath?: string | null;
+  preferredLanguage?: "en" | "ar";
+  notifyExpiry?: boolean;
+  notifyMarketing?: boolean;
 }): Promise<void> {
   const res = await fetch("/api/auth/me", {
     ...init,
@@ -734,6 +738,53 @@ export async function updateMyProfile(input: {
     body: JSON.stringify(input),
   });
   await jsonOrThrow(res);
+}
+
+/**
+ * Change the current user's password. Server verifies `currentPassword`,
+ * hashes the new one, and rotates the session cookie.
+ */
+export async function changeMyPassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}): Promise<void> {
+  const res = await fetch("/api/auth/change-password", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  await jsonOrThrow(res);
+}
+
+export interface PublicProfileCert {
+  id: string;
+  course: "intro" | "english";
+  tier: string;
+  certificateId: string;
+  completionDate: string;
+  issuedAt: string;
+}
+
+export interface PublicProfileData {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  memberSince: string;
+  certificates: PublicProfileCert[];
+}
+
+/**
+ * Fetch a user's public profile (any signed-in user can view).
+ * Returns avatar/name/bio/member-since/certificates only — no email or phone.
+ */
+export async function fetchPublicProfile(userId: string): Promise<PublicProfileData> {
+  const res = await fetch(`/api/users/${encodeURIComponent(userId)}/profile`, {
+    ...init,
+    method: "GET",
+  });
+  const data = await jsonOrThrow<{ profile: PublicProfileData }>(res);
+  return data.profile;
 }
 
 /**

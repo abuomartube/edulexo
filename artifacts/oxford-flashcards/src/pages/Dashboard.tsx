@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen, GraduationCap, Sparkles, Mail, Phone, ShieldCheck, Clock,
   CheckCircle2, AlertCircle, X, Receipt, Camera, Pencil, Award, CalendarDays,
-  Loader2, Trash2, UserRound,
+  Loader2, Trash2, UserRound, Settings, UserCircle2,
 } from "lucide-react";
 import Header from "@/components/Header";
 import MyCourses from "@/components/MyCourses";
@@ -370,6 +370,22 @@ function ProfileCard({
       >
         <Pencil size={15} /> {t("dashboard.profile.editBtn")}
       </button>
+
+      <Link
+        href="/account-settings"
+        data-testid="link-account-settings-dashboard"
+        className="mt-2 w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-200 font-semibold text-sm transition"
+      >
+        <Settings size={15} /> {t("dashboard.profile.accountSettings")}
+      </Link>
+
+      <Link
+        href={`/u/${user.id}`}
+        data-testid="link-view-public-profile"
+        className="mt-2 w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-200 font-semibold text-sm transition"
+      >
+        <UserCircle2 size={15} /> {t("dashboard.profile.viewPublic")}
+      </Link>
 
       <Link
         href="/payments"

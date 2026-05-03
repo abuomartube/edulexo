@@ -255,6 +255,7 @@ async function loadExpiringEnrollments(days: number): Promise<ExpiringRow[]> {
         isNotNull(enrollmentsTable.expiresAt),
         gt(enrollmentsTable.expiresAt, now),
         lte(enrollmentsTable.expiresAt, horizon),
+        eq(usersTable.notifyExpiry, true),
       ),
     );
 
@@ -276,6 +277,7 @@ async function loadExpiringEnrollments(days: number): Promise<ExpiringRow[]> {
         isNotNull(englishEnrollmentsTable.expiresAt),
         gt(englishEnrollmentsTable.expiresAt, now),
         lte(englishEnrollmentsTable.expiresAt, horizon),
+        eq(usersTable.notifyExpiry, true),
       ),
     );
 

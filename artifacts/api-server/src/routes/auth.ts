@@ -1,10 +1,11 @@
 import { Router, type IRouter } from "express";
-import { and, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import {
   db,
   usersTable,
   passwordResetTokensTable,
   emailVerificationTokensTable,
+  certificatesTable,
   type User,
 } from "@workspace/db";
 import {
@@ -14,9 +15,11 @@ import {
   ResetPasswordBody,
   VerifyEmailBody,
   UpdateProfileBody,
+  ChangePasswordBody,
   LoginResponse as AuthResponseSchema,
   GetCurrentUserResponse as MeResponseSchema,
   ForgotPasswordResponse as MessageResponseSchema,
+  GetPublicProfileResponse as PublicProfileResponseSchema,
 } from "@workspace/api-zod";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { uploadGrantsTable } from "@workspace/db";
@@ -295,14 +298,37 @@ router.patch("/auth/me", requireAuth, async (req, res, next) => {
       });
       return;
     }
-    const { name, phone, bio, avatarObjectPath } = parsed.data;
+    const {
+      name,
+      phone,
+      bio,
+      avatarObjectPath,
+      preferredLanguage,
+      notifyExpiry,
+      notifyMarketing,
+    } = parsed.data;
 
-    const updates: Partial<Pick<User, "name" | "phone" | "bio" | "avatarUrl" | "updatedAt">> = {
+    const updates: Partial<
+      Pick<
+        User,
+        | "name"
+        | "phone"
+        | "bio"
+        | "avatarUrl"
+        | "preferredLanguage"
+        | "notifyExpiry"
+        | "notifyMarketing"
+        | "updatedAt"
+      >
+    > = {
       updatedAt: new Date(),
     };
     if (name !== undefined) updates.name = name.trim();
     if (phone !== undefined) updates.phone = phone === null ? null : phone.trim() || null;
     if (bio !== undefined) updates.bio = bio === null ? null : bio.trim() || null;
+    if (preferredLanguage !== undefined) updates.preferredLanguage = preferredLanguage;
+    if (notifyExpiry !== undefined) updates.notifyExpiry = notifyExpiry;
+    if (notifyMarketing !== undefined) updates.notifyMarketing = notifyMarketing;
 
     if (avatarObjectPath !== undefined) {
       if (avatarObjectPath === null || avatarObjectPath === "") {
@@ -369,6 +395,118 @@ router.patch("/auth/me", requireAuth, async (req, res, next) => {
     next(err);
   }
 });
+
+// POST /auth/change-password — verifies the current password, hashes the
+// new one, and rotates the session. Rate-limited per-IP via authIpLimiter
+// (same limiter that protects /auth/login + /auth/reset-password).
+router.post(
+  "/auth/change-password",
+  authIpLimiter,
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      const parsed = ChangePasswordBody.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({
+          error: parsed.error.issues[0]?.message ?? "Invalid input",
+        });
+        return;
+      }
+      const { currentPassword, newPassword } = parsed.data;
+      const user = await getUserById(req.session.userId!);
+      if (!user) {
+        res.status(401).json({ error: "Not authenticated" });
+        return;
+      }
+      const ok = await verifyPassword(currentPassword, user.passwordHash);
+      if (!ok) {
+        res.status(400).json({ error: "Current password is incorrect" });
+        return;
+      }
+      if (currentPassword === newPassword) {
+        res.status(400).json({
+          error: "New password must be different from current password",
+        });
+        return;
+      }
+      const passwordHash = await hashPassword(newPassword);
+      await db
+        .update(usersTable)
+        .set({ passwordHash, updatedAt: new Date() })
+        .where(eq(usersTable.id, user.id));
+      // Rotate the session so any leaked old session ID can't continue to act
+      // as the user with the new credentials.
+      await loginSession(req, user);
+      const body = MessageResponseSchema.parse({
+        message: "Password updated.",
+      });
+      res.json(body);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// GET /users/:userId/profile — public profile of any user. Auth required so
+// we don't expose the existence of accounts to anonymous scrapers, but any
+// signed-in user can view another student's avatar/name/bio/certs (no email,
+// phone, role or notification prefs).
+router.get(
+  "/users/:userId/profile",
+  requireAuth,
+  async (req, res, next) => {
+    try {
+      const userId = String(req.params.userId);
+      if (!/^[0-9a-fA-F-]{36}$/.test(userId)) {
+        res.status(404).json({ error: "Profile not found" });
+        return;
+      }
+      const user = await getUserById(userId);
+      if (!user) {
+        res.status(404).json({ error: "Profile not found" });
+        return;
+      }
+      const certs = await db
+        .select({
+          id: certificatesTable.id,
+          course: certificatesTable.course,
+          tier: certificatesTable.tier,
+          certificateId: certificatesTable.certificateId,
+          completionDate: certificatesTable.completionDate,
+          issuedAt: certificatesTable.issuedAt,
+        })
+        .from(certificatesTable)
+        .where(
+          and(
+            eq(certificatesTable.userId, user.id),
+            isNull(certificatesTable.revokedAt),
+          ),
+        )
+        .orderBy(desc(certificatesTable.issuedAt));
+
+      const body = PublicProfileResponseSchema.parse({
+        profile: {
+          id: user.id,
+          name: user.name,
+          avatarUrl: user.avatarUrl,
+          bio: user.bio,
+          memberSince: user.createdAt.toISOString(),
+          certificates: certs.map((c) => ({
+            id: c.id,
+            course: c.course,
+            tier: c.tier,
+            certificateId: c.certificateId,
+            completionDate: c.completionDate,
+            issuedAt: c.issuedAt.toISOString(),
+          })),
+        },
+      });
+      res.json(body);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 router.post("/auth/forgot-password", forgotPasswordLimiter, async (req, res, next) => {
   try {

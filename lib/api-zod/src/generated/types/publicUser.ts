@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { PublicUserPreferredLanguage } from "./publicUserPreferredLanguage";
 import type { PublicUserRole } from "./publicUserRole";
 
 export interface PublicUser {
@@ -16,5 +17,8 @@ export interface PublicUser {
   emailVerified: boolean;
   avatarUrl?: string | null;
   bio?: string | null;
+  preferredLanguage: PublicUserPreferredLanguage;
+  notifyExpiry: boolean;
+  notifyMarketing: boolean;
   createdAt: Date;
 }

@@ -28,6 +28,8 @@ export const translations = {
   "header.login": { en: "Log In", ar: "تسجيل الدخول" },
   "header.signup": { en: "Sign Up", ar: "إنشاء حساب" },
   "header.dashboard": { en: "My Dashboard", ar: "لوحة التحكم" },
+  "header.publicProfile": { en: "View public profile", ar: "عرض الملف العام" },
+  "header.settings": { en: "Account settings", ar: "إعدادات الحساب" },
   "header.admin": { en: "Admin Panel", ar: "لوحة الإدارة" },
   "header.logout": { en: "Log Out", ar: "تسجيل الخروج" },
   "header.themeLight": { en: "Switch to light mode", ar: "التبديل للوضع الفاتح" },
@@ -509,6 +511,8 @@ export const translations = {
     ar: "أضف نبذة قصيرة ليتعرّف عليك زملاؤك…",
   },
   "dashboard.profile.editBtn": { en: "Edit profile", ar: "تعديل الملف الشخصي" },
+  "dashboard.profile.accountSettings": { en: "Account settings", ar: "إعدادات الحساب" },
+  "dashboard.profile.viewPublic": { en: "View public profile", ar: "عرض ملفي العام" },
   "dashboard.profile.changePhoto": { en: "Change photo", ar: "تغيير الصورة" },
   "dashboard.profile.uploadHint": {
     en: "JPG, PNG or WebP. Up to 5 MB.",
@@ -539,6 +543,83 @@ export const translations = {
   "dashboard.summary.daysShort": { en: "{n} days", ar: "{n} يومًا" },
   "dashboard.summary.dayShort": { en: "1 day", ar: "يوم واحد" },
   "dashboard.summary.expiringSoon": { en: "Expiring soon", ar: "ينتهي قريبًا" },
+
+  // ─────────────────── ACCOUNT SETTINGS ───────────────────
+  "settings.title": { en: "Account settings", ar: "إعدادات الحساب" },
+  "settings.subtitle": {
+    en: "Manage your password, language, and email preferences.",
+    ar: "أدِر كلمة المرور واللغة وتفضيلات البريد الإلكتروني.",
+  },
+  "settings.backToDashboard": { en: "Back to dashboard", ar: "العودة للوحة التحكم" },
+
+  "settings.password.title": { en: "Change password", ar: "تغيير كلمة المرور" },
+  "settings.password.subtitle": {
+    en: "Use at least 8 characters. You'll stay signed in on this device.",
+    ar: "استخدم 8 أحرف على الأقل. ستبقى مسجَّل الدخول على هذا الجهاز.",
+  },
+  "settings.password.current": { en: "Current password", ar: "كلمة المرور الحالية" },
+  "settings.password.new": { en: "New password", ar: "كلمة المرور الجديدة" },
+  "settings.password.confirm": { en: "Confirm new password", ar: "تأكيد كلمة المرور الجديدة" },
+  "settings.password.hint": { en: "At least 8 characters.", ar: "على الأقل 8 أحرف." },
+  "settings.password.submit": { en: "Update password", ar: "تحديث كلمة المرور" },
+  "settings.password.saving": { en: "Updating…", ar: "جارٍ التحديث…" },
+  "settings.password.saved": { en: "Password updated.", ar: "تم تحديث كلمة المرور." },
+  "settings.password.errShort": { en: "New password must be at least 8 characters.", ar: "يجب ألّا تقل كلمة المرور الجديدة عن 8 أحرف." },
+  "settings.password.errMismatch": { en: "New password and confirmation do not match.", ar: "كلمة المرور الجديدة وتأكيدها غير متطابقَين." },
+  "settings.password.errSame": { en: "New password must be different from your current one.", ar: "يجب أن تختلف كلمة المرور الجديدة عن الحالية." },
+  "settings.password.errFailed": { en: "Could not update password. Please check your current password and try again.", ar: "تعذّر تحديث كلمة المرور. تحقّق من كلمة المرور الحالية وحاول مرّة أخرى." },
+
+  "settings.language.title": { en: "Default language", ar: "اللغة الافتراضية" },
+  "settings.language.subtitle": {
+    en: "We'll use this for your dashboard and email reminders.",
+    ar: "سنستخدم هذه اللغة للوحة التحكم ورسائل التذكير.",
+  },
+  "settings.language.en": { en: "English", ar: "الإنجليزية" },
+  "settings.language.ar": { en: "Arabic", ar: "العربية" },
+  "settings.language.current": { en: "Current", ar: "الحالية" },
+  "settings.language.saved": { en: "Language preference saved.", ar: "تم حفظ تفضيل اللغة." },
+  "settings.language.errFailed": { en: "Could not save language preference.", ar: "تعذّر حفظ تفضيل اللغة." },
+
+  "settings.emails.title": { en: "Email preferences", ar: "تفضيلات البريد الإلكتروني" },
+  "settings.emails.subtitle": {
+    en: "Choose which emails you'd like to receive.",
+    ar: "اختر الرسائل التي تودّ تلقّيها.",
+  },
+  "settings.emails.expiryLabel": { en: "Subscription expiry reminders", ar: "تذكيرات انتهاء الاشتراك" },
+  "settings.emails.expiryDesc": {
+    en: "Get a heads-up before your access ends so you can renew on time.",
+    ar: "احصل على تنبيه قبل انتهاء وصولك لتُجدِّد في الوقت المناسب.",
+  },
+  "settings.emails.marketingLabel": { en: "Tips & product updates", ar: "نصائح وتحديثات" },
+  "settings.emails.marketingDesc": {
+    en: "Occasional study tips, new features and special offers.",
+    ar: "نصائح دراسية ومزايا جديدة وعروض خاصة من حين لآخر.",
+  },
+  "settings.emails.saved": { en: "Preferences saved.", ar: "تم حفظ التفضيلات." },
+  "settings.emails.errFailed": { en: "Could not save preferences.", ar: "تعذّر حفظ التفضيلات." },
+
+  // ─────────────────── PUBLIC PROFILE ───────────────────
+  "publicProfile.errTitle": { en: "Profile not available", ar: "الملف غير متاح" },
+  "publicProfile.errBody": {
+    en: "We couldn't load this profile. It may have been removed or you may need to sign in again.",
+    ar: "تعذّر تحميل هذا الملف. ربّما تمّت إزالته أو عليك تسجيل الدخول مجددًا.",
+  },
+  "publicProfile.memberSince": { en: "Member since", ar: "عضو منذ" },
+  "publicProfile.bioEmptySelf": {
+    en: "You haven't added a bio yet. Head to your dashboard to introduce yourself.",
+    ar: "لم تُضف نبذة بعد. اذهب إلى لوحتك لتُعرّف بنفسك.",
+  },
+  "publicProfile.bioEmptyOther": {
+    en: "This learner hasn't shared a bio yet.",
+    ar: "لم يُشارك هذا المتعلّم نبذةً بعد.",
+  },
+  "publicProfile.editOnDashboard": { en: "Edit on your dashboard →", ar: "تعديل من لوحتك →" },
+  "publicProfile.certsTitle": { en: "Certificates earned", ar: "الشهادات المُكتسبة" },
+  "publicProfile.certsEmpty": {
+    en: "No certificates yet — keep going!",
+    ar: "لا توجد شهادات بعد — واصل التقدّم!",
+  },
+  "publicProfile.completedOn": { en: "Completed on", ar: "اكتُمل في" },
 
   // ─────────────────── COMING SOON ───────────────────
   "comingSoon.eyebrow": { en: "Coming soon", ar: "قريباً" },

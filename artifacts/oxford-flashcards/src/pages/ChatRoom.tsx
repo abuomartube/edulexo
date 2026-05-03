@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   Headphones,
   RefreshCw,
+  MoreVertical,
 } from "lucide-react";
 import Header from "@/components/Header";
 import { useLanguage } from "@/lib/i18n";
@@ -342,8 +343,12 @@ export default function ChatRoomPage() {
           <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl shadow-black/20">
             <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/20 to-slate-900 p-6">
               <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-4xl shadow-2xl shadow-purple-900/40 mb-3">
-                  {room.emoji ?? "💬"}
+                <div className="relative flex items-center justify-center mb-3">
+                  <SoundWaves side="left" />
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-4xl shadow-2xl shadow-purple-900/40 mx-3">
+                    {room.emoji ?? "💬"}
+                  </div>
+                  <SoundWaves side="right" />
                 </div>
                 <h1 className="text-xl font-extrabold text-white">
                   {lang === "ar" ? room.nameAr : room.nameEn}
@@ -447,6 +452,7 @@ export default function ChatRoomPage() {
   }
 
   // ───────────── CHAT STAGE ─────────────
+  const insiders = roomQ.data?.activeUsers ?? [];
   return (
     <div className="dark min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 backdrop-blur-md bg-slate-950/85 border-b border-slate-800 px-3 sm:px-5 py-3">
@@ -463,12 +469,23 @@ export default function ChatRoomPage() {
             <h1 className="font-bold text-sm sm:text-base text-white truncate">
               {lang === "ar" ? room.nameAr : room.nameEn}
             </h1>
-            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
-              </span>
-              <span>
+            <div className="flex items-center justify-center gap-2 mt-1">
+              <div className="flex -space-x-1.5 rtl:space-x-reverse">
+                {insiders.slice(0, 3).map((u) => (
+                  <div
+                    key={u.id}
+                    title={u.name}
+                    className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 border border-slate-950 text-[8px] font-bold text-white flex items-center justify-center"
+                  >
+                    {u.name.slice(0, 1).toUpperCase()}
+                  </div>
+                ))}
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                </span>
                 {onlineCount ?? room.onlineCount}{" "}
                 {lang === "ar" ? "متصل" : "online"}
               </span>
@@ -481,6 +498,13 @@ export default function ChatRoomPage() {
             title={lang === "ar" ? "رفع اليد" : "Raise hand"}
           >
             ✋
+          </button>
+          <button
+            type="button"
+            className="w-9 h-9 rounded-full hover:bg-slate-800 text-slate-300 flex items-center justify-center"
+            aria-label="Menu"
+          >
+            <MoreVertical size={16} />
           </button>
         </div>
         <div className="max-w-3xl mx-auto mt-2.5 flex items-center justify-between gap-2">
@@ -621,6 +645,21 @@ export default function ChatRoomPage() {
           onUseAsMessage={(t) => setInput(t)}
         />
       )}
+    </div>
+  );
+}
+
+function SoundWaves({ side }: { side: "left" | "right" }) {
+  const heights = side === "left" ? [10, 18, 26, 14] : [14, 26, 18, 10];
+  return (
+    <div className="flex items-end gap-1 h-12">
+      {heights.map((h, i) => (
+        <span
+          key={i}
+          className="w-1 rounded-full bg-gradient-to-t from-purple-500 to-indigo-400 opacity-80"
+          style={{ height: `${h * 2}px` }}
+        />
+      ))}
     </div>
   );
 }

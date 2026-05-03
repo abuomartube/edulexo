@@ -1,5 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
+
+const BAR_COUNT = 28;
+
+function fakeBars(seed: string): number[] {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+  const bars: number[] = [];
+  for (let i = 0; i < BAR_COUNT; i++) {
+    h = (h * 9301 + 49297) & 0x7fffffff;
+    bars.push(0.25 + ((h % 1000) / 1000) * 0.75);
+  }
+  return bars;
+}
 
 export default function VoicePlayer({
   src,
@@ -14,6 +27,7 @@ export default function VoicePlayer({
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [actualDuration, setActualDuration] = useState<number>(durationSec ?? 0);
+  const bars = useMemo(() => fakeBars(src), [src]);
 
   useEffect(() => {
     const a = audioRef.current;
@@ -59,38 +73,46 @@ export default function VoicePlayer({
 
   const pct =
     actualDuration > 0 ? Math.min(100, (progress / actualDuration) * 100) : 0;
+  const playedBars = Math.floor((pct / 100) * BAR_COUNT);
 
   const isSelf = tone === "self";
-  const trackBg = isSelf ? "bg-white/30" : "bg-purple-200 dark:bg-purple-900/40";
-  const trackFg = isSelf
-    ? "bg-white"
-    : "bg-purple-600 dark:bg-purple-400";
   const btnBg = isSelf
-    ? "bg-white/30 hover:bg-white/40 text-white"
-    : "bg-purple-600 hover:bg-purple-700 text-white";
+    ? "bg-white/25 hover:bg-white/35 text-white"
+    : "bg-purple-600 hover:bg-purple-500 text-white";
 
   return (
-    <div className="flex items-center gap-3 min-w-[180px]">
+    <div className="flex items-center gap-3 min-w-[200px]">
       <button
         onClick={toggle}
         type="button"
-        className={`w-9 h-9 rounded-full flex items-center justify-center ${btnBg}`}
+        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${btnBg}`}
         aria-label={playing ? "Pause" : "Play"}
       >
-        {playing ? <Pause size={16} /> : <Play size={16} />}
+        {playing ? <Pause size={16} /> : <Play size={16} className="ms-0.5" />}
       </button>
-      <div className="flex-1 flex flex-col gap-1">
-        <div className={`h-1.5 rounded-full ${trackBg} overflow-hidden`}>
-          <div
-            className={`h-full ${trackFg} transition-[width]`}
-            style={{ width: `${pct}%` }}
-          />
+      <div className="flex-1 flex flex-col gap-1.5">
+        <div className="flex items-center gap-[2px] h-7">
+          {bars.map((h, i) => {
+            const played = i < playedBars;
+            const color = isSelf
+              ? played
+                ? "bg-white"
+                : "bg-white/35"
+              : played
+              ? "bg-purple-400"
+              : "bg-slate-600";
+            return (
+              <span
+                key={i}
+                className={`flex-1 rounded-full ${color} transition-colors`}
+                style={{ height: `${Math.round(h * 100)}%` }}
+              />
+            );
+          })}
         </div>
         <div
           className={`text-[11px] font-mono ${
-            isSelf
-              ? "text-white/80"
-              : "text-purple-700 dark:text-purple-300"
+            isSelf ? "text-white/80" : "text-slate-400"
           }`}
         >
           {fmt(playing ? progress : actualDuration)}

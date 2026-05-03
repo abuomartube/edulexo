@@ -515,7 +515,9 @@ export default function ChatRoomPage() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
                 </span>
-                {onlineCount ?? room.onlineCount}{" "}
+                {messages.length === 0
+                  ? 18
+                  : onlineCount ?? room.onlineCount}{" "}
                 {lang === "ar" ? "متصل" : "online"}
               </span>
             </div>
@@ -552,13 +554,7 @@ export default function ChatRoomPage() {
         ref={scrollRef}
         className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 max-w-3xl w-full mx-auto"
       >
-        {messages.length === 0 && (
-          <div className="text-center py-10 text-slate-400 text-sm">
-            {lang === "ar"
-              ? "لا توجد رسائل بعد — كن أول من يبدأ المحادثة! 👋"
-              : "No messages yet — be the first to break the ice! 👋"}
-          </div>
-        )}
+        {messages.length === 0 && <DemoConversation lang={lang} />}
         {messages.map((m) => (
           <MessageBubble
             key={m.id}
@@ -697,6 +693,300 @@ function SoundWaves({ side }: { side: "left" | "right" }) {
           style={{ height: `${h * 2}px` }}
         />
       ))}
+    </div>
+  );
+}
+
+// ───────────── DEMO CONVERSATION ─────────────
+type DemoUser = {
+  name: string;
+  initials: string;
+  gradient: string;
+  nameColor: string;
+  online: boolean;
+  role?: "host";
+};
+
+const DEMO_USERS: Record<string, DemoUser> = {
+  omar: {
+    name: "Omar",
+    initials: "OM",
+    gradient: "from-purple-500 to-indigo-600",
+    nameColor: "text-purple-300",
+    online: true,
+    role: "host",
+  },
+  sara: {
+    name: "Sara",
+    initials: "SA",
+    gradient: "from-rose-500 to-pink-600",
+    nameColor: "text-rose-300",
+    online: true,
+  },
+  james: {
+    name: "James",
+    initials: "JA",
+    gradient: "from-cyan-500 to-blue-600",
+    nameColor: "text-cyan-300",
+    online: false,
+  },
+  lina: {
+    name: "Lina",
+    initials: "LI",
+    gradient: "from-emerald-500 to-teal-600",
+    nameColor: "text-emerald-300",
+    online: true,
+  },
+};
+
+function DemoConversation({ lang }: { lang: "en" | "ar" }) {
+  useEffect(() => {
+    console.log("Demo active");
+  }, []);
+
+  return (
+    <div className="space-y-1.5 pb-2">
+      {/* System: welcome pill */}
+      <DemoSystem
+        text={
+          lang === "ar"
+            ? "مرحباً بك في الغرفة 👋 الرجاء استخدام الإنجليزية فقط"
+            : "Welcome to the room 👋 Please try to use English only"
+        }
+      />
+
+      {/* Omar (host) — text */}
+      <DemoIncoming user={DEMO_USERS.omar!} time="10:21 AM">
+        <p className="text-sm">Hi everyone! 👋 How was your weekend?</p>
+      </DemoIncoming>
+
+      {/* Sara — text + reaction + seen */}
+      <DemoIncoming
+        user={DEMO_USERS.sara!}
+        time="10:22 AM"
+        reaction="❤️"
+        reactionCount={2}
+      >
+        <p className="text-sm">
+          It was great! I went hiking with my friends 🏞️
+        </p>
+      </DemoIncoming>
+
+      {/* You — voice (outgoing, gradient + waveform + seen) */}
+      <DemoOutgoing time="10:22 AM" seen>
+        <DemoVoice durationLabel="0:18" />
+      </DemoOutgoing>
+
+      {/* James — file (PDF) */}
+      <DemoIncoming user={DEMO_USERS.james!} time="10:23 AM">
+        <DemoFile name="Useful Phrases.pdf" size="1.2 MB" />
+      </DemoIncoming>
+
+      {/* Lina — image + reaction */}
+      <DemoIncoming
+        user={DEMO_USERS.lina!}
+        time="10:24 AM"
+        reaction="❤️"
+        reactionCount={3}
+      >
+        <DemoImage />
+        <p className="text-sm mt-2">Let's talk about this picture!</p>
+      </DemoIncoming>
+
+      {/* System: english-only nudge (warm yellow) */}
+      <DemoSystem
+        tone="amber"
+        text={
+          lang === "ar"
+            ? "حاول استخدام الإنجليزية فقط للحصول على أفضل ممارسة 💪"
+            : "Please try to use English only 💪"
+        }
+      />
+    </div>
+  );
+}
+
+function DemoSystem({
+  text,
+  tone = "neutral",
+}: {
+  text: string;
+  tone?: "neutral" | "amber";
+}) {
+  const cls =
+    tone === "amber"
+      ? "bg-amber-400/15 backdrop-blur-xl ring-1 ring-amber-300/30 text-amber-200 shadow-[0_8px_24px_-12px_rgba(251,191,36,0.45)]"
+      : "bg-white/[0.06] backdrop-blur-xl ring-1 ring-white/10 text-slate-300";
+  return (
+    <div className="my-3 flex justify-center">
+      <div className={`text-[11px] px-3.5 py-1.5 rounded-full ${cls}`}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function DemoAvatar({ user }: { user: DemoUser }) {
+  return (
+    <div className="relative shrink-0">
+      <div
+        className={`w-8 h-8 rounded-full bg-gradient-to-br ${user.gradient} text-white flex items-center justify-center text-[11px] font-bold ring-2 ring-white/10 shadow-[0_6px_14px_-6px_rgba(0,0,0,0.6)]`}
+      >
+        {user.initials}
+      </div>
+      {user.online && (
+        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
+      )}
+    </div>
+  );
+}
+
+function DemoIncoming({
+  user,
+  time,
+  children,
+  reaction,
+  reactionCount,
+}: {
+  user: DemoUser;
+  time: string;
+  children: React.ReactNode;
+  reaction?: string;
+  reactionCount?: number;
+}) {
+  return (
+    <div className="flex gap-2 my-2.5 items-end">
+      <DemoAvatar user={user} />
+      <div className="max-w-[78%] flex flex-col items-start">
+        <span className={`text-[11px] font-bold mb-1 px-1 ${user.nameColor}`}>
+          {user.name}
+          {user.role === "host" && (
+            <span className="ms-1.5 px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 text-[9px] uppercase tracking-wide">
+              Host
+            </span>
+          )}
+        </span>
+        <div className="relative">
+          <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/[0.06] backdrop-blur-xl ring-1 ring-white/10 text-slate-100 shadow-[0_8px_22px_-12px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.04)]">
+            {children}
+            <div className="mt-1 text-[10px] text-slate-400">{time}</div>
+          </div>
+          {reaction && (
+            <div className="absolute -bottom-2 -end-2 px-1.5 py-0.5 rounded-full bg-slate-900/90 ring-1 ring-white/10 text-[10px] flex items-center gap-0.5 shadow-[0_4px_10px_-2px_rgba(0,0,0,0.6)]">
+              <span>{reaction}</span>
+              {reactionCount && (
+                <span className="text-slate-300 font-semibold">
+                  {reactionCount}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemoOutgoing({
+  time,
+  children,
+  seen,
+}: {
+  time: string;
+  children: React.ReactNode;
+  seen?: boolean;
+}) {
+  return (
+    <div className="flex gap-2 my-2.5 items-end flex-row-reverse">
+      <div className="max-w-[78%] flex flex-col items-end">
+        <span className="text-[11px] font-bold mb-1 px-1 text-purple-200">
+          You
+        </span>
+        <div
+          className="px-3.5 py-2.5 rounded-2xl rounded-br-md text-white shadow-[0_10px_28px_-10px_rgba(124,58,237,0.65),inset_0_1px_0_rgba(255,255,255,0.18)]"
+          style={{
+            background:
+              "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+          }}
+        >
+          {children}
+          <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/80">
+            <span>{time}</span>
+            {seen && (
+              <span className="text-cyan-200 font-bold tracking-tighter">
+                ✓✓
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemoVoice({ durationLabel }: { durationLabel: string }) {
+  const bars = [4, 8, 14, 10, 18, 22, 16, 12, 20, 14, 8, 16, 22, 12, 6];
+  return (
+    <div className="flex items-center gap-2 min-w-[180px]">
+      <button
+        type="button"
+        className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md ring-1 ring-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+        aria-label="Play"
+      >
+        ▶
+      </button>
+      <div className="flex items-end gap-[2px] h-6 flex-1">
+        {bars.map((h, i) => (
+          <span
+            key={i}
+            className="w-[3px] rounded-full bg-white/80"
+            style={{ height: `${h}px` }}
+          />
+        ))}
+      </div>
+      <span className="text-[11px] font-semibold text-white/90 tabular-nums">
+        {durationLabel}
+      </span>
+    </div>
+  );
+}
+
+function DemoFile({ name, size }: { name: string; size: string }) {
+  return (
+    <div className="flex items-center gap-2.5 min-w-[200px]">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white text-[10px] font-extrabold shadow-[0_6px_14px_-4px_rgba(244,63,94,0.5)]">
+        PDF
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-100 truncate">{name}</p>
+        <p className="text-[10px] text-slate-400">{size}</p>
+      </div>
+    </div>
+  );
+}
+
+function DemoImage() {
+  return (
+    <div className="rounded-xl overflow-hidden ring-1 ring-white/10 shadow-[0_8px_22px_-8px_rgba(0,0,0,0.7)] max-w-[240px]">
+      <div
+        className="w-full h-[140px] relative"
+        style={{
+          background:
+            "linear-gradient(135deg, #6d28d9 0%, #1e3a8a 40%, #0f172a 100%)",
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 30%, rgba(251,191,36,0.45), transparent 50%), radial-gradient(circle at 70% 80%, rgba(236,72,153,0.35), transparent 55%)",
+          }}
+        />
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+        <span className="absolute bottom-2 left-2.5 text-[10px] font-bold text-white/90 tracking-wide">
+          🌅 Sunset over the bay
+        </span>
+      </div>
     </div>
   );
 }

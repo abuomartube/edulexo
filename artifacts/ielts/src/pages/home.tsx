@@ -173,22 +173,6 @@ function IntroHome() {
               </div>
             </Link>
 
-            {/* Hemingway Reading */}
-            <Link href="/intro-reading" className="block group">
-              <div className="bg-card border border-violet-300/40 dark:border-violet-600/30 rounded-2xl p-6 hover:border-violet-400/60 hover:shadow-md transition-all h-full flex flex-col">
-                <div className="w-12 h-12 rounded-2xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center mb-4">
-                  <BookOpen className="w-6 h-6 text-violet-600" />
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-1">Hemingway AI Reading</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
-                  A2 &amp; B1 reading passages — 10 question types, 5 passages each. IELTS-style comprehension practice.
-                </p>
-                <p className="text-xs text-muted-foreground/60 mt-2" dir="rtl" lang="ar">تدريب القراءة بأسلوب IELTS</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-violet-600 text-sm font-semibold group-hover:gap-2 transition-all">
-                  Start reading →
-                </span>
-              </div>
-            </Link>
           </div>
         </section>
 

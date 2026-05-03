@@ -71,7 +71,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const introFeatureItems = showIntroFeatures
     ? [
         { href: "/free-conversation", label: "Churchill Free Conv.", icon: Mic },
-        { href: "/intro-reading", label: "Hemingway Reading", icon: BookOpen },
       ]
     : [];
 

@@ -58,6 +58,18 @@ function MessageItem({ m }: { m: Message }) {
       </OutgoingBubble>
     );
   }
+  if (m.kind === "voice-in" && m.name && m.letter && m.tone) {
+    return (
+      <IncomingBubble
+        name={m.name}
+        tone={m.tone}
+        letter={m.letter}
+        time={m.time}
+      >
+        <VoiceMessage duration={m.duration ?? "0:10"} played={0.3} bars={20} />
+      </IncomingBubble>
+    );
+  }
   if (m.kind === "system") {
     return <SystemBubble>{m.text}</SystemBubble>;
   }

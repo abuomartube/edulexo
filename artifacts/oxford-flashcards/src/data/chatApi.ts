@@ -52,7 +52,7 @@ const roomMessages = new Map<string, Message[]>();
 function getOrSeed(roomId: string): Message[] {
   let list = roomMessages.get(roomId);
   if (!list) {
-    list = seedMessages();
+    list = seedMessages(roomId);
     roomMessages.set(roomId, list);
   }
   return list;

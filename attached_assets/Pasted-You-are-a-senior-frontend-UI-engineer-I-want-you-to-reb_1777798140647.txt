@@ -1,0 +1,544 @@
+You are a senior frontend UI engineer. I want you to rebuild the attached reference image as closely as possible.
+
+VERY IMPORTANT:
+This is not just a chat app. I want the UI to visually match the reference image.
+Do not simplify the design.
+Do not make a basic chat.
+Focus on pixel-close visual design first.
+
+Tech:
+Use React + Tailwind CSS.
+Use lucide-react icons.
+Use responsive design, but optimize first for desktop layout showing multiple mobile screens like the reference.
+
+Goal:
+Create one high-fidelity UI presentation page called “LEXO Chat – English Practice Community”.
+
+The final page must look like the attached reference:
+- Dark navy premium SaaS style
+- Multiple mobile app screens displayed together
+- Left feature sidebar
+- 4 main flow screens on top
+- Additional smaller screens at the bottom
+- Right/bottom tool card
+- Glassmorphism cards
+- Purple/blue gradients
+- Rounded mobile frames
+- Avatars, icons, buttons, chat bubbles, voice notes
+
+==================================================
+GLOBAL STYLE
+==================================================
+
+Canvas:
+- Full width page
+- Background: radial gradient + dark navy
+  Use:
+  background: radial-gradient(circle at top, #10213a 0%, #07111f 45%, #030712 100%)
+- Text color: white
+- Font: Inter or system sans-serif
+- Overall padding: 28px
+- Gap between sections: 24px
+
+Colors:
+- Main background: #07111F
+- Card surface: rgba(15, 23, 42, 0.72)
+- Card surface lighter: rgba(30, 41, 59, 0.65)
+- Border: rgba(255,255,255,0.10)
+- Muted text: #94A3B8
+- Primary blue: #2563EB
+- Cyan: #06B6D4
+- Purple: #7C3AED
+- Green: #10B981
+- Pink: #EC4899
+- Yellow: #F59E0B
+- Red: #EF4444
+
+Glass style:
+- background: rgba(15, 23, 42, 0.68)
+- backdrop-filter: blur(18px)
+- border: 1px solid rgba(255,255,255,0.10)
+- box-shadow: 0 20px 60px rgba(0,0,0,0.35)
+
+Mobile frame:
+- width: 300px
+- height: 620px
+- border-radius: 32px
+- padding: 18px
+- background: linear-gradient(180deg, rgba(15,23,42,0.98), rgba(2,6,23,0.98))
+- border: 1px solid rgba(255,255,255,0.18)
+- box-shadow: 0 25px 70px rgba(0,0,0,0.50)
+- overflow hidden
+
+Small mobile frame:
+- width: 230px
+- height: 335px
+- border-radius: 24px
+
+All buttons:
+- border-radius: 14px
+- smooth hover
+- no sharp corners
+
+Typography:
+- App title: 34px bold
+- Section heading: 16px semibold
+- Mobile title: 15px bold
+- Body: 12px
+- Small caption: 10px
+
+==================================================
+PAGE LAYOUT
+==================================================
+
+Create a main desktop layout:
+
+[ Left Sidebar 260px ] [ Main Presentation Area ]
+
+Left sidebar:
+Width: 260px
+Height: full
+Contains:
+1. Logo:
+   LEXO Chat
+   - LEXO in blue #3B82F6
+   - Chat in white
+   - subtitle: English Practice Community
+
+2. Arabic description:
+   "منصة تفاعلية لممارسة اللغة الإنجليزية عبر الشات النصي والكتابي مع متعلمين من جميع أنحاء العالم."
+
+3. Feature box:
+   Title: "المميزات الرئيسية"
+   Feature list with icons:
+   - غرف محادثة متعددة
+   - محادثة نصية وصوتية
+   - وضع إنجليزي فقط
+   - مواضيع تفاعلية
+   - تحديات ولوحة المتصدرين
+   - ملف شخصي متكامل
+
+4. Language levels box:
+   Title: "مستويات اللغة"
+   Items:
+   A1 Beginner
+   A2 Elementary
+   B1 Intermediate
+   B1+ Upper Intermediate
+   C1 Advanced
+
+5. Packages box:
+   Title: "باقاتنا التدريبية"
+   LEXO FOR ENGLISH:
+   A1 → B1
+   B1+ → C1
+   A1 → C1
+
+   LEXO FOR IELTS:
+   Lexo for Intro
+   Lexo for Advanced
+   Lexo for All-in-one
+
+Main area:
+Top row:
+- Step 1: Course Selection Screen
+- Arrow
+- Step 2: Room Selection Screen
+- Arrow
+- Step 3: Room Details Screen
+- Arrow
+- Step 4: Chat Screen
+
+Each step has a small step label above:
+Blue circle number + Arabic title + small subtitle.
+
+Bottom row:
+- Voice Only Room
+- Topic Generator
+- Profile
+- Leaderboard
+- Settings
+- Tool Bar card
+
+==================================================
+SCREEN 1: COURSE SELECTION
+==================================================
+
+Mobile title:
+"اختيار دورتك"
+Subtitle:
+"اختر الباقة المناسبة لمستواك وهدفك"
+
+Top left notification icon.
+
+Section title:
+LEXO FOR ENGLISH
+
+Cards:
+1. A1 → B1
+   subtitle: "ابدأ من الأساس وتحدث بثقة"
+   chip: Beginner
+   icon: blue chat icon
+   arrow button blue
+
+2. B1+ → C1
+   subtitle: "ارتقِ إلى الطلاقة المتقدمة"
+   chip: Intermediate+
+   icon: green chat icon
+   arrow button green
+
+3. A1 → C1
+   subtitle: "رحلة كاملة من البداية للاحتراف"
+   chip: Complete
+   icon: purple chat icon with star
+   arrow button purple
+
+Section title:
+LEXO FOR IELTS
+
+Small cards:
+1. Lexo for Intro
+   4.5 → 6
+   target icon purple
+
+2. Lexo for Advanced
+   6 → 8
+   target icon purple
+
+3. Lexo for All-in-one
+   4.5 → 8
+   chip: Best Value
+   target icon purple
+
+Bottom nav:
+- الدورات active
+- الشات
+- الملف الشخصي
+
+==================================================
+SCREEN 2: ROOM SELECTION
+==================================================
+
+Mobile title:
+"اختيار الغرفة"
+Subtitle:
+"اختر الغرفة المناسبة لمستواك وهدفك"
+
+Back arrow top left.
+
+Tabs:
+- كل الغرف active purple
+- غرف المحادثة
+- الصوت فقط
+- IELTS
+
+Room cards:
+1. Speaking Room - Beginner
+   subtitle: "تحدث وتدرب على المحادثة اليومية"
+   18 online
+   icon blue microphone
+   button: "انضمام"
+
+2. Speaking Room - Intermediate
+   subtitle: "تطوير الطلاقة وزيادة الثقة"
+   24 online
+   icon purple
+   button: "انضمام"
+
+3. Voice Only Room
+   subtitle: "تحدث بصوت فقط بدون كتابة"
+   12 online
+   icon green headphones
+   button: "انضمام"
+
+4. IELTS Speaking Room
+   subtitle: "Speaking خاص لأسئلة IELTS"
+   16 online
+   icon pink badge
+   button: "انضمام"
+
+5. Casual Chat
+   subtitle: "دردشة حرة في أي موضوع"
+   20 online
+   icon green heart
+   button: "انضمام"
+
+6. Writing Help Room
+   subtitle: "اطرح كتاباتك واحصل على ملاحظات"
+   10 online
+   icon red pen
+   button: "انضمام"
+
+Bottom nav:
+- الدورات
+- الشات active
+- الملف الشخصي
+
+==================================================
+SCREEN 3: ROOM DETAILS
+==================================================
+
+Mobile title:
+"تفاصيل الغرفة"
+
+Hero card:
+- Purple gradient background #7C3AED to #2563EB
+- Big microphone icon
+- Title: Speaking Room - Intermediate
+- Subtitle: تطوير الطلاقة وزيادة الثقة
+- Bottom:
+  24 Online
+  متوسط المستوى
+  chip B1+ → C1
+- Add subtle waveform decoration on right.
+
+Info card:
+Title: "عن الغرفة"
+Text:
+"غرفة المحادثة الإنجليزية للمستوى المتوسط فما فوق. تحدث عن مواضيع مختلفة ومناسبة لتحسين مهارتك على التطوير."
+
+Rules card:
+Title: "قواعد الغرفة"
+Rules with check icons:
+- تحدث باللغة الإنجليزية فقط
+- احترم الآخرين واستمع جيداً
+- لا مقاطعة أثناء حديث الآخرين
+- مشاركة مفيدة وإيجابية
+
+Participants card:
+Title:
+"المشاركون الآن"
+Avatars row + "+19"
+
+Primary button:
+"انضمام إلى الغرفة 🎧"
+Gradient purple/blue
+Height 48
+
+Secondary button:
+"استمع أولاً 🎧"
+Outline/glass
+
+==================================================
+SCREEN 4: CHAT SCREEN
+==================================================
+
+Mobile title:
+Speaking Room - Intermediate
+
+Header:
+- Back button
+- Title
+- 18 online green dot
+- avatars row
+- menu dots
+
+Controls row:
+- English Only chip green
+- Center mic button blue
+- Raise Hand button with hand icon and small badge “3”
+
+Messages:
+1. Omar incoming:
+Avatar left
+Name Omar blue
+Bubble dark:
+"Hi everyone! 👋
+How was your weekend?"
+Time 10:20 AM
+Heart count 2 on right
+
+2. Sara incoming:
+"It was great! I went hiking
+with my friends 😊"
+Heart 1
+
+3. You outgoing voice note:
+Purple gradient bubble aligned right
+Play button
+Waveform
+Duration 0:18
+Time 10:22 AM
+Double check
+
+4. James file message:
+Dark bubble
+PDF red icon
+"Useful Phrases.pdf"
+"1.2 MB"
+Download icon
+Time 10:23 AM
+
+5. Lina image message:
+Image thumbnail café/library style
+Text: "Let's talk about this picture! ☕"
+Heart 3
+
+6. System message:
+Warm yellow transparent bubble
+"System"
+"Please try to use English only 😊"
+
+Action bar:
+Four mini cards:
+- Topic purple
+- Ice Breaker blue
+- Rotate green
+- Image Talk orange
+
+Input bar:
+- emoji icon
+- placeholder: Type a message...
+- attachment icon
+- purple send button
+
+Floating mic:
+Bottom center
+Large circle 58px
+Blue/purple gradient
+Glow shadow
+Small waveform line behind it
+Text: Tap to speak
+
+==================================================
+BOTTOM SMALL SCREENS
+==================================================
+
+1. Voice Only Room
+- Header
+- Big glowing mic center
+- Text: You are Live
+- Timer 00:45
+- Listener avatars
+- Bottom buttons:
+  Raise Hand
+  Message
+  Leave red
+
+2. Topic Generator
+- Header: Topic Generator
+- tabs: All, Travel, Daily Life, Study, Work
+- Topic list cards:
+  Describe a place you visited recently
+  What are your goals for the next year?
+  Do you prefer working in a team or alone?
+  What skill would you like to learn and why?
+  Talk about your favorite movie and why you like it.
+- Big purple button: Surprise me
+
+3. Profile
+- Avatar
+- Omar
+- Intermediate chip
+- Level 12
+- progress bar 750/1200 XP
+- stat cards:
+  Messages 320
+  Voice Time 85 min
+  Rooms Joined 24
+- menu:
+  Achievements
+  Statistics
+  Badges
+  Account Settings
+
+4. Leaderboard
+- Title: Leaderboard
+- filter chip: This Week
+- list:
+  1 Omar 850 XP
+  2 Sara 720 XP
+  3 James 610 XP
+  4 Lina 540 XP
+  5 Noah 430 XP
+- button: View full leaderboard
+
+5. Settings
+- Title: Settings
+- Preferences:
+  English Only Mode toggle on
+  Notifications
+  Dark Mode toggle on
+  Language English
+- Support:
+  Help Center
+  Contact Us
+  About the App
+- Log Out red
+
+6. Tool Bar card
+- Title: شريط الأدوات
+- Four action cards:
+  Topic
+  Ice Breaker
+  Rotate
+  Image Talk
+- Big mic button below
+- waveform
+- Tap to speak
+
+==================================================
+COMPONENT DETAILS
+==================================================
+
+Use real components:
+- MobileFrame
+- StepHeader
+- GlassCard
+- CourseCard
+- RoomCard
+- ChatBubble
+- VoiceBubble
+- FileBubble
+- ImageBubble
+- BottomNav
+- ActionButton
+- AvatarStack
+- Toggle
+- ProgressBar
+
+All components should be reusable.
+
+Use lucide-react icons:
+Bell, MessageCircle, Mic, Headphones, Target, Heart, PenTool, Users, ChevronRight, ArrowLeft, MoreVertical, Download, Send, Paperclip, Smile, Hand, Trophy, Settings, Image, RotateCcw, Star, LogOut, CheckCircle.
+
+Use placeholder avatars:
+Use simple circular divs with gradient backgrounds or use image urls from randomuser.me if available.
+But keep them realistic and circular.
+
+For image message:
+Use a café/library style placeholder gradient or a remote image.
+If remote images are not allowed, make a dark rectangle with warm gradient and small decorative blocks.
+
+==================================================
+IMPORTANT VISUAL REQUIREMENTS
+==================================================
+
+The result must NOT look plain.
+It must look premium like the reference.
+
+Checklist before finishing:
+- Is the background dark navy with depth?
+- Are cards glassmorphism?
+- Are all mobile frames rounded and realistic?
+- Do buttons have gradients?
+- Is the mic button glowing?
+- Do chat bubbles look rich?
+- Are there avatars and online dots?
+- Is spacing consistent?
+- Does the full page show the whole product flow like a Figma board?
+
+If the UI looks basic, improve it before final answer.
+
+Do not use default browser buttons.
+Do not use plain white backgrounds.
+Do not use sharp rectangles.
+Do not remove Arabic text.
+Do not change the overall layout.
+
+Deliver:
+- Fully working React app
+- Tailwind classes
+- Clean component structure
+- No backend needed
+- Static mock data is fine

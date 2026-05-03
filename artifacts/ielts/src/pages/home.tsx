@@ -10,7 +10,7 @@ import {
   Volume2, Globe, Layers, Award, ExternalLink,
   Flame, Star, HelpCircle, Sparkles, MessageCircle,
   FileText, ArrowLeftRight, ArrowUpDown, BookMarked, Mic, Send, CheckCircle2, Loader2,
-  TrendingUp, PlayCircle, Headphones
+  TrendingUp, PlayCircle
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { DailyPlanSection } from "@/components/daily-plan-section";
@@ -169,23 +169,6 @@ function IntroHome() {
                 <p className="text-xs text-muted-foreground/60 mt-2" dir="rtl" lang="ar">تحدث بحرية مع الذكاء الاصطناعي</p>
                 <span className="mt-4 inline-flex items-center gap-1 text-teal-600 text-sm font-semibold group-hover:gap-2 transition-all">
                   Start talking →
-                </span>
-              </div>
-            </Link>
-
-            {/* Attenborough Listening */}
-            <Link href="/intro-listening" className="block group">
-              <div className="bg-card border border-indigo-300/40 dark:border-indigo-600/30 rounded-2xl p-6 hover:border-indigo-400/60 hover:shadow-md transition-all h-full flex flex-col">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center mb-4">
-                  <Headphones className="w-6 h-6 text-indigo-600" />
-                </div>
-                <h3 className="text-lg font-bold text-foreground mb-1">Attenborough AI Listening</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed flex-1">
-                  A2-level listening tests with AI-read audio — 4 IELTS-style sections with instant scoring.
-                </p>
-                <p className="text-xs text-muted-foreground/60 mt-2" dir="rtl" lang="ar">اختبارات الاستماع بصوت الذكاء الاصطناعي</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-indigo-600 text-sm font-semibold group-hover:gap-2 transition-all">
-                  Start listening →
                 </span>
               </div>
             </Link>

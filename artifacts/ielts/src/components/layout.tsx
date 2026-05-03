@@ -71,7 +71,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const introFeatureItems = showIntroFeatures
     ? [
         { href: "/free-conversation", label: "Churchill Free Conv.", icon: Mic },
-        { href: "/intro-listening", label: "Attenborough Listening", icon: Headphones },
         { href: "/intro-reading", label: "Hemingway Reading", icon: BookOpen },
       ]
     : [];
@@ -112,12 +111,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               <Menu className="w-5 h-5 text-foreground" />
             </button>
-            <Link href="/" className="flex items-center gap-3">
-              <img
-                src="/4ielts-logo.png"
-                alt="4IELTS"
-                className="h-24 w-auto object-contain"
-              />
+            <Link href="/" className="flex items-center gap-2">
+              <span className="text-lg font-extrabold tracking-tight">
+                <span className="text-foreground">Abu Omar </span>
+                <span className="bg-gradient-to-r from-teal-500 to-sky-500 bg-clip-text text-transparent">EduLexo</span>
+              </span>
             </Link>
           </div>
           <div className="flex items-center gap-1">
@@ -199,12 +197,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
           />
           <div className="absolute top-0 left-0 bottom-0 w-72 bg-card border-r border-border flex flex-col animate-in slide-in-from-left duration-200">
             <div className="p-4 border-b border-border flex items-center justify-between">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3">
-                <img
-                  src="/4ielts-logo.png"
-                  alt="4IELTS"
-                  className="h-16 w-auto object-contain"
-                />
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-2">
+                <span className="text-base font-extrabold tracking-tight">
+                  <span className="text-foreground">Abu Omar </span>
+                  <span className="bg-gradient-to-r from-teal-500 to-sky-500 bg-clip-text text-transparent">EduLexo</span>
+                </span>
               </Link>
               <button
                 onClick={() => setMobileMenuOpen(false)}

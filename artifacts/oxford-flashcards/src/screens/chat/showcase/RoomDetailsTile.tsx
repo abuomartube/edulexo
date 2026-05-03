@@ -19,7 +19,13 @@ import {
   ChatScrollBg,
   HeroBadge,
 } from "@/components/chat-ui";
-import { MOCK_ROOMS, PARTICIPANTS, ROOM_RULES } from "@/data/chat";
+import { MOCK_ROOMS, PARTICIPANTS, ROOM_RULES, USERS } from "@/data/chat";
+
+const ACTIVITY = [
+  { user: USERS[6], action: "shared a voice note", time: "2m" },
+  { user: USERS[2], action: "joined the room", time: "5m" },
+  { user: USERS[1], action: "replied to topic", time: "8m" },
+];
 
 export function RoomDetailsTile() {
   const room = MOCK_ROOMS[1];
@@ -79,6 +85,37 @@ export function RoomDetailsTile() {
               +{Math.max(0, room.online - 6)}
             </div>
           </div>
+        </Card>
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+              </span>
+              النشاط الحي
+            </span>
+          }
+          icon={<Clock size={13} />}
+        >
+          <ul className="space-y-1.5" dir="rtl">
+            {ACTIVITY.map((a, i) => (
+              <li key={i} className="flex items-center gap-2 text-[11px]">
+                <Avatar
+                  letter={a.user.letter}
+                  tone={a.user.tone}
+                  size={20}
+                />
+                <span className="text-slate-300 flex-1 truncate">
+                  <span className="font-bold text-white">{a.user.name}</span>{" "}
+                  {a.action}
+                </span>
+                <span className="text-slate-500 text-[9.5px] font-medium">
+                  {a.time}
+                </span>
+              </li>
+            ))}
+          </ul>
         </Card>
         <Card title="قواعد الغرفة" icon={<ShieldCheck size={13} />}>
           <ul className="space-y-1.5">

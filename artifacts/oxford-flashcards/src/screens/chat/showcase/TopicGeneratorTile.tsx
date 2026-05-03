@@ -44,12 +44,15 @@ export function TopicGeneratorTile() {
               Talk about your favorite cuisines, family recipes, and the best
               meal you've ever had.
             </p>
-            <div className="flex items-center justify-center gap-1.5 mt-3">
+            <div className="flex items-center justify-center gap-1.5 mt-3 flex-wrap">
               <span className="px-2 py-0.5 rounded-full bg-white/15 ring-1 ring-white/25 text-white text-[9.5px] font-semibold">
                 Beginner+
               </span>
               <span className="px-2 py-0.5 rounded-full bg-white/15 ring-1 ring-white/25 text-white text-[9.5px] font-semibold">
                 ~5 min
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-400/25 ring-1 ring-emerald-200/40 text-white text-[9.5px] font-bold">
+                234 learners today
               </span>
             </div>
           </div>

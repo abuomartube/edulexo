@@ -90,7 +90,8 @@ export function SettingsTile() {
 
         <Card title="الحساب">
           <SettingRow icon={<Lock size={13} />} label="كلمة المرور" />
-          <SettingRow icon={<CreditCard size={13} />} label="الاشتراك" value="Pro" />
+          <SettingRow icon={<CreditCard size={13} />} label="الاشتراك" value="Pro · 247 يوم" />
+          <SettingRow icon={<Bell size={13} />} label="الإشعارات غير المقروءة" value="8 جديدة" />
           <SettingRow icon={<HelpCircle size={13} />} label="المساعدة والدعم" />
           <SettingRow
             icon={<LogOut size={13} />}

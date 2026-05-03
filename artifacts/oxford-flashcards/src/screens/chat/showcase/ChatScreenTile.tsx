@@ -92,6 +92,18 @@ export function ChatScreenTile() {
           }
           return null;
         })}
+        {/* typing indicator */}
+        <div className="flex items-end gap-2">
+          <Avatar letter="K" tone="indigo" size={26} />
+          <div className="rounded-2xl rounded-bl-md bg-white/[0.06] ring-1 ring-white/10 px-3 py-2.5 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300/80 animate-bounce" style={{ animationDelay: "0ms" }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300/80 animate-bounce" style={{ animationDelay: "150ms" }} />
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-300/80 animate-bounce" style={{ animationDelay: "300ms" }} />
+          </div>
+          <span className="text-[9.5px] text-slate-500 font-medium">
+            Kenza is typing…
+          </span>
+        </div>
       </ChatScrollBg>
 
       <div className="relative z-10 px-4 pt-2 pb-1 border-t border-white/5 bg-slate-950/40 backdrop-blur">

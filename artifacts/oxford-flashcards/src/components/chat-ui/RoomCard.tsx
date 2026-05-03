@@ -30,6 +30,9 @@ export function RoomCard({
   joinLabel = "Join",
   onJoin,
   onClick,
+  unread,
+  lastActivity,
+  peekAvatars,
 }: {
   icon: ReactNode;
   tone: AvatarTone;
@@ -39,6 +42,9 @@ export function RoomCard({
   joinLabel?: string;
   onJoin?: () => void;
   onClick?: () => void;
+  unread?: number;
+  lastActivity?: string;
+  peekAvatars?: ReactNode;
 }) {
   return (
     <div
@@ -55,20 +61,39 @@ export function RoomCard({
         >
           {icon}
         </div>
+        {unread !== undefined && unread > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-500 ring-2 ring-slate-950 text-[9px] font-extrabold text-white flex items-center justify-center shadow-[0_0_10px_rgba(244,63,94,0.6)]">
+            {unread > 99 ? "99+" : unread}
+          </span>
+        )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[12.5px] font-bold text-white truncate leading-tight tracking-tight">
-          {title}
+        <div className="flex items-center gap-1.5">
+          <div className="text-[12.5px] font-bold text-white truncate leading-tight tracking-tight flex-1 min-w-0">
+            {title}
+          </div>
+          {lastActivity && (
+            <span className="text-[9.5px] text-slate-500 font-medium shrink-0">
+              {lastActivity}
+            </span>
+          )}
         </div>
         <div className="text-[10.5px] text-slate-400 truncate mt-0.5 leading-tight">
           {desc}
         </div>
-        <div className="flex items-center gap-1 mt-0.5 text-[10px] text-emerald-400 font-semibold">
-          <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+        <div className="flex items-center gap-2 mt-1">
+          <span className="flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+            </span>
+            {online} online
           </span>
-          {online} online
+          {peekAvatars && (
+            <div dir="ltr" className="flex -space-x-1.5">
+              {peekAvatars}
+            </div>
+          )}
         </div>
       </div>
       <button

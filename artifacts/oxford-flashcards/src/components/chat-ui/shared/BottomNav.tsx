@@ -13,10 +13,14 @@ function NavTab({
   icon,
   label,
   active = false,
+  badge,
+  dot,
 }: {
   icon: ReactNode;
   label: string;
   active?: boolean;
+  badge?: number;
+  dot?: boolean;
 }) {
   return (
     <button className="flex-1 flex flex-col items-center gap-0.5 py-1.5">
@@ -35,6 +39,14 @@ function NavTab({
           }
         >
           {icon}
+          {badge !== undefined && badge > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 rounded-full bg-rose-500 ring-2 ring-slate-950 text-[8.5px] font-extrabold text-white flex items-center justify-center shadow-[0_0_8px_rgba(244,63,94,0.6)]">
+              {badge > 99 ? "99+" : badge}
+            </span>
+          )}
+          {dot && badge === undefined && (
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-slate-950" />
+          )}
         </div>
       </div>
       <span
@@ -59,16 +71,19 @@ export function BottomNav({ active = "chat" }: { active?: BottomNavTab }) {
           icon={<Course size={16} className={courseColor} />}
           label="الدورات"
           active={active === "courses"}
+          dot
         />
         <NavTab
           icon={<MessageSquare size={16} className={chatColor} />}
           label="الشات"
           active={active === "chat"}
+          badge={62}
         />
         <NavTab
           icon={<User size={16} className={profileColor} />}
           label="الملف الشخصي"
           active={active === "profile"}
+          badge={8}
         />
       </div>
       <HomeIndicator />

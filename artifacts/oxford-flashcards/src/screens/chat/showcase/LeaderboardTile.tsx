@@ -11,12 +11,12 @@ import {
 import { USERS } from "@/data/chat";
 
 const RANKED = [
-  { user: USERS[2], xp: 4820, delta: "+3" }, // James
-  { user: USERS[6], xp: 4310, delta: "+1" }, // Kenza
-  { user: USERS[1], xp: 3970, delta: "−1" }, // Sara
-  { user: USERS[8], xp: 3140, delta: "+2" }, // Yusuf
-  { user: USERS[3], xp: 2880, delta: "—" }, // Lina
-  { user: USERS[0], xp: 2480, delta: "+5" }, // Omar (you)
+  { user: USERS[2], xp: 4820, weekly: 1240, delta: "+3" }, // James
+  { user: USERS[6], xp: 4310, weekly: 980, delta: "+1" }, // Kenza
+  { user: USERS[1], xp: 3970, weekly: 720, delta: "−1" }, // Sara
+  { user: USERS[8], xp: 3140, weekly: 640, delta: "+2" }, // Yusuf
+  { user: USERS[3], xp: 2880, weekly: 410, delta: "—" }, // Lina
+  { user: USERS[0], xp: 2480, weekly: 890, delta: "+5" }, // Omar (you)
 ];
 
 const PODIUM_TONES = [
@@ -87,7 +87,12 @@ export function LeaderboardTile() {
                 <div className="mt-1.5 text-[11.5px] font-bold text-white truncate max-w-full">
                   {r.user.name}
                 </div>
-                <div className="text-[10px] text-slate-400">{r.xp} XP</div>
+                <div className="text-[10px] font-bold text-slate-200">
+                  {r.xp.toLocaleString()} XP
+                </div>
+                <div className="text-[9px] text-emerald-400 font-bold">
+                  +{r.weekly} this week
+                </div>
               </div>
             );
           })}

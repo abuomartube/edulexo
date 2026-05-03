@@ -328,96 +328,117 @@ export default function ChatRoomPage() {
   // ───────────── PREVIEW STAGE ─────────────
   if (stage === "preview") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/40 dark:from-gray-950 dark:via-purple-950/40 dark:to-slate-950 text-slate-900 dark:text-slate-100">
+      <div className="dark min-h-screen bg-slate-950 text-slate-100">
         <Header />
         <main className="max-w-xl mx-auto px-4 sm:px-6 py-6">
           <Link
             href="/chat"
-            className="inline-flex items-center gap-1 text-purple-700 dark:text-purple-300 text-sm mb-4 font-semibold"
+            className="inline-flex items-center gap-1 text-purple-300 text-sm mb-4 font-semibold"
           >
             <ArrowLeft size={16} className="rtl:rotate-180" />{" "}
             {lang === "ar" ? "رجوع" : "Back"}
           </Link>
-          <div className="rounded-3xl bg-gradient-to-br from-purple-600 via-indigo-600 to-purple-700 text-white p-6 shadow-xl">
-            <div className="flex items-start gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center text-3xl">
-                {room.emoji ?? "💬"}
-              </div>
-              <div className="flex-1">
-                <h1 className="text-xl font-extrabold">
+
+          <div className="rounded-3xl bg-slate-900 border border-slate-800 overflow-hidden shadow-xl shadow-black/20">
+            <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/20 to-slate-900 p-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-4xl shadow-2xl shadow-purple-900/40 mb-3">
+                  {room.emoji ?? "💬"}
+                </div>
+                <h1 className="text-xl font-extrabold text-white">
                   {lang === "ar" ? room.nameAr : room.nameEn}
                 </h1>
-                <div className="mt-1 flex items-center gap-3 text-xs text-purple-100">
-                  <span className="inline-flex items-center gap-1">
-                    <Users size={12} />
+                <div className="mt-2 flex items-center justify-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-semibold">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
                     {room.onlineCount} {lang === "ar" ? "متصل" : "Online"}
                   </span>
                   {room.level && (
-                    <span className="px-2 py-0.5 rounded-full bg-white/15 font-mono">
+                    <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-mono">
                       {room.level}
                     </span>
                   )}
                 </div>
               </div>
             </div>
+
             {(lang === "ar" ? room.descriptionAr : room.descriptionEn) && (
-              <p className="mt-4 text-sm text-purple-50 leading-relaxed">
-                {lang === "ar" ? room.descriptionAr : room.descriptionEn}
-              </p>
+              <div className="px-6 pb-5">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  {lang === "ar" ? "عن الغرفة" : "About"}
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {lang === "ar" ? room.descriptionAr : room.descriptionEn}
+                </p>
+              </div>
+            )}
+
+            {rules.length > 0 && (
+              <div className="px-6 pb-5 border-t border-slate-800 pt-5">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <ShieldAlert size={12} className="text-purple-400" />
+                  {lang === "ar" ? "قواعد الغرفة" : "Room Rules"}
+                </h3>
+                <ul className="space-y-2">
+                  {rules.map((r, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-sm text-slate-200"
+                    >
+                      <span className="mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                        ✓
+                      </span>
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {(roomQ.data?.activeUsers?.length ?? 0) > 0 && (
+              <div className="px-6 pb-6 border-t border-slate-800 pt-5">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                  {lang === "ar" ? "الموجودون الآن" : "People inside now"}
+                </h3>
+                <div className="flex -space-x-2 rtl:space-x-reverse items-center">
+                  {(roomQ.data?.activeUsers ?? []).slice(0, 6).map((u) => (
+                    <div
+                      key={u.id}
+                      title={u.name}
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold border-2 border-slate-900"
+                    >
+                      {u.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  ))}
+                  {(roomQ.data?.activeUsers?.length ?? 0) > 6 && (
+                    <div className="ms-3 ps-3 text-xs text-slate-400 font-semibold">
+                      +{(roomQ.data?.activeUsers?.length ?? 0) - 6}{" "}
+                      {lang === "ar" ? "آخرون" : "more"}
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          {rules.length > 0 && (
-            <section className="mt-5 rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-5">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                <ShieldAlert size={14} className="text-purple-500" />
-                {lang === "ar" ? "قواعد الغرفة" : "Room Rules"}
-              </h2>
-              <ul className="space-y-2">
-                {rules.map((r, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200"
-                  >
-                    <span className="text-emerald-500 font-bold">✓</span>
-                    <span>{r}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {(roomQ.data?.activeUsers?.length ?? 0) > 0 && (
-            <section className="mt-5 rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-5">
-              <h2 className="text-sm font-bold text-slate-900 dark:text-white mb-3">
-                {lang === "ar" ? "الموجودون الآن" : "People inside"}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {(roomQ.data?.activeUsers ?? []).slice(0, 12).map((u) => (
-                  <div
-                    key={u.id}
-                    className="px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-200 text-xs font-semibold"
-                  >
-                    {u.name}
-                  </div>
-                ))}
-                {(roomQ.data?.activeUsers?.length ?? 0) > 12 && (
-                  <div className="px-3 py-1.5 rounded-full bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-slate-300 text-xs">
-                    +{(roomQ.data?.activeUsers?.length ?? 0) - 12}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          <div className="mt-6 flex flex-col gap-2">
+          <div className="mt-5 flex flex-col gap-2">
             <button
               onClick={() => setStage("chat")}
-              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold shadow-lg"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-xl shadow-purple-900/40"
               type="button"
             >
-              <Mic size={18} />{" "}
-              {lang === "ar" ? "انضم وتحدّث" : "Join & Speak"}
+              <Headphones size={18} />{" "}
+              {lang === "ar" ? "الانضمام إلى الغرفة" : "Join the Room"}
+            </button>
+            <button
+              onClick={() => setStage("chat")}
+              className="w-full text-center text-sm text-slate-400 hover:text-purple-300 py-2"
+              type="button"
+            >
+              {lang === "ar" ? "استمع أولاً" : "Listen first"}
             </button>
           </div>
         </main>
@@ -427,25 +448,25 @@ export default function ChatRoomPage() {
 
   // ───────────── CHAT STAGE ─────────────
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-slate-100 via-purple-50/30 to-slate-100 dark:from-gray-950 dark:via-purple-950/30 dark:to-slate-950 text-slate-900 dark:text-slate-100">
-      <header className="sticky top-0 z-30 backdrop-blur-md bg-white/85 dark:bg-gray-950/85 border-b border-slate-200/80 dark:border-gray-800/80 px-3 sm:px-5 py-3">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
+    <div className="dark min-h-screen flex flex-col bg-slate-950 text-slate-100">
+      <header className="sticky top-0 z-30 backdrop-blur-md bg-slate-950/85 border-b border-slate-800 px-3 sm:px-5 py-3">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
           <button
             onClick={() => navigate("/chat")}
-            className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-gray-800"
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-300"
             aria-label="Back"
             type="button"
           >
             <ArrowLeft size={18} className="rtl:rotate-180" />
           </button>
-          <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-sm sm:text-base truncate">
+          <div className="flex-1 min-w-0 text-center">
+            <h1 className="font-bold text-sm sm:text-base text-white truncate">
               {lang === "ar" ? room.nameAr : room.nameEn}
             </h1>
-            <div className="flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
-              <span className="relative flex h-2 w-2">
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+              <span className="relative flex h-1.5 w-1.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
               </span>
               <span>
                 {onlineCount ?? room.onlineCount}{" "}
@@ -453,8 +474,23 @@ export default function ChatRoomPage() {
               </span>
             </div>
           </div>
-          <div className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-wide">
-            EN ONLY
+          <button
+            type="button"
+            className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 text-purple-300 flex items-center justify-center"
+            aria-label="Raise hand"
+            title={lang === "ar" ? "رفع اليد" : "Raise hand"}
+          >
+            ✋
+          </button>
+        </div>
+        <div className="max-w-3xl mx-auto mt-2.5 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            {lang === "ar" ? "إنجليزية فقط" : "English Only"}
+          </span>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+            <Mic size={11} />
+            {lang === "ar" ? "اضغط للتسجيل" : "Hold mic to record"}
           </div>
         </div>
       </header>
@@ -464,7 +500,7 @@ export default function ChatRoomPage() {
         className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 max-w-3xl w-full mx-auto"
       >
         {messages.length === 0 && (
-          <div className="text-center py-10 text-slate-500 dark:text-slate-400 text-sm">
+          <div className="text-center py-10 text-slate-400 text-sm">
             {lang === "ar"
               ? "لا توجد رسائل بعد — كن أول من يبدأ المحادثة! 👋"
               : "No messages yet — be the first to break the ice! 👋"}
@@ -484,7 +520,7 @@ export default function ChatRoomPage() {
 
       {arabicWarn && (
         <div className="max-w-3xl mx-auto w-full px-3 sm:px-5">
-          <div className="mb-2 px-3 py-2 rounded-xl bg-amber-100 dark:bg-amber-950/50 border border-amber-300/60 dark:border-amber-900/60 text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2">
+          <div className="mb-2 px-3 py-2 rounded-xl bg-amber-950/50 border border-amber-900/60 text-amber-200 text-xs flex items-center gap-2">
             <ShieldAlert size={14} />
             {lang === "ar"
               ? "حاول استخدام الإنجليزية فقط للحصول على أفضل ممارسة 💪"
@@ -493,24 +529,37 @@ export default function ChatRoomPage() {
         </div>
       )}
 
-      <footer className="sticky bottom-0 backdrop-blur-md bg-white/90 dark:bg-gray-950/90 border-t border-slate-200 dark:border-gray-800 px-3 sm:px-5 py-2.5">
+      <footer className="sticky bottom-0 backdrop-blur-md bg-slate-950/95 border-t border-slate-800 px-3 sm:px-5 py-3">
         <div className="max-w-3xl mx-auto">
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            <ChipBtn onClick={() => setShowTopic(true)} icon={<Sparkles size={12} />}>
-              {lang === "ar" ? "موضوع" : "Topic"}
-            </ChipBtn>
-            <ChipBtn onClick={handleIceBreaker} icon={<Lightbulb size={12} />}>
-              {lang === "ar" ? "كاسر الجمود" : "Ice Breaker"}
-            </ChipBtn>
-            <ChipBtn onClick={handleIceBreaker} icon={<RefreshCw size={12} />}>
-              {lang === "ar" ? "تبديل" : "Rotate"}
-            </ChipBtn>
-            <ChipBtn
-              onClick={() => fileInputRef.current?.click()}
-              icon={<ImageIcon size={12} />}
+          <div className="flex items-center gap-2 mb-2.5 overflow-x-auto pb-1">
+            <ToolPill
+              onClick={() => setShowTopic(true)}
+              icon={<Sparkles size={13} />}
+              tone="purple"
             >
-              {lang === "ar" ? "صورة" : "Image"}
-            </ChipBtn>
+              {lang === "ar" ? "موضوع" : "Topic"}
+            </ToolPill>
+            <ToolPill
+              onClick={handleIceBreaker}
+              icon={<Lightbulb size={13} />}
+              tone="amber"
+            >
+              {lang === "ar" ? "كاسر الجمود" : "Ice Breaker"}
+            </ToolPill>
+            <ToolPill
+              onClick={handleIceBreaker}
+              icon={<RefreshCw size={13} />}
+              tone="cyan"
+            >
+              {lang === "ar" ? "تبديل" : "Rotate"}
+            </ToolPill>
+            <ToolPill
+              onClick={() => fileInputRef.current?.click()}
+              icon={<ImageIcon size={13} />}
+              tone="rose"
+            >
+              {lang === "ar" ? "صورة" : "Image Talk"}
+            </ToolPill>
           </div>
           <input
             ref={fileInputRef}
@@ -525,37 +574,41 @@ export default function ChatRoomPage() {
               onCancel={() => setRecording(false)}
             />
           ) : (
-            <form onSubmit={handleSendText} className="flex items-center gap-2">
+            <form
+              onSubmit={handleSendText}
+              className="flex items-center gap-2 rounded-full bg-slate-900 border border-slate-800 ps-3 pe-1.5 py-1.5"
+            >
+              <span className="text-lg select-none">😊</span>
               <input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={
                   lang === "ar" ? "اكتب رسالة..." : "Type a message…"
                 }
-                className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-gray-800 border border-transparent focus:border-purple-500 focus:outline-none text-sm"
+                className="flex-1 bg-transparent border-none focus:outline-none text-sm text-slate-100 placeholder:text-slate-500"
                 maxLength={2000}
               />
               {input.trim() ? (
                 <button
                   type="submit"
                   disabled={sending}
-                  className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center disabled:opacity-50"
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center disabled:opacity-50 shadow-md shadow-purple-900/40"
                   aria-label="Send"
                 >
                   {sending ? (
-                    <Loader2 size={18} className="animate-spin" />
+                    <Loader2 size={16} className="animate-spin" />
                   ) : (
-                    <Send size={18} />
+                    <Send size={16} className="rtl:rotate-180" />
                   )}
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => setRecording(true)}
-                  className="w-11 h-11 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center"
+                  className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center shadow-md shadow-purple-900/40"
                   aria-label="Record voice note"
                 >
-                  <Mic size={18} />
+                  <Mic size={16} />
                 </button>
               )}
             </form>
@@ -574,20 +627,28 @@ export default function ChatRoomPage() {
   );
 }
 
-function ChipBtn({
+function ToolPill({
   children,
   icon,
   onClick,
+  tone,
 }: {
   children: React.ReactNode;
   icon: React.ReactNode;
   onClick: () => void;
+  tone: "purple" | "amber" | "cyan" | "rose";
 }) {
+  const toneClasses: Record<typeof tone, string> = {
+    purple: "bg-purple-500/15 text-purple-300 hover:bg-purple-500/25",
+    amber: "bg-amber-500/15 text-amber-300 hover:bg-amber-500/25",
+    cyan: "bg-cyan-500/15 text-cyan-300 hover:bg-cyan-500/25",
+    rose: "bg-rose-500/15 text-rose-300 hover:bg-rose-500/25",
+  };
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-900/60 transition"
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition ${toneClasses[tone]}`}
     >
       {icon}
       {children}

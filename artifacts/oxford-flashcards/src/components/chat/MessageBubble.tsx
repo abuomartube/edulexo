@@ -13,6 +13,36 @@ function initials(name: string): string {
   );
 }
 
+const PALETTE = [
+  "from-purple-500 to-indigo-600",
+  "from-cyan-500 to-blue-600",
+  "from-rose-500 to-pink-600",
+  "from-amber-500 to-orange-600",
+  "from-emerald-500 to-teal-600",
+  "from-fuchsia-500 to-purple-600",
+];
+
+function colorForName(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return PALETTE[Math.abs(h) % PALETTE.length]!;
+}
+
+const NAME_COLOR = [
+  "text-purple-300",
+  "text-cyan-300",
+  "text-rose-300",
+  "text-amber-300",
+  "text-emerald-300",
+  "text-fuchsia-300",
+];
+
+function nameColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0;
+  return NAME_COLOR[Math.abs(h) % NAME_COLOR.length]!;
+}
+
 export default function MessageBubble({
   msg,
   isMine,
@@ -33,8 +63,8 @@ export default function MessageBubble({
 
   if (msg.kind === "system") {
     return (
-      <div className="my-2 flex justify-center">
-        <div className="text-xs px-3 py-1.5 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-200 border border-purple-200/60 dark:border-purple-900/60">
+      <div className="my-3 flex justify-center">
+        <div className="text-[11px] px-3 py-1.5 rounded-full bg-slate-800/70 text-slate-300 border border-slate-700">
           {msg.body}
         </div>
       </div>
@@ -43,35 +73,43 @@ export default function MessageBubble({
 
   return (
     <div
-      className={`flex gap-2 my-2 ${isMine ? "flex-row-reverse" : "flex-row"} items-end`}
+      className={`flex gap-2 my-2.5 ${isMine ? "flex-row-reverse" : "flex-row"} items-end`}
     >
       {!isMine && (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+        <div
+          className={`w-8 h-8 rounded-full bg-gradient-to-br ${colorForName(msg.authorName)} text-white flex items-center justify-center text-[11px] font-bold shrink-0`}
+        >
           {initials(msg.authorName)}
         </div>
       )}
-      <div className={`max-w-[78%] flex flex-col ${isMine ? "items-end" : "items-start"}`}>
+      <div
+        className={`max-w-[78%] flex flex-col ${isMine ? "items-end" : "items-start"}`}
+      >
         {!isMine && (
-          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5 px-1">
+          <span
+            className={`text-[11px] font-bold mb-1 px-1 ${nameColor(msg.authorName)}`}
+          >
             {msg.authorName}
             {msg.authorRole === "admin" && (
-              <span className="ms-1 px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-700 dark:text-amber-300 text-[9px] uppercase tracking-wide">
+              <span className="ms-1.5 px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 text-[9px] uppercase tracking-wide">
                 Admin
               </span>
             )}
           </span>
         )}
         <div
-          className={`group relative px-3.5 py-2 rounded-2xl shadow-sm ${
+          className={`group relative px-3.5 py-2.5 rounded-2xl shadow-md ${
             isMine
-              ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-br-sm"
-              : "bg-white dark:bg-gray-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-gray-700 rounded-bl-sm"
+              ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-br-md"
+              : "bg-slate-800 text-slate-100 rounded-bl-md"
           }`}
         >
           {msg.deleted ? (
             <span className="italic opacity-70 text-sm">message deleted</span>
           ) : msg.kind === "text" ? (
-            <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {msg.body}
+            </p>
           ) : msg.kind === "voice" && msg.attachmentUrl ? (
             <VoicePlayer
               src={msg.attachmentUrl}
@@ -99,9 +137,7 @@ export default function MessageBubble({
           )}
           <div
             className={`mt-1 text-[10px] ${
-              isMine
-                ? "text-white/70 text-end"
-                : "text-slate-400 dark:text-slate-500"
+              isMine ? "text-white/70 text-end" : "text-slate-400"
             }`}
           >
             {time}

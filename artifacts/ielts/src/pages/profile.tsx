@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { customFetch } from "@workspace/ielts-api-client-react";
-import { User, Mail, Lock, Camera, Trash2, CheckCircle2, AlertCircle, Loader2, GraduationCap, Target } from "lucide-react";
+import { User, Mail, Camera, Trash2, CheckCircle2, AlertCircle, Loader2, GraduationCap, Target } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { cn } from "@/lib/utils";
 import { levelLabel } from "@/lib/daily-plan";
@@ -59,12 +59,6 @@ export default function ProfilePage() {
 
   const [avatarBusy, setAvatarBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [pwBusy, setPwBusy] = useState(false);
-  const [pwMsg, setPwMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   // Initial load.
   useEffect(() => {
@@ -166,47 +160,6 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setPwMsg(null);
-    if (!currentPassword) { setPwMsg({ type: "err", text: "Enter your current password." }); return; }
-    if (newPassword.length < 6) { setPwMsg({ type: "err", text: "New password must be at least 6 characters." }); return; }
-    if (newPassword !== confirmPassword) { setPwMsg({ type: "err", text: "New passwords don't match." }); return; }
-    if (newPassword === currentPassword) { setPwMsg({ type: "err", text: "Pick a new password different from your current one." }); return; }
-
-    setPwBusy(true);
-    try {
-      const res = await fetch("/api-ielts/access/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-student-email": email ?? "",
-          "x-student-token": (() => {
-            try {
-              const raw = localStorage.getItem("4ielts_email");
-              if (!raw) return "";
-              const { token } = JSON.parse(raw);
-              return token || "";
-            } catch { return ""; }
-          })(),
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setPwMsg({ type: "err", text: body?.error || "Could not change password." });
-      } else {
-        setPwMsg({ type: "ok", text: "Password updated." });
-        setCurrentPassword("");
-        setNewPassword("");
-        setConfirmPassword("");
-      }
-    } catch {
-      setPwMsg({ type: "err", text: "Connection error. Please try again." });
-    } finally {
-      setPwBusy(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -363,83 +316,6 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* ── Change password card ─────────────────────────────────────── */}
-        <section className="rounded-3xl border border-border bg-card p-6 space-y-4">
-          <div>
-            <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-              <Lock className="w-4 h-4 text-primary" /> Change password
-            </h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              You'll need your current password to change it.
-            </p>
-          </div>
-
-          <form className="space-y-3" onSubmit={handleChangePassword}>
-            <div>
-              <label htmlFor="cur-pw" className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                Current password
-              </label>
-              <input
-                id="cur-pw"
-                type="password"
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="mt-1 w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-            <div>
-              <label htmlFor="new-pw" className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                New password
-              </label>
-              <input
-                id="new-pw"
-                type="password"
-                autoComplete="new-password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="mt-1 w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">At least 6 characters.</p>
-            </div>
-            <div>
-              <label htmlFor="conf-pw" className="text-xs uppercase tracking-widest font-bold text-muted-foreground">
-                Confirm new password
-              </label>
-              <input
-                id="conf-pw"
-                type="password"
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 w-full px-4 py-3 bg-background border border-border rounded-xl text-foreground font-medium focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-            </div>
-
-            {pwMsg && (
-              <div className={cn(
-                "rounded-xl px-3 py-2 text-sm font-medium flex items-center gap-2",
-                pwMsg.type === "ok"
-                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800"
-                  : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800"
-              )}>
-                {pwMsg.type === "ok" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-                {pwMsg.text}
-              </div>
-            )}
-
-            <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={pwBusy || !currentPassword || !newPassword || !confirmPassword}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-40"
-              >
-                {pwBusy && <Loader2 className="w-4 h-4 animate-spin" />}
-                Update password
-              </button>
-            </div>
-          </form>
-        </section>
       </div>
     </Layout>
   );

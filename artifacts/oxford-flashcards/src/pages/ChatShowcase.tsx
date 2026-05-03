@@ -44,6 +44,7 @@ type Tile = {
   icon: ReactNode;
   body: ReactNode;
   dir?: "ltr" | "rtl";
+  glow: string;
 };
 
 const TOP_ROW: Tile[] = [
@@ -52,18 +53,21 @@ const TOP_ROW: Tile[] = [
     badge: "Entry",
     icon: <GraduationCap size={12} />,
     body: <CourseSelectionTile />,
+    glow: "rgba(96,165,250,0.55)",
   },
   {
     label: "Room Selection",
     badge: "Browse",
     icon: <MessageSquare size={12} />,
     body: <RoomSelectionTile />,
+    glow: "rgba(168,85,247,0.55)",
   },
   {
     label: "Room Details",
     badge: "Preview",
     icon: <Layers size={12} />,
     body: <RoomDetailsTile />,
+    glow: "rgba(236,72,153,0.55)",
   },
   {
     label: "Chat Screen",
@@ -71,6 +75,7 @@ const TOP_ROW: Tile[] = [
     icon: <Mic size={12} />,
     body: <ChatScreenTile />,
     dir: "ltr",
+    glow: "rgba(34,211,238,0.55)",
   },
 ];
 
@@ -80,30 +85,35 @@ const BOTTOM_ROW: Tile[] = [
     badge: "Audio",
     icon: <Headphones size={12} />,
     body: <VoiceOnlyTile />,
+    glow: "rgba(124,58,237,0.6)",
   },
   {
     label: "Topic Generator",
     badge: "Feature",
     icon: <Sparkles size={12} />,
     body: <TopicGeneratorTile />,
+    glow: "rgba(244,114,182,0.55)",
   },
   {
     label: "Profile",
     badge: "Account",
     icon: <User size={12} />,
     body: <ProfileTile />,
+    glow: "rgba(99,102,241,0.55)",
   },
   {
     label: "Leaderboard",
     badge: "XP",
     icon: <Trophy size={12} />,
     body: <LeaderboardTile />,
+    glow: "rgba(251,191,36,0.55)",
   },
   {
     label: "Settings",
     badge: "Account",
     icon: <SettingsIcon size={12} />,
     body: <SettingsTile />,
+    glow: "rgba(148,163,184,0.45)",
   },
 ];
 
@@ -148,13 +158,57 @@ function TileCard({ tile }: { tile: Tile }) {
   return (
     <div className="flex flex-col items-center" style={{ width: MINI_W }}>
       <div className="flex items-center gap-1.5 mb-2.5">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 ring-1 ring-white/10 text-[9.5px] font-bold text-slate-300">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/5 ring-1 ring-white/10 backdrop-blur text-[9.5px] font-bold text-slate-300 shadow-[0_4px_12px_-2px_rgba(0,0,0,0.6)]">
           {tile.icon}
           {tile.badge}
         </span>
       </div>
-      <MiniPhone dir={tile.dir ?? "rtl"}>{tile.body}</MiniPhone>
-      <div className="mt-3 text-center">
+
+      {/* phone with halo + drop shadow + floor reflection */}
+      <div className="relative" style={{ width: MINI_W }}>
+        {/* colored halo behind the phone */}
+        <div
+          aria-hidden
+          className="absolute -inset-10 rounded-[60px] blur-[60px] opacity-90 pointer-events-none"
+          style={{ background: tile.glow }}
+        />
+        {/* secondary tighter halo */}
+        <div
+          aria-hidden
+          className="absolute -inset-4 rounded-[44px] blur-2xl opacity-70 pointer-events-none"
+          style={{ background: tile.glow }}
+        />
+        {/* top rim light */}
+        <div
+          aria-hidden
+          className="absolute -top-2 left-1/2 -translate-x-1/2 w-[80%] h-3 rounded-full blur-md opacity-80 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)",
+          }}
+        />
+        {/* the phone itself, with a heavy drop shadow */}
+        <div
+          className="relative"
+          style={{
+            filter:
+              "drop-shadow(0 30px 40px rgba(0,0,0,0.7)) drop-shadow(0 60px 80px rgba(0,0,0,0.55))",
+          }}
+        >
+          <MiniPhone dir={tile.dir ?? "rtl"}>{tile.body}</MiniPhone>
+        </div>
+        {/* floor reflection ellipse beneath the phone */}
+        <div
+          aria-hidden
+          className="absolute left-1/2 -translate-x-1/2 -bottom-6 w-[80%] h-6 rounded-[50%] blur-xl opacity-80 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 70%)",
+          }}
+        />
+      </div>
+
+      <div className="mt-7 text-center">
         <div className="text-[12.5px] font-bold text-white tracking-tight">
           {tile.label}
         </div>
@@ -200,19 +254,65 @@ export default function ChatShowcase() {
       className="min-h-screen w-full text-white relative overflow-x-auto"
       style={{
         background:
-          "radial-gradient(ellipse at top left, rgba(124,58,237,0.18), transparent 55%), radial-gradient(ellipse at bottom right, rgba(37,99,235,0.18), transparent 55%), #050816",
+          "radial-gradient(ellipse 1200px 600px at 50% -10%, rgba(168,85,247,0.28), transparent 70%), radial-gradient(ellipse at top left, rgba(124,58,237,0.18), transparent 55%), radial-gradient(ellipse at bottom right, rgba(37,99,235,0.20), transparent 55%), linear-gradient(180deg, #0a0a1f 0%, #050816 50%, #02030a 100%)",
         fontFamily:
           'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
+      {/* overhead spotlight — bright from the top, fading down */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[600px]"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 100% at 50% 0%, rgba(255,255,255,0.10) 0%, rgba(168,85,247,0.08) 30%, transparent 70%)",
+        }}
+      />
+      {/* secondary side rim lights */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[10%] left-[20%] w-[600px] h-[600px] rounded-full blur-[140px] opacity-60"
+        style={{ background: "rgba(124,58,237,0.45)" }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[40%] right-[10%] w-[700px] h-[700px] rounded-full blur-[160px] opacity-50"
+        style={{ background: "rgba(236,72,153,0.35)" }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-[5%] left-[40%] w-[800px] h-[500px] rounded-full blur-[180px] opacity-50"
+        style={{ background: "rgba(59,130,246,0.30)" }}
+      />
+
+      {/* SVG noise/texture overlay */}
+      <svg
+        aria-hidden
+        className="pointer-events-none absolute inset-0 w-full h-full opacity-[0.07] mix-blend-overlay"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <filter id="showcase-noise">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.85"
+            numOctaves="2"
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#showcase-noise)" />
+      </svg>
+
       {/* dotted canvas grid */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.18]"
+        className="pointer-events-none absolute inset-0 opacity-[0.13]"
         style={{
           backgroundImage:
-            "radial-gradient(rgba(255,255,255,0.35) 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
+            "radial-gradient(rgba(255,255,255,0.45) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
+          maskImage:
+            "radial-gradient(ellipse 100% 80% at 50% 30%, black 30%, transparent 90%)",
         }}
       />
 
@@ -317,7 +417,7 @@ export default function ChatShowcase() {
             title="User Journey"
             desc="From course → room → live conversation."
           />
-          <div className="flex items-start gap-2 mb-16">
+          <div className="flex items-start gap-2 mb-24">
             {TOP_ROW.map((tile, i) => (
               <div key={tile.label} className="flex items-stretch">
                 <TileCard tile={tile} />
@@ -332,7 +432,7 @@ export default function ChatShowcase() {
             title="Features"
             desc="Everything that makes the room feel alive."
           />
-          <div className="flex items-start gap-7 mb-12 flex-wrap">
+          <div className="flex items-start gap-10 mb-20 flex-wrap">
             {BOTTOM_ROW.map((tile) => (
               <TileCard key={tile.label} tile={tile} />
             ))}

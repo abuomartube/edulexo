@@ -127,6 +127,26 @@ function MessageItem({ m }: { m: Message }) {
   return null;
 }
 
+type OnboardingStage = "off" | "intro" | "turn" | "fading" | "done";
+
+const ONBOARDING_DEMOS: Message[] = [
+  {
+    id: "demo-1",
+    kind: "incoming",
+    name: "Sara",
+    letter: "S",
+    tone: "pink",
+    time: "now",
+    text: "Hi everyone! Where's the best café near campus? ☕",
+  },
+  {
+    id: "demo-2",
+    kind: "outgoing",
+    time: "now",
+    text: "Try Brew & Books on 5th — quiet and great wifi 👌",
+  },
+];
+
 export default function ChatScreen() {
   const [, params] = useRoute("/chat-screen/:id");
   const [, setLocation] = useLocation();
@@ -137,22 +157,69 @@ export default function ChatScreen() {
   const [draft, setDraft] = useState("");
   const [onlineCount, setOnlineCount] = useState<number>(MOCK_ROOMS[1].online);
   const [typingUser, setTypingUser] = useState<User | null>(null);
+  const [onboardStage, setOnboardStage] = useState<OnboardingStage>("off");
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  function dismissOnboarding() {
+    setOnboardStage((s) => (s === "off" || s === "done" ? s : "done"));
+    try {
+      localStorage.setItem(`lexo-chat-onboarded-${roomId}`, "1");
+    } catch {
+      // ignore (e.g. SSR / sandboxed)
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
+    setOnboardStage("off");
     Promise.all([getRoom(roomId), getMessages(roomId)]).then(([r, msgs]) => {
       if (cancelled) return;
       if (r) {
         setRoom(r);
         setOnlineCount(r.online);
       }
-      setMessages(msgs);
+      const force =
+        typeof window !== "undefined" &&
+        new URLSearchParams(window.location.search).get("onboard") === "1";
+      let seen = false;
+      try {
+        seen = localStorage.getItem(`lexo-chat-onboarded-${roomId}`) === "1";
+      } catch {
+        seen = false;
+      }
+      if (force) {
+        setMessages([]);
+        setOnboardStage("intro");
+      } else {
+        setMessages(msgs);
+        if (msgs.length === 0 && !seen) {
+          setOnboardStage("intro");
+        }
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [roomId]);
+
+  useEffect(() => {
+    if (onboardStage !== "intro") return;
+    const t1 = setTimeout(() => setOnboardStage("turn"), 4000);
+    const t2 = setTimeout(() => setOnboardStage("fading"), 6500);
+    const t3 = setTimeout(() => {
+      setOnboardStage("done");
+      try {
+        localStorage.setItem(`lexo-chat-onboarded-${roomId}`, "1");
+      } catch {
+        // ignore
+      }
+    }, 8000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
+  }, [onboardStage, roomId]);
 
   useEffect(() => {
     const unsub = subscribeToRoom(roomId, (e) => {
@@ -174,11 +241,13 @@ export default function ChatScreen() {
     const text = draft.trim();
     if (!text) return;
     setDraft("");
+    dismissOnboarding();
     const res = await sendMessage(roomId, text);
     if (res.ok) setMessages((prev) => [...prev, res.data]);
   }
 
   async function sendVoice() {
+    dismissOnboarding();
     const res = await sendVoiceMessage(roomId);
     if (res.ok) setMessages((prev) => [...prev, res.data]);
   }
@@ -245,6 +314,44 @@ export default function ChatScreen() {
           scrollRef={scrollRef}
           className="px-4 pt-3 pb-2 space-y-2.5"
         >
+          {onboardStage !== "off" && onboardStage !== "done" && (
+            <div
+              className={`space-y-2.5 transition-opacity duration-[1400ms] ${
+                onboardStage === "fading" ? "opacity-0" : "opacity-100"
+              }`}
+            >
+              <div className="flex justify-center">
+                <div
+                  className="rounded-full px-3.5 py-1.5 ring-1 ring-purple-400/30 shadow-md inline-flex items-center gap-2"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(168,85,247,0.20), rgba(124,58,237,0.10))",
+                  }}
+                >
+                  <span className="text-[9px] font-bold text-purple-200 uppercase tracking-wide">
+                    Demo
+                  </span>
+                  <span className="text-[11px] text-purple-100">
+                    {onboardStage === "turn"
+                      ? "Now it's your turn. Start the conversation! ✨"
+                      : "Welcome 👋 Here's how conversations work:"}
+                  </span>
+                </div>
+              </div>
+              {ONBOARDING_DEMOS.map((m, i) => (
+                <div
+                  key={m.id}
+                  className="animate-fade-in-up relative opacity-90"
+                  style={{ animationDelay: `${(i + 1) * 600}ms` }}
+                >
+                  <span className="absolute -top-1.5 left-9 z-10 px-1.5 py-[1px] rounded-full bg-purple-500/25 ring-1 ring-purple-400/40 text-purple-100 text-[8.5px] font-extrabold tracking-wide uppercase shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+                    Example
+                  </span>
+                  <MessageItem m={m} />
+                </div>
+              ))}
+            </div>
+          )}
           {messages.map((m) => (
             <div key={m.id} className="animate-fade-in-up">
               <MessageItem m={m} />
@@ -309,7 +416,14 @@ export default function ChatScreen() {
             />
           </div>
 
-          <InputBar value={draft} onChange={setDraft} onSend={sendText} />
+          <InputBar
+            value={draft}
+            onChange={(v) => {
+              if (v.length > 0) dismissOnboarding();
+              setDraft(v);
+            }}
+            onSend={sendText}
+          />
 
           <div className="flex items-center justify-center gap-2 mt-1.5 mb-0.5">
             <Waves />

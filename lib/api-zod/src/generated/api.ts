@@ -50,6 +50,8 @@ export const LoginResponse = zod.object({
     phone: zod.string().nullish(),
     role: zod.enum(["student", "admin"]),
     emailVerified: zod.boolean(),
+    avatarUrl: zod.string().nullish(),
+    bio: zod.string().nullish(),
     createdAt: zod.coerce.date(),
   }),
 });
@@ -66,10 +68,52 @@ export const GetCurrentUserResponse = zod.object({
       phone: zod.string().nullish(),
       role: zod.enum(["student", "admin"]),
       emailVerified: zod.boolean(),
+      avatarUrl: zod.string().nullish(),
+      bio: zod.string().nullish(),
       createdAt: zod.coerce.date(),
     }),
     zod.null(),
   ]),
+});
+
+/**
+ * @summary Update the current user's profile (name, phone, bio, avatar)
+ */
+export const updateProfileBodyNameMin = 2;
+export const updateProfileBodyNameMax = 120;
+
+export const updateProfileBodyPhoneMax = 32;
+
+export const updateProfileBodyBioMax = 500;
+
+export const UpdateProfileBody = zod.object({
+  name: zod
+    .string()
+    .min(updateProfileBodyNameMin)
+    .max(updateProfileBodyNameMax)
+    .optional(),
+  phone: zod.string().max(updateProfileBodyPhoneMax).nullish(),
+  bio: zod.string().max(updateProfileBodyBioMax).nullish(),
+  avatarObjectPath: zod
+    .string()
+    .nullish()
+    .describe(
+      "Object path returned from POST \/storage\/uploads\/request-url after\nthe client uploaded a new avatar image. Server normalizes and\nsets the avatar ACL, then stores the resulting public URL.\n",
+    ),
+});
+
+export const UpdateProfileResponse = zod.object({
+  user: zod.object({
+    id: zod.string().uuid(),
+    name: zod.string(),
+    email: zod.string().email(),
+    phone: zod.string().nullish(),
+    role: zod.enum(["student", "admin"]),
+    emailVerified: zod.boolean(),
+    avatarUrl: zod.string().nullish(),
+    bio: zod.string().nullish(),
+    createdAt: zod.coerce.date(),
+  }),
 });
 
 /**

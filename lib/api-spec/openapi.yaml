@@ -94,6 +94,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MeResponse"
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      summary: Update the current user's profile (name, phone, bio, avatar)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /auth/forgot-password:
     post:
@@ -232,6 +253,12 @@ components:
           enum: [student, admin]
         emailVerified:
           type: boolean
+        avatarUrl:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -320,3 +347,26 @@ components:
           minLength: 8
       required:
         - token
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 120
+        phone:
+          type: string
+          maxLength: 32
+          nullable: true
+        bio:
+          type: string
+          maxLength: 500
+          nullable: true
+        avatarObjectPath:
+          type: string
+          description: |
+            Object path returned from POST /storage/uploads/request-url after
+            the client uploaded a new avatar image. Server normalizes and
+            sets the avatar ACL, then stores the resulting public URL.
+          nullable: true

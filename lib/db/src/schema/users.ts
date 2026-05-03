@@ -23,6 +23,8 @@ export const usersTable = pgTable("users", {
   preferredLanguage: varchar("preferred_language", { length: 8 })
     .notNull()
     .default("en"),
+  avatarUrl: text("avatar_url"),
+  bio: text("bio"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

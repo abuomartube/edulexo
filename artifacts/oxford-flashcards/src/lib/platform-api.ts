@@ -683,6 +683,71 @@ export interface UploadedProof {
   filename: string;
 }
 
+/**
+ * Upload an avatar image and persist its object path on the user's profile.
+ * Uses the same two-step request-url + PUT flow as the payment-proof helper,
+ * then PATCHes /auth/me with the resulting `objectPath` so the server can
+ * normalize it, set the ACL, and store it on the user row.
+ */
+export async function uploadAvatar(file: File): Promise<{ avatarUrl: string | null }> {
+  const reqRes = await fetch("/api/storage/uploads/request-url", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({
+      name: file.name,
+      size: file.size,
+      contentType: file.type || "application/octet-stream",
+    }),
+  });
+  const { uploadURL, objectPath } = await jsonOrThrow<{
+    uploadURL: string;
+    objectPath: string;
+  }>(reqRes);
+  const putRes = await fetch(uploadURL, {
+    method: "PUT",
+    headers: { "Content-Type": file.type || "application/octet-stream" },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error(`upload_failed_${putRes.status}`);
+  const patchRes = await fetch("/api/auth/me", {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify({ avatarObjectPath: objectPath }),
+  });
+  const data = await jsonOrThrow<{ user: { avatarUrl: string | null } }>(patchRes);
+  return { avatarUrl: data.user.avatarUrl };
+}
+
+/**
+ * PATCH the current user's profile (name / phone / bio / clear avatar).
+ * Returns nothing — callers should invalidate the auth-me query to refresh.
+ */
+export async function updateMyProfile(input: {
+  name?: string;
+  phone?: string | null;
+  bio?: string | null;
+  avatarObjectPath?: string | null;
+}): Promise<void> {
+  const res = await fetch("/api/auth/me", {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
+  await jsonOrThrow(res);
+}
+
+/**
+ * Resolve a stored avatar path (`/objects/uploads/<id>`) to the URL that
+ * actually serves the bytes (proxied through the API auth wall, where the
+ * owning user passes the ACL check). Returns null when nothing is stored.
+ */
+export function avatarViewUrl(path: string | null | undefined): string | null {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (path.startsWith("/objects/")) return `/api/storage${path}`;
+  return null;
+}
+
 export async function uploadPaymentProof(file: File): Promise<UploadedProof> {
   const reqRes = await fetch("/api/storage/uploads/request-url", {
     ...init,

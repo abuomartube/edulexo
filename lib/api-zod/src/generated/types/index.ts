@@ -19,5 +19,6 @@ export * from "./publicUserRole";
 export * from "./resetPasswordRequest";
 export * from "./signupRequest";
 export * from "./unauthorizedResponse";
+export * from "./updateProfileRequest";
 export * from "./validationErrorResponse";
 export * from "./verifyEmailRequest";

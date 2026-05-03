@@ -14,5 +14,7 @@ export interface PublicUser {
   phone?: string | null;
   role: PublicUserRole;
   emailVerified: boolean;
+  avatarUrl?: string | null;
+  bio?: string | null;
   createdAt: Date;
 }

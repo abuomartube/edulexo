@@ -13,10 +13,13 @@ import {
   ForgotPasswordBody,
   ResetPasswordBody,
   VerifyEmailBody,
+  UpdateProfileBody,
   LoginResponse as AuthResponseSchema,
   GetCurrentUserResponse as MeResponseSchema,
   ForgotPasswordResponse as MessageResponseSchema,
 } from "@workspace/api-zod";
+import { ObjectStorageService } from "../lib/objectStorage";
+import { uploadGrantsTable } from "@workspace/db";
 import {
   hashPassword,
   verifyPassword,
@@ -268,6 +271,99 @@ router.get("/auth/me", async (req, res, next) => {
       return;
     }
     const body = MeResponseSchema.parse({ user: toPublicUser(user) });
+    res.json(body);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /auth/me — update profile fields the user owns: name, phone, bio,
+// and avatar. Avatars come in as an `avatarObjectPath` returned by the
+// storage upload-grant flow; we set the ACL to grant the owner READ and
+// store the normalized object path. The same path can later be served
+// through GET /api/storage/objects/* (admins always have access; the
+// owning user passes via owner-bypass in the ACL check).
+const objectStorageForAvatars = new ObjectStorageService();
+
+router.patch("/auth/me", requireAuth, async (req, res, next) => {
+  try {
+    const parsed = UpdateProfileBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({
+        error: "Invalid body",
+        details: parsed.error.flatten(),
+      });
+      return;
+    }
+    const { name, phone, bio, avatarObjectPath } = parsed.data;
+
+    const updates: Partial<Pick<User, "name" | "phone" | "bio" | "avatarUrl" | "updatedAt">> = {
+      updatedAt: new Date(),
+    };
+    if (name !== undefined) updates.name = name.trim();
+    if (phone !== undefined) updates.phone = phone === null ? null : phone.trim() || null;
+    if (bio !== undefined) updates.bio = bio === null ? null : bio.trim() || null;
+
+    if (avatarObjectPath !== undefined) {
+      if (avatarObjectPath === null || avatarObjectPath === "") {
+        updates.avatarUrl = null;
+      } else {
+        // Strict shape check — only accept the canonical entity path that
+        // request-url issues. Reject external URLs, traversal, anything
+        // that isn't `/objects/<uuid-ish>` to prevent storing arbitrary
+        // strings as the user's avatar URL.
+        if (!/^\/objects\/[A-Za-z0-9_-]{8,128}$/.test(avatarObjectPath)) {
+          res.status(400).json({ error: "invalid_avatar_path" });
+          return;
+        }
+        // IDOR guard — verify this exact object path was granted to this
+        // user (and hasn't expired or been used elsewhere). Mirrors the
+        // bank-transfer attach flow.
+        const [grant] = await db
+          .select({ id: uploadGrantsTable.id })
+          .from(uploadGrantsTable)
+          .where(
+            and(
+              eq(uploadGrantsTable.objectPath, avatarObjectPath),
+              eq(uploadGrantsTable.userId, req.session.userId!),
+              gt(uploadGrantsTable.expiresAt, new Date()),
+              isNull(uploadGrantsTable.usedAt),
+            ),
+          )
+          .limit(1);
+        if (!grant) {
+          res.status(403).json({ error: "avatar_path_not_owned" });
+          return;
+        }
+        try {
+          const normalized = await objectStorageForAvatars
+            .trySetObjectEntityAclPolicy(avatarObjectPath, {
+              owner: req.session.userId!,
+              visibility: "private",
+            });
+          updates.avatarUrl = normalized;
+          await db
+            .update(uploadGrantsTable)
+            .set({ usedAt: new Date() })
+            .where(eq(uploadGrantsTable.id, grant.id));
+        } catch (err) {
+          req.log.warn({ err, avatarObjectPath }, "avatar ACL set failed");
+          res.status(400).json({ error: "invalid_avatar_path" });
+          return;
+        }
+      }
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set(updates)
+      .where(eq(usersTable.id, req.session.userId!))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "user_not_found" });
+      return;
+    }
+    const body = AuthResponseSchema.parse({ user: toPublicUser(updated) });
     res.json(body);
   } catch (err) {
     next(err);

@@ -32,6 +32,8 @@ export interface PublicUser {
   phone?: string | null;
   role: PublicUserRole;
   emailVerified: boolean;
+  avatarUrl?: string | null;
+  bio?: string | null;
   createdAt: string;
 }
 
@@ -82,6 +84,23 @@ export interface ResetPasswordRequest {
 export interface VerifyEmailRequest {
   /** @minLength 8 */
   token: string;
+}
+
+export interface UpdateProfileRequest {
+  /**
+   * @minLength 2
+   * @maxLength 120
+   */
+  name?: string;
+  /** @maxLength 32 */
+  phone?: string | null;
+  /** @maxLength 500 */
+  bio?: string | null;
+  /** Object path returned from POST /storage/uploads/request-url after
+the client uploaded a new avatar image. Server normalizes and
+sets the avatar ACL, then stores the resulting public URL.
+ */
+  avatarObjectPath?: string | null;
 }
 
 /**

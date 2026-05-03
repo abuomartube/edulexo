@@ -4,6 +4,8 @@ export {
   IncomingBubble,
   OutgoingBubble,
   SystemBubble,
+  ImageContent,
+  FileContent,
 } from "./ChatBubble";
 export { VoiceMessage } from "./VoiceMessage";
 export { ActionButton, type ActionTone } from "./ActionButton";

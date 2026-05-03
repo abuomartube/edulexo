@@ -23,6 +23,8 @@ export const USERS: User[] = [
   { id: "u8", name: "Nora", letter: "N", tone: "blue", level: "Beginner", country: "🇰🇼" },
   { id: "u9", name: "Yusuf", letter: "Y", tone: "emerald", level: "Intermediate", country: "🇹🇷" },
   { id: "u10", name: "Rana", letter: "R", tone: "pink", level: "Intermediate", country: "🇶🇦" },
+  { id: "u11", name: "Noah", letter: "N", tone: "purple", level: "Advanced", country: "🇺🇸" },
+  { id: "u12", name: "Emma", letter: "E", tone: "rose", level: "Advanced", country: "🇨🇦" },
 ];
 
 export function userById(id: string): User | undefined {
@@ -67,7 +69,7 @@ export const MOCK_ROOMS: MockRoom[] = [
     cat: "speaking",
     title: "Speaking Room - Intermediate",
     desc: "تطوير الطلاقة وزيادة الثقة",
-    online: 24,
+    online: 18,
     tone: "purple",
     iconKey: "mic",
     about:
@@ -246,7 +248,9 @@ export type ChatMsgKind =
   | "outgoing"
   | "system"
   | "voice-out"
-  | "voice-in";
+  | "voice-in"
+  | "image-in"
+  | "file-in";
 
 export type ChatMsg = {
   id: string;
@@ -258,6 +262,12 @@ export type ChatMsg = {
   text?: string;
   reactions?: number;
   duration?: string;
+  host?: boolean;
+  imageUrl?: string;
+  imageCaption?: string;
+  fileName?: string;
+  fileSize?: string;
+  filePages?: number;
 };
 
 export function nowTime(): string {
@@ -333,16 +343,94 @@ const CONVERSATION_BY_ROOM: Record<string, ChatMsg[]> = {
 
   // Speaking - Intermediate
   "2": [
-    inMsg("r2m1", "u1", "10:20 AM", "Hi everyone! 👋 How was your weekend?", 2),
-    inMsg("r2m2", "u2", "10:21 AM", "It was great! I went hiking with my friends 😊", 1),
-    outVoice("r2m3", "10:22 AM", "0:18"),
-    inMsg("r2m4", "u3", "10:23 AM", "Anyone wants to do a quick speaking exercise?"),
-    sysMsg("r2m5", "10:24 AM", "Please try to use English only 😊"),
-    inVoice("r2m6", "u7", "10:26 AM", "0:32"),
-    inMsg("r2m7", "u6", "10:28 AM", "Kenza that pronunciation was 🔥 really clear!", 4),
-    inMsg("r2m8", "u3", "10:30 AM", "Agreed! Try to slow down on long sentences though."),
-    outMsg("r2m9", "10:31 AM", "Thanks Kenza, that helped me a lot 🙏"),
-    inMsg("r2m10", "u10", "10:33 AM", "Can someone explain the difference between 'used to' and 'would'?"),
+    {
+      ...inMsg(
+        "r2m1",
+        "u1",
+        "10:18 AM",
+        "Hi everyone! 👋 Today's topic: Describe a place you visited recently. Take 2 minutes to think then jump in 🎙️",
+        7,
+      ),
+      host: true,
+    },
+    sysMsg(
+      "r2m2",
+      "10:18 AM",
+      "English only — please switch to text if you can't speak in English yet 🌍",
+    ),
+    inMsg(
+      "r2m3",
+      "u2",
+      "10:20 AM",
+      "Ohhh nice topic! I went to Istanbul last month, the food was unreal 🤤",
+      4,
+    ),
+    inMsg(
+      "r2m4",
+      "u4",
+      "10:21 AM",
+      "Same! I was in Marrakech in March — the colors of the souks are something else.",
+      2,
+    ),
+    {
+      id: "r2m5",
+      kind: "image-in",
+      name: "Lina",
+      letter: "L",
+      tone: "amber",
+      time: "10:21 AM",
+      imageUrl:
+        "https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=70&auto=format&fit=crop",
+      imageCaption: "Sunset at Jemaa el-Fnaa 🌅",
+      reactions: 9,
+    },
+    inMsg(
+      "r2m6",
+      "u11",
+      "10:23 AM",
+      "Wow that photo is gorgeous Lina. I've never been to Morocco — adding it to my list 📌",
+    ),
+    inVoice("r2m7", "u3", "10:24 AM", "0:42"),
+    inMsg(
+      "r2m8",
+      "u6",
+      "10:25 AM",
+      "James your accent is so smooth, what's your trick? 🔥",
+      6,
+    ),
+    inMsg(
+      "r2m9",
+      "u3",
+      "10:26 AM",
+      "Honestly just a lot of shadowing — repeat after podcasts every morning for like 10 minutes.",
+      3,
+    ),
+    {
+      id: "r2m10",
+      kind: "file-in",
+      name: "Emma",
+      letter: "E",
+      tone: "rose",
+      time: "10:27 AM",
+      fileName: "travel-vocab-pack.pdf",
+      fileSize: "1.2 MB",
+      filePages: 8,
+      text: "Here's a vocab pack I made for travel topics — 60 words + example sentences ✨",
+      reactions: 12,
+    },
+    outVoice("r2m11", "10:29 AM", "0:23"),
+    outMsg(
+      "r2m12",
+      "10:30 AM",
+      "Just shared a quick story about my trip to Salalah — feedback welcome 🙏",
+    ),
+    inMsg(
+      "r2m13",
+      "u2",
+      "10:31 AM",
+      "Loved your intro! Try linking your sentences with 'because' and 'so' to sound more natural.",
+      5,
+    ),
   ],
 
   // Voice Only Room (text fallback / preview)

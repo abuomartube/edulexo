@@ -13,6 +13,8 @@ import {
   OutgoingBubble,
   SystemBubble,
   VoiceMessage,
+  ImageContent,
+  FileContent,
   ActionButton,
   InputBar,
   PhoneFrame,
@@ -50,6 +52,7 @@ function MessageItem({ m }: { m: Message }) {
         letter={m.letter}
         time={m.time}
         reactions={m.reactions}
+        host={m.host}
       >
         {m.text}
       </IncomingBubble>
@@ -72,8 +75,49 @@ function MessageItem({ m }: { m: Message }) {
         tone={m.tone}
         letter={m.letter}
         time={m.time}
+        reactions={m.reactions}
       >
         <VoiceMessage duration={m.duration ?? "0:10"} played={0.3} bars={20} />
+      </IncomingBubble>
+    );
+  }
+  if (m.kind === "image-in" && m.name && m.letter && m.tone && m.imageUrl) {
+    return (
+      <IncomingBubble
+        name={m.name}
+        tone={m.tone}
+        letter={m.letter}
+        time={m.time}
+        reactions={m.reactions}
+        bare
+      >
+        <ImageContent url={m.imageUrl} caption={m.imageCaption} />
+      </IncomingBubble>
+    );
+  }
+  if (
+    m.kind === "file-in" &&
+    m.name &&
+    m.letter &&
+    m.tone &&
+    m.fileName &&
+    m.fileSize
+  ) {
+    return (
+      <IncomingBubble
+        name={m.name}
+        tone={m.tone}
+        letter={m.letter}
+        time={m.time}
+        reactions={m.reactions}
+        bare
+      >
+        <FileContent
+          fileName={m.fileName}
+          fileSize={m.fileSize}
+          pages={m.filePages}
+          caption={m.text}
+        />
       </IncomingBubble>
     );
   }

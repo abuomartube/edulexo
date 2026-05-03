@@ -170,13 +170,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         <div className="hidden md:block px-4 pb-5 space-y-1">
           <a
-            href="https://www.4ielts.com"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="/dashboard"
             className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
           >
             <ExternalLink className="w-4 h-4 shrink-0" />
-            www.4ielts.com
+            Back to EduLexo
           </a>
           <button
             onClick={handleLogout}
@@ -242,13 +240,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {theme === "dark" ? "Light Mode" : "Dark Mode"}
               </button>
               <a
-                href="https://www.4ielts.com"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
                 className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
               >
                 <ExternalLink className="w-5 h-5 shrink-0" />
-                www.4ielts.com
+                Back to EduLexo
               </a>
               <button
                 onClick={() => { handleLogout(); setMobileMenuOpen(false); }}

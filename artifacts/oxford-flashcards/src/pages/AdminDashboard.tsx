@@ -32,6 +32,11 @@ import {
   XCircle,
   ExternalLink,
   BarChart3,
+  Video,
+  CalendarDays,
+  MessageSquare,
+  Paperclip,
+  Inbox,
 } from "lucide-react";
 import {
   LineChart,
@@ -100,7 +105,15 @@ import {
   type CheckoutProvider,
   type PaymentStatus,
   type RevenueReport,
+  fetchAdminLiveSessions,
+  createLiveSession,
+  deleteLiveSession,
+  fetchAdminTickets,
+  type LiveSession,
+  type SupportStatus,
+  type SupportTicket,
 } from "@/lib/platform-api";
+import { Link as WLink } from "wouter";
 
 type Tab =
   | "overview"
@@ -112,7 +125,9 @@ type Tab =
   | "codes"
   | "certificates"
   | "payments"
-  | "reports";
+  | "reports"
+  | "liveSessions"
+  | "support";
 
 const TAB_DEFS: {
   key: Tab;
@@ -129,6 +144,8 @@ const TAB_DEFS: {
   { key: "certificates", icon: <Award size={16} />, labelKey: "admin.tab.certificates" },
   { key: "payments", icon: <CreditCard size={16} />, labelKey: "admin.tab.payments" },
   { key: "reports", icon: <BarChart3 size={16} />, labelKey: "admin.reports.tab" },
+  { key: "liveSessions", icon: <Video size={16} />, labelKey: "admin.tab.liveSessions" },
+  { key: "support", icon: <MessageSquare size={16} />, labelKey: "admin.tab.support" },
 ];
 
 export default function AdminDashboard() {
@@ -211,6 +228,8 @@ export default function AdminDashboard() {
             {tab === "certificates" && <CertificatesTab />}
             {tab === "payments" && <PaymentsTab />}
             {tab === "reports" && <ReportsTab />}
+            {tab === "liveSessions" && <LiveSessionsTab />}
+            {tab === "support" && <SupportTab />}
           </section>
         </div>
       </main>
@@ -3771,6 +3790,336 @@ function ReportsTab() {
             </div>
           </div>
         </>
+      )}
+    </div>
+  );
+}
+
+// ───────────────────────── LIVE SESSIONS TAB ─────────────────────────
+
+function LiveSessionsTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const qc = useQueryClient();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-live-sessions"],
+    queryFn: fetchAdminLiveSessions,
+  });
+
+  const [showForm, setShowForm] = useState(false);
+
+  return (
+    <div className="space-y-5">
+      <p className="text-sm text-slate-600 dark:text-slate-300">{t("admin.live.subtitle")}</p>
+      <button
+        type="button"
+        onClick={() => setShowForm(true)}
+        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm shadow-sm"
+        data-testid="admin-live-create-btn"
+      >
+        <Plus size={16} /> {t("admin.live.create")}
+      </button>
+
+      {showForm && (
+        <NewLiveSessionForm
+          onClose={() => setShowForm(false)}
+          onCreated={() => {
+            qc.invalidateQueries({ queryKey: ["admin-live-sessions"] });
+            setShowForm(false);
+          }}
+        />
+      )}
+
+      {isLoading && <LoadingPanel />}
+      {error && <ErrorPanel msg={(error as Error).message} />}
+      {data && data.length === 0 && !isLoading && (
+        <div className="rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-10 text-center text-sm text-slate-500">
+          {t("admin.live.empty")}
+        </div>
+      )}
+      {data && data.length > 0 && (
+        <ul className="space-y-3">
+          {data.map((s: LiveSession) => (
+            <AdminSessionRow key={s.id} session={s} lang={lang} t={t} onChanged={() => qc.invalidateQueries({ queryKey: ["admin-live-sessions"] })} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function AdminSessionRow({
+  session, lang, t, onChanged,
+}: {
+  session: LiveSession;
+  lang: "en" | "ar";
+  t: (k: TranslationKey) => string;
+  onChanged: () => void;
+}) {
+  const delMut = useMutation({
+    mutationFn: () => deleteLiveSession(session.id),
+    onSuccess: onChanged,
+  });
+  const dt = new Date(session.startsAt).toLocaleString(
+    lang === "ar" ? "ar-EG" : "en-US",
+    { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" },
+  );
+  return (
+    <li
+      className="rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-5"
+      data-testid={`admin-session-${session.id}`}
+    >
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold">
+              {session.audience === "public"
+                ? t("liveSessions.badge.public")
+                : `${session.course === "english" ? "English" : "IELTS"}${session.tier ? " · " + session.tier : ""}`}
+            </span>
+            {session.cancelledAt && (
+              <span className="px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 font-semibold">
+                {t("admin.live.cancelled")}
+              </span>
+            )}
+          </div>
+          <h3 className="mt-2 font-bold">{session.title}</h3>
+          {session.description && (
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{session.description}</p>
+          )}
+          <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+            <span className="inline-flex items-center gap-1"><CalendarDays size={12} /> {dt}</span>
+            <span className="inline-flex items-center gap-1"><Clock size={12} /> {session.durationMin} {t("liveSessions.minutes")}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            {session.zoomStartUrl && (
+              <a href={session.zoomStartUrl} target="_blank" rel="noopener noreferrer"
+                 className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-semibold hover:bg-emerald-100">
+                <ExternalLink size={11} /> {t("admin.live.startUrl")}
+              </a>
+            )}
+            <a href={session.zoomJoinUrl} target="_blank" rel="noopener noreferrer"
+               className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-200">
+              <ExternalLink size={11} /> {t("admin.live.joinUrl")}
+            </a>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            if (window.confirm(t("admin.live.confirmCancel"))) delMut.mutate();
+          }}
+          disabled={delMut.isPending}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50"
+          data-testid={`admin-session-cancel-${session.id}`}
+        >
+          <Trash2 size={12} /> {t("admin.live.cancel")}
+        </button>
+      </div>
+    </li>
+  );
+}
+
+function NewLiveSessionForm({
+  onClose, onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const t = useT();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [audience, setAudience] = useState<"public" | "course">("public");
+  const [course, setCourse] = useState<"intro" | "english">("intro");
+  const [tier, setTier] = useState("");
+  const [startsAt, setStartsAt] = useState("");
+  const [durationMin, setDurationMin] = useState(60);
+  const [error, setError] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      setError(null);
+      return createLiveSession({
+        title,
+        description: description || undefined,
+        audience,
+        course: audience === "course" ? course : null,
+        tier: audience === "course" && tier ? tier : null,
+        startsAt: new Date(startsAt).toISOString(),
+        durationMin,
+      });
+    },
+    onSuccess: onCreated,
+    onError: (e) => setError((e as Error).message),
+  });
+
+  const disabled = mutation.isPending || !title.trim() || !startsAt;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-white dark:bg-gray-900 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-bold mb-4">{t("admin.live.create")}</h2>
+        <LiveField label={t("admin.live.field.title")}>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+            data-testid="admin-live-title" />
+        </LiveField>
+        <LiveField label={t("admin.live.field.description")}>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+        </LiveField>
+        <LiveField label={t("admin.live.field.audience")}>
+          <div className="flex flex-col gap-1 text-sm">
+            <label className="inline-flex items-center gap-2">
+              <input type="radio" checked={audience === "public"} onChange={() => setAudience("public")} />
+              {t("admin.live.audience.public")}
+            </label>
+            <label className="inline-flex items-center gap-2">
+              <input type="radio" checked={audience === "course"} onChange={() => setAudience("course")} />
+              {t("admin.live.audience.course")}
+            </label>
+          </div>
+        </LiveField>
+        {audience === "course" && (
+          <>
+            <LiveField label={t("admin.live.field.course")}>
+              <select value={course} onChange={(e) => setCourse(e.target.value as "intro" | "english")}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm">
+                <option value="intro">IELTS</option>
+                <option value="english">English</option>
+              </select>
+            </LiveField>
+            <LiveField label={t("admin.live.field.tier")}>
+              <input value={tier} onChange={(e) => setTier(e.target.value)} placeholder="(any)"
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+            </LiveField>
+          </>
+        )}
+        <LiveField label={t("admin.live.field.startsAt")}>
+          <input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm"
+            data-testid="admin-live-startsAt" />
+        </LiveField>
+        <LiveField label={t("admin.live.field.duration")}>
+          <input type="number" min={5} max={600} value={durationMin}
+            onChange={(e) => setDurationMin(parseInt(e.target.value, 10) || 60)}
+            className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm" />
+        </LiveField>
+        {error && (
+          <p className="text-sm text-red-600 dark:text-red-400 mb-3 inline-flex items-center gap-1">
+            <AlertCircle size={14} /> {error}
+          </p>
+        )}
+        <div className="flex gap-2 justify-end mt-3">
+          <button type="button" onClick={onClose}
+            className="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-gray-800">
+            {t("common.cancel")}
+          </button>
+          <button type="button" onClick={() => mutation.mutate()} disabled={disabled}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-400 text-white font-semibold text-sm inline-flex items-center gap-2"
+            data-testid="admin-live-submit">
+            {mutation.isPending && <Loader2 size={14} className="animate-spin" />}
+            {t("common.save")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="mb-3">
+      <label className="block text-sm font-semibold mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+// ───────────────────────── SUPPORT TAB (admin) ─────────────────────────
+
+function SupportTab() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const [filter, setFilter] = useState<SupportStatus | "all">("all");
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["admin-tickets", filter],
+    queryFn: () => fetchAdminTickets(filter === "all" ? undefined : filter),
+    refetchInterval: 60_000,
+  });
+
+  const filters: Array<{ key: SupportStatus | "all"; labelKey: TranslationKey }> = [
+    { key: "all", labelKey: "admin.support.filter.all" },
+    { key: "awaiting_admin", labelKey: "support.status.awaiting_admin" },
+    { key: "awaiting_user", labelKey: "support.status.awaiting_user" },
+    { key: "resolved", labelKey: "support.status.resolved" },
+    { key: "closed", labelKey: "support.status.closed" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-slate-600 dark:text-slate-300">{t("admin.support.subtitle")}</p>
+      <div className="flex flex-wrap gap-2">
+        {filters.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setFilter(f.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+              filter === f.key
+                ? "bg-indigo-600 text-white border-indigo-600"
+                : "bg-white dark:bg-gray-900 border-slate-200 dark:border-gray-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-gray-800"
+            }`}
+            data-testid={`admin-support-filter-${f.key}`}
+          >
+            {t(f.labelKey)}{data?.counts?.[f.key] ? ` (${data.counts[f.key]})` : ""}
+          </button>
+        ))}
+      </div>
+
+      {isLoading && <LoadingPanel />}
+      {error && <ErrorPanel msg={(error as Error).message} />}
+      {data && data.tickets.length === 0 && !isLoading && (
+        <div className="rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-10 text-center">
+          <Inbox size={32} className="mx-auto text-slate-400" />
+          <p className="mt-2 text-sm text-slate-500">{t("admin.support.empty")}</p>
+        </div>
+      )}
+      {data && data.tickets.length > 0 && (
+        <ul className="space-y-2">
+          {data.tickets.map((tkt: SupportTicket) => (
+            <li key={tkt.id}>
+              <WLink
+                href={`/support/${tkt.id}`}
+                className="block rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-4 hover:border-indigo-400 transition"
+                data-testid={`admin-ticket-${tkt.id}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
+                      <span className="px-2 py-0.5 rounded-full font-semibold bg-amber-50 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                        {t(`support.status.${tkt.status}` as TranslationKey)}
+                      </span>
+                      <span className="text-slate-500">{t(`support.category.${tkt.category}` as TranslationKey)}</span>
+                    </div>
+                    <h3 className="mt-1 font-bold truncate">{tkt.subject}</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {t("admin.support.from")}: {tkt.userName ?? tkt.userId} · <span dir="ltr">{tkt.userEmail ?? ""}</span>
+                    </p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {new Date(tkt.lastActivityAt).toLocaleString(lang === "ar" ? "ar-EG" : "en-US",
+                        { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                    </p>
+                  </div>
+                  <ChevronRight className="text-slate-400 rtl:rotate-180" />
+                </div>
+              </WLink>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

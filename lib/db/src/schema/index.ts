@@ -9,3 +9,5 @@ export * from "./certificates";
 export * from "./payments";
 export * from "./payment-audit-log";
 export * from "./upload-grants";
+export * from "./live-sessions";
+export * from "./support";

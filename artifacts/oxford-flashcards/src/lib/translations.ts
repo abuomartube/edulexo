@@ -1560,6 +1560,102 @@ export const translations = {
   "english.course.cta.priceFull": { en: "150 SAR · One-time", ar: "150 ر.س · دفعة واحدة" },
   "english.course.invalid": { en: "English course not found.", ar: "دورة الإنجليزيّة غير موجودة." },
 
+  // ───────────────────────── COMMON (extra) ─────────────────────────
+  "common.cancel": { en: "Cancel", ar: "إلغاء" },
+  "common.save": { en: "Save", ar: "حفظ" },
+  "common.delete": { en: "Delete", ar: "حذف" },
+
+  // ───────────────────────── LIVE SESSIONS (student) ─────────────────────────
+  "liveSessions.title": { en: "Live Sessions", ar: "الجلسات المباشرة" },
+  "liveSessions.subtitle": {
+    en: "Join live Zoom classes with your teacher.",
+    ar: "انضم إلى الفصول المباشرة عبر زووم مع معلّمك.",
+  },
+  "liveSessions.empty": {
+    en: "No upcoming sessions yet. Check back soon!",
+    ar: "لا توجد جلسات قادمة بعد. تابعنا قريباً!",
+  },
+  "liveSessions.minutes": { en: "min", ar: "دقيقة" },
+  "liveSessions.join": { en: "Join", ar: "انضم" },
+  "liveSessions.badge.public": { en: "Public", ar: "عامة" },
+  "liveSessions.badge.live": { en: "LIVE", ar: "مباشر" },
+  "liveSessions.badge.english": { en: "English", ar: "الإنجليزيّة" },
+  "liveSessions.badge.ielts": { en: "IELTS", ar: "IELTS" },
+  "dashboard.liveSessions.cardTitle": { en: "Upcoming live sessions", ar: "الجلسات المباشرة القادمة" },
+  "dashboard.liveSessions.viewAll": { en: "View all", ar: "عرض الكل" },
+  "dashboard.liveSessions.none": { en: "No live sessions scheduled.", ar: "لا توجد جلسات مجدولة." },
+  "nav.liveSessions": { en: "Live", ar: "مباشر" },
+
+  // ───────────────────────── LIVE SESSIONS (admin) ─────────────────────────
+  "admin.tab.liveSessions": { en: "Live Sessions", ar: "الجلسات المباشرة" },
+  "admin.live.subtitle": {
+    en: "Schedule, edit, and cancel Zoom live sessions for students.",
+    ar: "جدولة وتعديل وإلغاء جلسات زووم المباشرة للطلاب.",
+  },
+  "admin.live.create": { en: "Schedule new session", ar: "جدولة جلسة جديدة" },
+  "admin.live.field.title": { en: "Title", ar: "العنوان" },
+  "admin.live.field.description": { en: "Description (optional)", ar: "الوصف (اختياري)" },
+  "admin.live.field.audience": { en: "Audience", ar: "الجمهور" },
+  "admin.live.audience.public": { en: "Public — any signed-in user", ar: "عام — أي مستخدم مسجّل" },
+  "admin.live.audience.course": { en: "Course-restricted", ar: "مقيّد بدورة" },
+  "admin.live.field.course": { en: "Course", ar: "الدورة" },
+  "admin.live.field.tier": { en: "Tier (optional, any if blank)", ar: "المستوى (اختياري، أيّ مستوى إذا فارغ)" },
+  "admin.live.field.startsAt": { en: "Start time", ar: "وقت البداية" },
+  "admin.live.field.duration": { en: "Duration (minutes)", ar: "المدة (دقائق)" },
+  "admin.live.empty": { en: "No sessions yet — schedule the first one above.", ar: "لا توجد جلسات بعد — جدول أول جلسة من الأعلى." },
+  "admin.live.cancel": { en: "Cancel session", ar: "إلغاء الجلسة" },
+  "admin.live.confirmCancel": { en: "Cancel this session for everyone?", ar: "إلغاء هذه الجلسة للجميع؟" },
+  "admin.live.cancelled": { en: "Cancelled", ar: "ملغاة" },
+  "admin.live.startUrl": { en: "Host link", ar: "رابط المضيف" },
+  "admin.live.joinUrl": { en: "Join link", ar: "رابط الانضمام" },
+
+  // ───────────────────────── SUPPORT (student) ─────────────────────────
+  "support.title": { en: "Support", ar: "الدعم" },
+  "support.subtitle": {
+    en: "Open a ticket and we'll get back to you by email and here.",
+    ar: "افتح تذكرة وسنردّ عليك بالبريد الإلكتروني وهنا.",
+  },
+  "support.new": { en: "New ticket", ar: "تذكرة جديدة" },
+  "support.new.title": { en: "Create a support ticket", ar: "إنشاء تذكرة دعم" },
+  "support.empty": {
+    en: "You haven't opened any tickets yet.",
+    ar: "لم تفتح أي تذاكر بعد.",
+  },
+  "support.send": { en: "Send", ar: "إرسال" },
+  "support.back": { en: "Back to support", ar: "العودة للدعم" },
+  "support.closedNotice": {
+    en: "This ticket is closed. Open a new one if you need more help.",
+    ar: "هذه التذكرة مغلقة. افتح تذكرة جديدة إذا كنت بحاجة إلى مساعدة أخرى.",
+  },
+  "support.field.subject": { en: "Subject", ar: "الموضوع" },
+  "support.field.category": { en: "Category", ar: "الفئة" },
+  "support.field.body": { en: "How can we help?", ar: "كيف يمكننا المساعدة؟" },
+  "support.field.attachments": { en: "Attachments (max 5)", ar: "المرفقات (5 كحد أقصى)" },
+  "support.reply.placeholder": { en: "Write a reply…", ar: "اكتب ردّك…" },
+  "support.status.awaiting_admin": { en: "Awaiting admin", ar: "بانتظار الإدارة" },
+  "support.status.awaiting_user": { en: "Awaiting your reply", ar: "بانتظار ردّك" },
+  "support.status.resolved": { en: "Resolved", ar: "تم الحل" },
+  "support.status.closed": { en: "Closed", ar: "مغلقة" },
+  "support.category.general": { en: "General", ar: "عامة" },
+  "support.category.billing": { en: "Billing", ar: "الفواتير" },
+  "support.category.technical": { en: "Technical", ar: "تقنية" },
+  "support.category.course_content": { en: "Course content", ar: "محتوى الدورة" },
+  "support.category.account": { en: "Account", ar: "الحساب" },
+  "support.role.student": { en: "You", ar: "أنت" },
+  "support.role.admin": { en: "Support team", ar: "فريق الدعم" },
+  "header.support": { en: "Support", ar: "الدعم" },
+
+  // ───────────────────────── SUPPORT (admin) ─────────────────────────
+  "admin.tab.support": { en: "Support", ar: "الدعم" },
+  "admin.support.subtitle": {
+    en: "Read and reply to student tickets.",
+    ar: "اقرأ وردّ على تذاكر الطلاب.",
+  },
+  "admin.support.filter.all": { en: "All", ar: "الكل" },
+  "admin.support.empty": { en: "No tickets in this view.", ar: "لا توجد تذاكر في هذه العرض." },
+  "admin.support.from": { en: "From", ar: "من" },
+  "admin.support.openThread": { en: "Open thread", ar: "افتح المحادثة" },
+
 } as const;
 
 export type TranslationKey = keyof typeof translations;

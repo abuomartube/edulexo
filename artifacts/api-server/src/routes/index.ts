@@ -13,6 +13,8 @@ import coursesRouter from "./courses";
 import certificatesRouter from "./certificates";
 import checkoutRouter from "./checkout";
 import storageRouter from "./storage";
+import liveSessionsRouter from "./live-sessions";
+import supportRouter from "./support";
 
 const router: IRouter = Router();
 
@@ -30,5 +32,7 @@ router.use(coursesRouter);
 router.use(certificatesRouter);
 router.use(checkoutRouter);
 router.use(storageRouter);
+router.use(liveSessionsRouter);
+router.use(supportRouter);
 
 export default router;

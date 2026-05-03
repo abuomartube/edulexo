@@ -1065,3 +1065,228 @@ export function revenueReportCsvUrl(from: string, to: string): string {
   const params = new URLSearchParams({ from, to, format: "csv" });
   return `/api/admin/reports/revenue?${params.toString()}`;
 }
+
+// ───── Live sessions ─────
+
+export interface LiveSession {
+  id: string;
+  title: string;
+  description: string | null;
+  audience: "public" | "course";
+  course: "intro" | "english" | null;
+  tier: string | null;
+  startsAt: string;
+  durationMin: number;
+  zoomMeetingId: string;
+  zoomJoinUrl: string;
+  zoomStartUrl?: string;
+  zoomPasscode: string | null;
+  hostId: string | null;
+  cancelledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function fetchMyLiveSessions(): Promise<LiveSession[]> {
+  const res = await fetch("/api/live-sessions", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ sessions: LiveSession[] }>(res);
+  return data.sessions;
+}
+
+export async function fetchAdminLiveSessions(): Promise<LiveSession[]> {
+  const res = await fetch("/api/admin/live-sessions", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ sessions: LiveSession[] }>(res);
+  return data.sessions;
+}
+
+export async function createLiveSession(input: {
+  title: string;
+  description?: string;
+  audience: "public" | "course";
+  course?: "intro" | "english" | null;
+  tier?: string | null;
+  startsAt: string; // ISO
+  durationMin: number;
+}): Promise<LiveSession> {
+  const res = await fetch("/api/admin/live-sessions", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  const data = await jsonOrThrow<{ session: LiveSession }>(res);
+  return data.session;
+}
+
+export async function deleteLiveSession(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/live-sessions/${id}`, {
+    ...init,
+    method: "DELETE",
+  });
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+}
+
+// ───── Support tickets ─────
+
+export type SupportStatus =
+  | "awaiting_admin"
+  | "awaiting_user"
+  | "resolved"
+  | "closed";
+export type SupportCategory =
+  | "general"
+  | "billing"
+  | "technical"
+  | "course_content"
+  | "account";
+export type SupportRole = "student" | "admin";
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  subject: string;
+  category: SupportCategory;
+  status: SupportStatus;
+  lastActivityAt: string;
+  closedAt: string | null;
+  createdAt: string;
+  // Admin-list only:
+  userName?: string;
+  userEmail?: string;
+}
+
+export interface SupportAttachment {
+  id: string;
+  messageId: string;
+  objectPath: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+}
+
+export interface SupportMessage {
+  id: string;
+  ticketId: string;
+  authorId: string;
+  authorRole: SupportRole;
+  body: string;
+  createdAt: string;
+  attachments: SupportAttachment[];
+}
+
+export interface AttachmentInput {
+  objectPath: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+}
+
+export async function fetchMyTickets(): Promise<SupportTicket[]> {
+  const res = await fetch("/api/support/tickets", { ...init, method: "GET" });
+  const data = await jsonOrThrow<{ tickets: SupportTicket[] }>(res);
+  return data.tickets;
+}
+
+export async function fetchTicket(
+  id: string,
+): Promise<{ ticket: SupportTicket; messages: SupportMessage[] }> {
+  const res = await fetch(`/api/support/tickets/${id}`, {
+    ...init,
+    method: "GET",
+  });
+  return jsonOrThrow<{ ticket: SupportTicket; messages: SupportMessage[] }>(res);
+}
+
+export async function createTicket(input: {
+  subject: string;
+  category?: SupportCategory;
+  body: string;
+  attachments?: AttachmentInput[];
+}): Promise<SupportTicket> {
+  const res = await fetch("/api/support/tickets", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  const data = await jsonOrThrow<{ ticket: SupportTicket }>(res);
+  return data.ticket;
+}
+
+export async function replyToTicket(
+  ticketId: string,
+  body: string,
+  attachments?: AttachmentInput[],
+): Promise<{ message: SupportMessage; ticket: SupportTicket }> {
+  const res = await fetch(`/api/support/tickets/${ticketId}/messages`, {
+    ...init,
+    method: "POST",
+    body: JSON.stringify({ body, attachments }),
+  });
+  return jsonOrThrow<{ message: SupportMessage; ticket: SupportTicket }>(res);
+}
+
+export async function fetchAdminTickets(
+  status?: SupportStatus,
+): Promise<{ tickets: SupportTicket[]; counts: Record<string, number> }> {
+  const url = status
+    ? `/api/admin/support/tickets?status=${status}`
+    : `/api/admin/support/tickets`;
+  const res = await fetch(url, { ...init, method: "GET" });
+  return jsonOrThrow<{
+    tickets: SupportTicket[];
+    counts: Record<string, number>;
+  }>(res);
+}
+
+export async function setTicketStatus(
+  id: string,
+  status: SupportStatus,
+): Promise<SupportTicket> {
+  const res = await fetch(`/api/admin/support/tickets/${id}`, {
+    ...init,
+    method: "PATCH",
+    body: JSON.stringify({ status }),
+  });
+  const data = await jsonOrThrow<{ ticket: SupportTicket }>(res);
+  return data.ticket;
+}
+
+export function attachmentDownloadUrl(id: string): string {
+  return `/api/support/attachments/${id}`;
+}
+
+/**
+ * Request a presigned URL, then PUT the file directly. Returns the metadata
+ * needed to attach it to a message.
+ */
+export async function uploadSupportAttachment(
+  file: File,
+): Promise<AttachmentInput> {
+  const meta = {
+    name: file.name,
+    size: file.size,
+    contentType: file.type || "application/octet-stream",
+  };
+  const grantRes = await fetch("/api/storage/uploads/request-url", {
+    ...init,
+    method: "POST",
+    body: JSON.stringify(meta),
+  });
+  const grant = await jsonOrThrow<{ uploadURL: string; objectPath: string }>(
+    grantRes,
+  );
+  const putRes = await fetch(grant.uploadURL, {
+    method: "PUT",
+    headers: { "Content-Type": meta.contentType },
+    body: file,
+  });
+  if (!putRes.ok) throw new Error(`upload_failed_${putRes.status}`);
+  return {
+    objectPath: grant.objectPath,
+    filename: file.name,
+    contentType: meta.contentType,
+    sizeBytes: file.size,
+  };
+}

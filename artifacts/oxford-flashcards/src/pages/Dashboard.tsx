@@ -16,6 +16,7 @@ import type { TranslationKey } from "@/lib/translations";
 import {
   fetchMyEnrollments, fetchMyEnglishEnrollments, fetchMyCertificates,
   uploadAvatar, updateMyProfile, avatarViewUrl,
+  fetchMyLiveSessions, type LiveSession,
 } from "@/lib/platform-api";
 
 const PAYMENT_BANNER_KEYS: Record<string, { key: TranslationKey; tone: "success" | "warning" | "error" }> = {
@@ -101,6 +102,7 @@ export default function Dashboard() {
         <section className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <MyCourses />
+            <UpcomingLiveSessions />
             <MyCertificates />
           </div>
 
@@ -611,5 +613,72 @@ function ProfileRow({
         </p>
       </div>
     </li>
+  );
+}
+
+// ─────────────────── Upcoming live sessions widget ───────────────────
+
+function UpcomingLiveSessions() {
+  const t = useT();
+  const { lang } = useLanguage();
+  const { data, isLoading } = useQuery({
+    queryKey: ["my-live-sessions"],
+    queryFn: fetchMyLiveSessions,
+    refetchInterval: 60_000,
+  });
+
+  if (isLoading) return null;
+  const sessions = (data ?? []).slice(0, 3);
+
+  return (
+    <div className="rounded-2xl bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-800 p-5">
+      <header className="flex items-center justify-between gap-2 mb-3">
+        <h3 className="font-bold text-slate-900 dark:text-slate-100 inline-flex items-center gap-2">
+          <CalendarDays size={18} className="text-indigo-600 dark:text-indigo-400" />
+          {t("dashboard.liveSessions.cardTitle")}
+        </h3>
+        <Link
+          href="/live-sessions"
+          className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
+          data-testid="dash-live-viewall"
+        >
+          {t("dashboard.liveSessions.viewAll")} →
+        </Link>
+      </header>
+      {sessions.length === 0 ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          {t("dashboard.liveSessions.none")}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {sessions.map((s: LiveSession) => {
+            const dt = new Date(s.startsAt).toLocaleString(
+              lang === "ar" ? "ar-EG" : "en-US",
+              { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" },
+            );
+            return (
+              <li
+                key={s.id}
+                className="flex items-center justify-between gap-3 px-3 py-2 rounded-xl bg-slate-50 dark:bg-gray-800"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate">{s.title}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{dt}</p>
+                </div>
+                <a
+                  href={s.zoomJoinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold"
+                  data-testid={`dash-live-join-${s.id}`}
+                >
+                  {t("liveSessions.join")}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

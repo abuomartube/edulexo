@@ -17,6 +17,9 @@ import MyPayments from "@/pages/MyPayments";
 import AccountSettings from "@/pages/AccountSettings";
 import PublicProfile from "@/pages/PublicProfile";
 import AdminDashboard from "@/pages/AdminDashboard";
+import LiveSessions from "@/pages/LiveSessions";
+import Support from "@/pages/Support";
+import SupportThread from "@/pages/SupportThread";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -75,6 +78,23 @@ export default function App() {
         <Route path="/u/:userId">
           <ProtectedRoute>
             <PublicProfile />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/live-sessions">
+          <ProtectedRoute>
+            <LiveSessions />
+          </ProtectedRoute>
+        </Route>
+
+        <Route path="/support">
+          <ProtectedRoute>
+            <Support />
+          </ProtectedRoute>
+        </Route>
+        <Route path="/support/:id">
+          <ProtectedRoute>
+            <SupportThread />
           </ProtectedRoute>
         </Route>
 

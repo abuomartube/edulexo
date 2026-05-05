@@ -665,6 +665,21 @@ export async function fetchEnglishLessons(): Promise<EnglishLessonsResponse> {
   return jsonOrThrow<EnglishLessonsResponse>(res);
 }
 
+export interface EnglishStudyTimeResponse {
+  totalMinutes: number;
+  dailyBreakdown: { date: string; minutes: number }[];
+}
+
+export async function fetchEnglishStudyTime(
+  range: "week" | "month" = "week",
+): Promise<EnglishStudyTimeResponse> {
+  const res = await fetch(
+    `/api/english/me/study-time?range=${encodeURIComponent(range)}`,
+    { ...init, method: "GET", cache: "no-store" },
+  );
+  return jsonOrThrow<EnglishStudyTimeResponse>(res);
+}
+
 // ─────────────────────────── Certificates ───────────────────────────
 
 export type CertificateCourse = "intro" | "english";

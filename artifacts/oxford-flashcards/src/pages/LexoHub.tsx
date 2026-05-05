@@ -7,6 +7,7 @@ import {
   BookOpen,
   CalendarDays,
   CheckCircle2,
+  Clock,
   Layers,
   Lock,
   PlayCircle,
@@ -19,11 +20,24 @@ import { useLanguage } from "@/lib/i18n";
 import {
   ENGLISH_TIER_LABELS,
   fetchEnglishLessons,
+  fetchEnglishStudyTime,
   fetchMyEnglishEnrollments,
   hasActiveEnglishAccess,
   type EnglishLessonSummary,
   type EnglishTier,
 } from "@/lib/platform-api";
+
+// Format aggregate study minutes for the Study Time stat card.
+// <60  → "27 min"  / "27 دقيقة"
+// ≥60  → "4h 30m" / "4س 30د"  (omit "0m" → "4h" / "4س")
+function formatStudyMinutes(totalMinutes: number, isAr: boolean): string {
+  const m = Math.max(0, Math.round(totalMinutes));
+  if (m < 60) return isAr ? `${m} دقيقة` : `${m} min`;
+  const h = Math.floor(m / 60);
+  const rem = m % 60;
+  if (isAr) return rem === 0 ? `${h}س` : `${h}س ${rem}د`;
+  return rem === 0 ? `${h}h` : `${h}h ${rem}m`;
+}
 
 // Phase-2 L6 / Task #26 — real Lexo English Dashboard. Replaces the bilingual
 // "being prepared" placeholder with progress, today's tasks, and upcoming
@@ -60,6 +74,15 @@ export default function LexoHub() {
     queryKey: ["english-mentor-lessons"],
     queryFn: fetchEnglishLessons,
   });
+
+  // Study Time (last 7 days). On error we fall back to 0 so the card
+  // still renders with a sane value instead of disappearing.
+  const studyTimeQuery = useQuery({
+    queryKey: ["english-study-time", "week"],
+    queryFn: () => fetchEnglishStudyTime("week"),
+    retry: 1,
+  });
+  const studyMinutes = studyTimeQuery.data?.totalMinutes ?? 0;
 
   const enrollments = enrollmentsQuery.data ?? [];
   const hasAccess = isAdmin || hasActiveEnglishAccess(enrollments);
@@ -187,7 +210,7 @@ export default function LexoHub() {
         )}
 
         {/* ── Stats row ──────────────────────────────────────────── */}
-        <section className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <section className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             icon={<CheckCircle2 size={20} />}
             tone="from-emerald-500 to-teal-600"
@@ -255,6 +278,24 @@ export default function LexoHub() {
                 : ""
             }
             testId="stat-next-renewal"
+          />
+          <StatCard
+            icon={<Clock size={20} />}
+            tone="from-fuchsia-500 to-purple-600"
+            label={isAr ? "وقت الدراسة" : "Study time"}
+            value={
+              studyTimeQuery.isLoading
+                ? "…"
+                : formatStudyMinutes(studyMinutes, isAr)
+            }
+            note={
+              studyTimeQuery.isLoading
+                ? ""
+                : isAr
+                  ? "آخر 7 أيام"
+                  : "Last 7 days"
+            }
+            testId="stat-study-time"
           />
         </section>
 

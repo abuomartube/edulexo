@@ -1,4 +1,4 @@
-import { Link, useParams } from "wouter";
+import { Link, useParams, useSearch } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import { useLanguage } from "@/lib/i18n";
@@ -24,6 +24,7 @@ const TOOL_TITLES: Record<string, { en: string; ar: string }> = {
 export default function LexoTool() {
   const params = useParams<{ tool: string }>();
   const tool = params.tool ?? "";
+  const search = useSearch();
   const { lang } = useLanguage();
   const isAr = lang === "ar";
 
@@ -49,8 +50,19 @@ export default function LexoTool() {
     );
   }
 
+  // For the lessons tool, forward a parent ?lesson=<id> query param into
+  // the iframe so the embedded Lessons page can deep-link / auto-open it.
+  // Only forward for the lessons tool to keep other tools' URLs untouched.
+  let extra = "";
+  if (tool === "lessons" && search) {
+    const sp = new URLSearchParams(search);
+    const lessonParam = sp.get("lesson");
+    if (lessonParam && /^\d+$/.test(lessonParam)) {
+      extra = `&lesson=${lessonParam}`;
+    }
+  }
   const sep = target.includes("?") ? "&" : "?";
-  const src = `${target}${sep}embed=1`;
+  const src = `${target}${sep}embed=1${extra}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/60 dark:from-gray-950 dark:via-indigo-950/50 dark:to-slate-950 text-slate-900 dark:text-slate-100">

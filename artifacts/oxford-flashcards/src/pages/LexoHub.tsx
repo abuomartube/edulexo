@@ -20,6 +20,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useLanguage } from "@/lib/i18n";
 import {
   ENGLISH_TIER_LABELS,
+  fetchEnglishLastLesson,
   fetchEnglishLessons,
   fetchEnglishStreak,
   fetchEnglishStudyTime,
@@ -28,6 +29,17 @@ import {
   type EnglishLessonSummary,
   type EnglishTier,
 } from "@/lib/platform-api";
+
+// Format a resume position for the Continue Learning subtitle.
+// "1:23" or "1:02:34" (drops leading zero on hours; pads m/s).
+function formatResumeAt(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
 
 // Format aggregate study minutes for the Study Time stat card.
 // <60  → "27 min"  / "27 دقيقة"
@@ -96,6 +108,16 @@ export default function LexoHub() {
   const currentStreak = streakQuery.data?.currentStreak ?? 0;
   const longestStreak = streakQuery.data?.longestStreak ?? 0;
   const todayActive = streakQuery.data?.todayActive ?? false;
+
+  // Last watched lesson — server-side picks the single most-recent
+  // resumable lesson the student can still access. On error we fall
+  // back to null and the existing "next lesson" branch is used.
+  const lastLessonQuery = useQuery({
+    queryKey: ["english-last-lesson"],
+    queryFn: fetchEnglishLastLesson,
+    retry: 1,
+  });
+  const lastLesson = lastLessonQuery.data?.lesson ?? null;
 
   const enrollments = enrollmentsQuery.data ?? [];
   const hasAccess = isAdmin || hasActiveEnglishAccess(enrollments);
@@ -418,49 +440,82 @@ export default function LexoHub() {
               </p>
             ) : (
               <ul className="mt-5 space-y-3">
-                <TaskRow
-                  testId="task-continue-lesson"
-                  icon={<PlayCircle size={18} />}
-                  iconTone="from-indigo-600 to-purple-600"
-                  title={
-                    inProgressLesson
-                      ? isAr
-                        ? "تابع الدرس الذي بدأته"
-                        : "Continue your lesson"
-                      : nextLesson
-                        ? isAr
-                          ? "ابدأ الدرس التالي"
-                          : "Start your next lesson"
-                        : isAr
-                          ? "أنهيت كل الدروس المتاحة"
-                          : "All available lessons completed"
-                  }
-                  subtitle={
-                    inProgressLesson
+                {(() => {
+                  // Prefer the server-picked last-watched lesson (most
+                  // recently touched, still resumable, still unlocked).
+                  // Fall back to the locally derived inProgressLesson, then
+                  // to the next unstarted lesson, matching prior behavior.
+                  const resumeId = lastLesson?.id ?? inProgressLesson?.id ?? null;
+                  const resumeTitle = lastLesson
+                    ? lang === "ar"
+                      ? (lastLesson.titleAr ?? lastLesson.title)
+                      : lastLesson.title
+                    : inProgressLesson
                       ? lessonTitle(inProgressLesson, isAr)
-                      : nextLesson
-                        ? lessonTitle(nextLesson, isAr)
-                        : isAr
-                          ? "ترقّب المزيد من المحتوى قريباً"
-                          : "More lessons are on the way"
-                  }
-                  href="/dashboard/english/lessons"
-                  ctaLabel={
-                    inProgressLesson
+                      : null;
+                  const dur = lastLesson?.durationSeconds ?? 0;
+                  const watched = lastLesson?.watchedSeconds ?? 0;
+                  const pct =
+                    dur > 0
+                      ? Math.min(100, Math.max(0, Math.round((watched / dur) * 100)))
+                      : 0;
+                  const pos = lastLesson?.lastPositionSeconds ?? 0;
+                  const meta =
+                    lastLesson && dur > 0
                       ? isAr
-                        ? "تابع"
-                        : "Resume"
-                      : nextLesson
-                        ? isAr
-                          ? "ابدأ"
-                          : "Start"
-                        : isAr
-                          ? "تصفّح الدروس"
-                          : "Browse lessons"
-                  }
-                  isAr={isAr}
-                  disabled={!nextLesson && !inProgressLesson}
-                />
+                        ? ` · ${pct}٪ · المتابعة من ${formatResumeAt(pos)}`
+                        : ` · ${pct}% · Resume at ${formatResumeAt(pos)}`
+                      : "";
+                  const href =
+                    resumeId !== null
+                      ? `/dashboard/english/lessons?lesson=${resumeId}`
+                      : "/dashboard/english/lessons";
+                  return (
+                    <TaskRow
+                      testId="task-continue-lesson"
+                      icon={<PlayCircle size={18} />}
+                      iconTone="from-indigo-600 to-purple-600"
+                      title={
+                        resumeTitle
+                          ? isAr
+                            ? "تابع الدرس الذي بدأته"
+                            : "Continue your lesson"
+                          : nextLesson
+                            ? isAr
+                              ? "ابدأ الدرس التالي"
+                              : "Start your next lesson"
+                            : isAr
+                              ? "أنهيت كل الدروس المتاحة"
+                              : "All available lessons completed"
+                      }
+                      subtitle={
+                        resumeTitle
+                          ? `${resumeTitle}${meta}`
+                          : nextLesson
+                            ? lessonTitle(nextLesson, isAr)
+                            : isAr
+                              ? "ترقّب المزيد من المحتوى قريباً"
+                              : "More lessons are on the way"
+                      }
+                      href={href}
+                      ctaLabel={
+                        resumeTitle
+                          ? isAr
+                            ? "تابع"
+                            : "Resume"
+                          : nextLesson
+                            ? isAr
+                              ? "ابدأ"
+                              : "Start"
+                            : isAr
+                              ? "تصفّح الدروس"
+                              : "Browse lessons"
+                      }
+                      isAr={isAr}
+                      disabled={!resumeTitle && !nextLesson}
+                    />
+                  );
+                })()}
                 <TaskRow
                   testId="task-review-flashcards"
                   icon={<BookOpen size={18} />}

@@ -68,6 +68,10 @@ export default function Lessons({ onBack }: Props) {
   const positionRef = useRef(0);
 
   const completedSetRef = useRef(new Set<number>());
+  // Deep-link auto-open: when the parent navigates to .../lessons?lesson=<id>
+  // we open the matching (unlocked) lesson exactly once after lessons load.
+  // The existing Vimeo player effect handles resume from lastPositionSeconds.
+  const autoOpenedRef = useRef(false);
 
   const fetchLessons = useCallback(async () => {
     setLoading(true);
@@ -90,6 +94,33 @@ export default function Lessons({ onBack }: Props) {
   useEffect(() => {
     fetchLessons();
   }, [fetchLessons]);
+
+  // Once lessons have loaded, honor a ?lesson=<id> deep-link by auto-
+  // opening that lesson if the student can access it. Fires at most once
+  // per page load so the user can still close + browse freely afterwards.
+  useEffect(() => {
+    if (autoOpenedRef.current) return;
+    if (loading || lessons.length === 0) return;
+    if (typeof window === "undefined") return;
+    const sp = new URLSearchParams(window.location.search);
+    const raw = sp.get("lesson");
+    if (!raw || !/^\d+$/.test(raw)) return;
+    const targetId = parseInt(raw, 10);
+    const target = lessons.find((l) => l.id === targetId);
+    if (!target || target.locked) {
+      autoOpenedRef.current = true;
+      return;
+    }
+    autoOpenedRef.current = true;
+    completedTriggeredRef.current = false;
+    lastTimeRef.current = 0;
+    const prior = target.progress;
+    playedSecondsRef.current = prior?.watchedSeconds ?? 0;
+    durationRef.current = prior?.durationSeconds ?? 0;
+    lastSavedSecondsRef.current = playedSecondsRef.current;
+    positionRef.current = prior?.lastPositionSeconds ?? 0;
+    setActiveLesson(target);
+  }, [loading, lessons]);
 
   const saveProgress = useCallback(
     async (lessonId: number, watched: number, duration: number, position: number) => {

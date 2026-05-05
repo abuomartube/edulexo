@@ -1,10 +1,9 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider, useT } from "@/lib/i18n";
-import { Header } from "@/components/Header";
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import ToolChoice from "@/pages/ToolChoice";
@@ -28,11 +27,46 @@ import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
+const TOOL_PATH_TO_DASHBOARD_SLUG: Record<string, string> = {
+  "/tools/lessons": "lessons",
+  "/tools/speaking": "speaking",
+  "/tools/writing": "writing",
+  "/tools/listening": "listening",
+  "/tools/reading": "reading",
+  "/mentor/flashcards": "flashcards",
+};
+
+function isEmbeddedRequest(): boolean {
+  if (typeof window === "undefined") return true;
+  return new URLSearchParams(window.location.search).has("embed");
+}
+
+function redirectTargetFor(path: string): string {
+  if (path.startsWith("/package/")) return "/english";
+  const toolSlug = TOOL_PATH_TO_DASHBOARD_SLUG[path];
+  if (toolSlug) return `/dashboard/lexo/${toolSlug}`;
+  if (path === "/tools" || path.startsWith("/tools/")) return "/dashboard/lexo";
+  return "/dashboard";
+}
+
 function Shell() {
   const t = useT();
   const [bootstrapping, setBootstrapping] = useState(true);
   const [user, setUser] = useState<PublicUser | null>(null);
   const [enrollments, setEnrollments] = useState<EnglishEnrollment[]>([]);
+  const [location, navigate] = useLocation();
+
+  const embed = useMemo(() => isEmbeddedRequest(), []);
+  const isToolPath = location in TOOL_PATH_TO_DASHBOARD_SLUG;
+  // Only allow rendering when iframed (embed=1) on a known tool path.
+  // Every other case (any non-embed visit, or embed on a non-tool path) redirects.
+  const shouldRedirect = !(embed && isToolPath);
+
+  useEffect(() => {
+    if (!shouldRedirect) return;
+    if (typeof window === "undefined") return;
+    window.location.replace(redirectTargetFor(location));
+  }, [shouldRedirect, location]);
 
   const refresh = useCallback(async () => {
     const meRes = await getMe();
@@ -47,8 +81,12 @@ function Shell() {
   }, []);
 
   useEffect(() => {
+    if (shouldRedirect) {
+      setBootstrapping(false);
+      return;
+    }
     void refresh().finally(() => setBootstrapping(false));
-  }, [refresh]);
+  }, [refresh, shouldRedirect]);
 
   const handleLogout = useCallback(async () => {
     await apiLogout();
@@ -56,7 +94,16 @@ function Shell() {
     setEnrollments([]);
   }, []);
 
-  const [, navigate] = useLocation();
+  if (shouldRedirect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>{t("loading")}</span>
+        </div>
+      </div>
+    );
+  }
 
   if (bootstrapping) {
     return (
@@ -69,9 +116,10 @@ function Shell() {
     );
   }
 
+  void handleLogout;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <Header user={user} onLogout={handleLogout} />
       <main className="flex-1">
         <Switch>
           <Route path="/">
@@ -93,7 +141,7 @@ function Shell() {
                 onBack={() => navigate("/")}
                 onNavigate={(id) => {
                   if (id === "flashcards") {
-                    window.open("/lexo/flashcards/", "_blank", "noopener,noreferrer");
+                    window.open("/dashboard/lexo/flashcards", "_blank", "noopener,noreferrer");
                   } else {
                     navigate(`/tools/${id}`);
                   }

@@ -8,8 +8,8 @@ type GateState =
   | { kind: "no-plan" }
   | { kind: "error"; message: string };
 
-const ENGLISH_HOME = "/lexo/";
-const TOOLS_HOME = "/lexo/tools";
+const ENGLISH_HOME = "/login";
+const TOOLS_HOME = "/english";
 
 export function AccessGate({ children }: { children: ReactNode }) {
   const [state, setState] = useState<GateState>({ kind: "loading" });

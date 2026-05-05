@@ -154,11 +154,15 @@ export default function Dashboard() {
             <ActionCard
               href="/dashboard/english"
               icon={<Sparkles size={22} />}
-              title={lang === "ar" ? "أدوات ليكسو" : "Lexo Tools"}
+              title={
+                lang === "ar"
+                  ? "لوحة ليكسو للإنجليزي"
+                  : "Lexo English Dashboard"
+              }
               description={
                 lang === "ar"
-                  ? "تحدّث، اكتب، استمع، اقرأ، شاهد الدروس، وراجع البطاقات."
-                  : "Speak, write, listen, read, watch lessons, and review flashcards."
+                  ? "ادخل إلى مساحتك المخصّصة لتعلّم الإنجليزي."
+                  : "Open your dedicated English-learning space."
               }
               tone="from-fuchsia-600 to-pink-600"
             />

@@ -1,82 +1,15 @@
 import { Link } from "wouter";
-import {
-  Mic,
-  PenLine,
-  Headphones,
-  BookOpen,
-  Video,
-  Layers,
-  ArrowLeft,
-} from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import Header from "@/components/Header";
 import { useLanguage } from "@/lib/i18n";
 
-type Tool = {
-  slug: string;
-  titleEn: string;
-  titleAr: string;
-  descEn: string;
-  descAr: string;
-  icon: React.ReactNode;
-  tone: string;
-};
-
-const TOOLS: Tool[] = [
-  {
-    slug: "speaking",
-    titleEn: "Speaking",
-    titleAr: "التحدث",
-    descEn: "Practice conversation with the Churchill mentor.",
-    descAr: "تدرّب على المحادثة مع مرشد تشرشل.",
-    icon: <Mic size={22} />,
-    tone: "from-rose-500 to-pink-600",
-  },
-  {
-    slug: "writing",
-    titleEn: "Writing",
-    titleAr: "الكتابة",
-    descEn: "Sharpen your writing with the Orwell mentor.",
-    descAr: "طوّر كتابتك مع مرشد أورويل.",
-    icon: <PenLine size={22} />,
-    tone: "from-amber-500 to-orange-600",
-  },
-  {
-    slug: "listening",
-    titleEn: "Listening",
-    titleAr: "الاستماع",
-    descEn: "Train your ear with the Attenborough mentor.",
-    descAr: "درّب أذنك مع مرشد أتينبره.",
-    icon: <Headphones size={22} />,
-    tone: "from-sky-500 to-blue-600",
-  },
-  {
-    slug: "reading",
-    titleEn: "Reading",
-    titleAr: "القراءة",
-    descEn: "Read with guidance from the Hemingway mentor.",
-    descAr: "اقرأ بإرشاد من مرشد هيمنغواي.",
-    icon: <BookOpen size={22} />,
-    tone: "from-emerald-500 to-teal-600",
-  },
-  {
-    slug: "lessons",
-    titleEn: "Video Lessons",
-    titleAr: "دروس الفيديو",
-    descEn: "Watch structured video lessons.",
-    descAr: "شاهد دروس فيديو منظّمة.",
-    icon: <Video size={22} />,
-    tone: "from-violet-500 to-purple-600",
-  },
-  {
-    slug: "flashcards",
-    titleEn: "Flashcards",
-    titleAr: "البطاقات",
-    descEn: "Review vocabulary with smart flashcards.",
-    descAr: "راجع المفردات ببطاقات ذكية.",
-    icon: <Layers size={22} />,
-    tone: "from-indigo-600 to-blue-700",
-  },
-];
+// Mentor 6-tool grid (Speaking / Writing / Listening / Reading / Lessons /
+// Flashcards) intentionally hidden from the UI per phase-2 L6. The Mentor
+// backend (api-server routes /api/english-mentor/*, /api/english/*, embed
+// pages at /lexo/tools/*?embed=1) and the per-tool iframe page at
+// /dashboard/english/:tool remain reachable for internal use, but no UI
+// surface in this app links to them. To re-enable, restore the prior
+// version of this file from git history (last seen at commit 9c25ef45).
 
 export default function LexoHub() {
   const { lang } = useLanguage();
@@ -97,41 +30,35 @@ export default function LexoHub() {
 
         <section className="bg-gradient-to-br from-indigo-700 via-purple-600 to-blue-600 text-white rounded-3xl p-7 sm:p-10 shadow-xl">
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-100/90">
-            EduLexo · Lexo
+            EduLexo · Lexo for English
           </p>
           <h1 className="mt-1 text-3xl sm:text-4xl font-extrabold tracking-tight">
-            {isAr ? "أدوات ليكسو" : "Lexo Tools"}
+            {isAr ? "لوحة ليكسو للإنجليزي" : "Lexo English Dashboard"}
           </h1>
           <p className="mt-2 text-indigo-100 text-sm sm:text-base max-w-xl">
             {isAr
-              ? "تدرّب على المهارات الأربع، شاهد الدروس، وراجع المفردات — كل ذلك من داخل منصّتك."
-              : "Practice the four skills, watch lessons, and review vocabulary — all inside your platform."}
+              ? "مساحتك المخصّصة لتعلّم الإنجليزي داخل منصّة EduLexo."
+              : "Your dedicated English-learning space inside EduLexo."}
           </p>
         </section>
 
-        <section className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {TOOLS.map((tool) => (
-            <Link
-              key={tool.slug}
-              href={`/dashboard/english/${tool.slug}`}
-              data-testid={`card-lexo-tool-${tool.slug}`}
-              className="group bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-5 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow hover:shadow-lg transition flex items-start gap-4"
-            >
-              <div
-                className={`w-11 h-11 rounded-xl bg-gradient-to-br ${tool.tone} text-white flex items-center justify-center shadow-md shrink-0`}
-              >
-                {tool.icon}
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition">
-                  {isAr ? tool.titleAr : tool.titleEn}
-                </h3>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  {isAr ? tool.descAr : tool.descEn}
-                </p>
-              </div>
-            </Link>
-          ))}
+        <section
+          className="mt-8 bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-8 sm:p-10 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow-lg text-center"
+          data-testid="section-english-dashboard-placeholder"
+        >
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md">
+            <Sparkles size={26} />
+          </div>
+          <h2 className="mt-5 text-xl sm:text-2xl font-extrabold tracking-tight">
+            {isAr
+              ? "لوحتك للإنجليزي قيد التحضير"
+              : "Your English dashboard is being prepared"}
+          </h2>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-xl mx-auto">
+            {isAr
+              ? "نعمل على تجهيز التجربة الجديدة لطلاب كورس Lexo for English. ستجد هنا قريباً تقدّمك ومهامك اليومية والمزيد."
+              : "We're getting your new Lexo for English experience ready. You'll find your progress, daily tasks, and more here soon."}
+          </p>
         </section>
       </main>
     </div>

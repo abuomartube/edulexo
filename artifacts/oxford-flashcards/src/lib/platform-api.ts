@@ -631,6 +631,40 @@ export const ENGLISH_TIER_LABELS: Record<
   advanced: { en: "A2 → C1 (Complete)", ar: "A2 → C1 (شامل)" },
 };
 
+// ───── English lessons (read-only, used by /dashboard/english) ─────
+
+export interface EnglishLessonSummary {
+  id: number;
+  title: string;
+  titleAr: string | null;
+  vimeoUrl: string;
+  tier: string;
+  level: string;
+  sortOrder: number;
+  locked: boolean;
+  completed: boolean;
+  progress: {
+    watchedSeconds: number;
+    durationSeconds: number;
+    lastPositionSeconds: number;
+  } | null;
+}
+
+export interface EnglishLessonsResponse {
+  lessons: EnglishLessonSummary[];
+  bestTier: EnglishTier | null;
+  allowedLevels: string[];
+}
+
+export async function fetchEnglishLessons(): Promise<EnglishLessonsResponse> {
+  const res = await fetch("/api/english/mentor/lessons", {
+    ...init,
+    method: "GET",
+    cache: "no-store",
+  });
+  return jsonOrThrow<EnglishLessonsResponse>(res);
+}
+
 // ─────────────────────────── Certificates ───────────────────────────
 
 export type CertificateCourse = "intro" | "english";

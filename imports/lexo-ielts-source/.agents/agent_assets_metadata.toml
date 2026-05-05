@@ -1,0 +1,86 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "FokJmO1aM_LnshaZCYgnK"
+uri = "file://churchill-ai-export.tar.gz"
+type = "unspecified"
+title = "Churchill AI — Standalone Export (tar.gz)"
+
+[[outputs]]
+id = "guG8-qeYSJeDsf57uCqQ7"
+uri = "file://exports/lexo-project-export.zip"
+type = "unspecified"
+title = "LEXO Complete Project Export (ZIP)"
+
+[[outputs]]
+id = "wID-EApSCWQmGFyMLtIQk"
+uri = "file://exports/lexo-4ielts-technical-report.pdf"
+type = "pdf"
+title = "LEXO – 4IELTS — Technical Report"
+
+[[outputs]]
+id = "iAk3htmZiJL85fYJPR46M"
+uri = "file://exports/lexo-full-system.zip"
+type = "unspecified"
+title = "LEXO – Full System (code + database dump)"
+
+[[outputs]]
+id = "FKJsDa2uxhlPf35tfstze"
+uri = "file://exports/lexo-code-and-database.zip"
+type = "unspecified"
+title = "LEXO – Code + Database (lighter, ~82 MB)"
+
+[[outputs]]
+id = "OTgO2t6xGPtVwOmV1lqja"
+uri = "file://exports/lexo-source-code.zip"
+type = "unspecified"
+title = "LEXO – Source Code (1.8 MB)"
+
+[[outputs]]
+id = "AMzpO09pXyZikCrVzws12"
+uri = "file://exports/lexo-database.zip"
+type = "unspecified"
+title = "LEXO – Full Database – all students, lessons, progress (385 KB)"
+
+[[outputs]]
+id = "E0vSfVMqfE9Gl-VoNSJYt"
+uri = "file://exports/lexo-part1-source-code.zip"
+type = "unspecified"
+title = "Part 1 – Source Code (all TypeScript, configs, schema) – 1.9 MB"
+
+[[outputs]]
+id = "M87eCXgS7hxt5yaoIoNvp"
+uri = "file://exports/lexo-part2-database.zip"
+type = "unspecified"
+title = "Part 2 – Full Database (all students, progress, lessons) – 0.5 MB"
+
+[[outputs]]
+id = "Kz9FM-j5AlJjwwRPcswVu"
+uri = "file://exports/lexo-part3-public-assets.zip"
+type = "unspecified"
+title = "Part 3 – Images, Icons, HTML, PWA files – 10.4 MB"
+
+[[outputs]]
+id = "b9cVSnB1x9CgXtt5jKAp3"
+uri = "file://exports/lexo-part4-audio-set1.zip"
+type = "unspecified"
+title = "Part 4 – Listening Audio Set 1 (listening-part1 to part4) – 25.7 MB"
+
+[[outputs]]
+id = "ohkiz3y5IaGghzpz-LHwz"
+uri = "file://exports/lexo-part5-audio-set2.zip"
+type = "unspecified"
+title = "Part 5 – Listening Audio Set 2 (listening2-part1 to part4) – 23.7 MB"
+
+[[outputs]]
+id = "OOmkBx4JTs1ZVv1HkOZio"
+uri = "file://exports/lexo-part6-audio-clips.zip"
+type = "unspecified"
+title = "Part 6 – Short Audio Clips folder (130 files) – 30.7 MB"
+
+[[outputs]]
+id = "Ov-u1xkyyYfTXv6k1soXx"
+uri = "file://exports/lexo-part7-documents-and-data.zip"
+type = "unspecified"
+title = "Part 7 – PDFs, Vocabulary Data, Screenshots, Technical Report – 48 MB"

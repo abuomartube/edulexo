@@ -7,10 +7,12 @@ import {
   usersTable,
   englishEnrollmentsTable,
   englishAccessCodesTable,
+  englishLessonsTable,
   englishLessonProgressTable,
   englishLessonCompletionsTable,
   ENGLISH_TIER_VALUES,
   type EnglishTier,
+  type EnglishCefrLevel,
 } from "@workspace/db";
 import { requireAuth, requireAdmin } from "../lib/auth";
 import { subscriptionExpiryFromNow } from "../lib/subscription-policy";
@@ -242,6 +244,140 @@ router.get("/english/me/streak", requireAuth, async (req, res, next) => {
 
     res.set("Cache-Control", "no-store");
     res.json({ currentStreak, longestStreak, todayActive, lastActiveDate });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /english/me/last-lesson
+//
+// Returns the single most-recently-touched English lesson the student can
+// still resume. Powers the dashboard's "Continue Learning" card. Read-only;
+// no schema or migration changes.
+//
+// "Resumable" means:
+//   - lastPositionSeconds >= 5  (matches RESUME_MIN_SECONDS in english/Lessons.tsx,
+//     so we never advertise resume on a video the player would restart from 0)
+//   - durationSeconds = 0 OR lastPositionSeconds < durationSeconds - 5
+//     (skip videos already at/near the end)
+//   - lesson is NOT already in english_lesson_completions
+//   - lesson's level is reachable by the student's CURRENT active tiers
+//     (so a tier downgrade silently skips the now-locked lesson)
+//
+// Sort: english_lesson_progress.updated_at DESC, LIMIT 1.
+//
+// Tier→level mapping is duplicated from english-mentor.ts to avoid
+// cross-file coupling. Keep in sync if that mapping ever changes.
+const LL_BEGINNER_LEVELS: EnglishCefrLevel[] = ["A1", "A2", "B1"];
+const LL_INTERMEDIATE_LEVELS: EnglishCefrLevel[] = ["B1+", "B2", "C1"];
+
+router.get("/english/me/last-lesson", requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.session.userId!;
+
+    // Resolve which CEFR levels this student can currently access.
+    const enrollmentRows = await db
+      .select({
+        tier: englishEnrollmentsTable.tier,
+        expiresAt: englishEnrollmentsTable.expiresAt,
+      })
+      .from(englishEnrollmentsTable)
+      .where(
+        and(
+          eq(englishEnrollmentsTable.userId, userId),
+          eq(englishEnrollmentsTable.status, "active"),
+        ),
+      );
+
+    const now = new Date();
+    const activeTiers = new Set(
+      enrollmentRows
+        .filter((r) => !r.expiresAt || r.expiresAt > now)
+        .map((r) => r.tier),
+    );
+
+    let allowedLevels: EnglishCefrLevel[];
+    if (activeTiers.has("advanced")) {
+      allowedLevels = ["A1", "A2", "B1", "B1+", "B2", "C1"];
+    } else {
+      const acc: EnglishCefrLevel[] = [];
+      if (activeTiers.has("beginner")) acc.push(...LL_BEGINNER_LEVELS);
+      if (activeTiers.has("intermediate")) acc.push(...LL_INTERMEDIATE_LEVELS);
+      allowedLevels = acc;
+    }
+
+    // Student has no active access → nothing to resume.
+    if (allowedLevels.length === 0) {
+      res.set("Cache-Control", "no-store");
+      res.json({ lesson: null });
+      return;
+    }
+
+    // Single query: progress JOIN lessons LEFT JOIN completions, filter,
+    // order by updatedAt desc, limit 1.
+    const rows = await db
+      .select({
+        id: englishLessonsTable.id,
+        title: englishLessonsTable.title,
+        titleAr: englishLessonsTable.titleAr,
+        level: englishLessonsTable.level,
+        tier: englishLessonsTable.tier,
+        lastPositionSeconds: englishLessonProgressTable.lastPositionSeconds,
+        watchedSeconds: englishLessonProgressTable.watchedSeconds,
+        durationSeconds: englishLessonProgressTable.durationSeconds,
+        updatedAt: englishLessonProgressTable.updatedAt,
+        completionId: englishLessonCompletionsTable.id,
+      })
+      .from(englishLessonProgressTable)
+      .innerJoin(
+        englishLessonsTable,
+        eq(englishLessonsTable.id, englishLessonProgressTable.lessonId),
+      )
+      .leftJoin(
+        englishLessonCompletionsTable,
+        and(
+          eq(
+            englishLessonCompletionsTable.userId,
+            englishLessonProgressTable.userId,
+          ),
+          eq(
+            englishLessonCompletionsTable.lessonId,
+            englishLessonProgressTable.lessonId,
+          ),
+        ),
+      )
+      .where(
+        and(
+          eq(englishLessonProgressTable.userId, userId),
+          sql`${englishLessonProgressTable.lastPositionSeconds} >= 5`,
+          sql`(${englishLessonProgressTable.durationSeconds} = 0 OR ${englishLessonProgressTable.lastPositionSeconds} < ${englishLessonProgressTable.durationSeconds} - 5)`,
+          sql`${englishLessonCompletionsTable.id} IS NULL`,
+          sql`${englishLessonsTable.level} = ANY(${allowedLevels}::text[])`,
+        ),
+      )
+      .orderBy(desc(englishLessonProgressTable.updatedAt))
+      .limit(1);
+
+    res.set("Cache-Control", "no-store");
+    if (rows.length === 0) {
+      res.json({ lesson: null });
+      return;
+    }
+
+    const r = rows[0];
+    res.json({
+      lesson: {
+        id: r.id,
+        title: r.title,
+        titleAr: r.titleAr,
+        level: r.level,
+        tier: r.tier,
+        lastPositionSeconds: r.lastPositionSeconds,
+        watchedSeconds: r.watchedSeconds,
+        durationSeconds: r.durationSeconds,
+        updatedAt: r.updatedAt,
+      },
+    });
   } catch (err) {
     next(err);
   }

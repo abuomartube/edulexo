@@ -696,6 +696,29 @@ export async function fetchEnglishStreak(): Promise<EnglishStreakResponse> {
   return jsonOrThrow<EnglishStreakResponse>(res);
 }
 
+export interface EnglishLastLessonResponse {
+  lesson: {
+    id: number;
+    title: string;
+    titleAr: string | null;
+    level: string;
+    tier: string;
+    lastPositionSeconds: number;
+    watchedSeconds: number;
+    durationSeconds: number;
+    updatedAt: string;
+  } | null;
+}
+
+export async function fetchEnglishLastLesson(): Promise<EnglishLastLessonResponse> {
+  const res = await fetch(`/api/english/me/last-lesson`, {
+    ...init,
+    method: "GET",
+    cache: "no-store",
+  });
+  return jsonOrThrow<EnglishLastLessonResponse>(res);
+}
+
 // ─────────────────────────── Certificates ───────────────────────────
 
 export type CertificateCourse = "intro" | "english";

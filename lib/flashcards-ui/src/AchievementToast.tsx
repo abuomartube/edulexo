@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ACHIEVEMENT_META, type Achievement } from "@/lib/studyStats";
+import { ACHIEVEMENT_META, type Achievement } from "./lib/studyStats";
 
 interface Props {
   achievements: Achievement[];

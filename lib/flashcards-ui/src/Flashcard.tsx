@@ -5,10 +5,10 @@ import { AudioButton } from "./AudioButton";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
+import { cn } from "./lib/utils";
 import { Lightbulb, Eye, Brain } from "lucide-react";
-import type { Difficulty } from "@/lib/studyStats";
-import { sounds } from "@/lib/sounds";
+import type { Difficulty } from "./lib/studyStats";
+import { sounds } from "./lib/sounds";
 
 interface FlashcardProps {
   id: number;

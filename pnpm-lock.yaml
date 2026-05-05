@@ -1181,6 +1181,13 @@ importers:
         version: 0.31.9
 
   lib/flashcards-ui:
+    dependencies:
+      clsx:
+        specifier: 'catalog:'
+        version: 2.1.1
+      tailwind-merge:
+        specifier: 'catalog:'
+        version: 3.5.0
     devDependencies:
       '@tanstack/react-query':
         specifier: 'catalog:'

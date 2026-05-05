@@ -14,6 +14,10 @@
     "lucide-react": "catalog:",
     "@workspace/api-client-react": "workspace:*"
   },
+  "dependencies": {
+    "clsx": "catalog:",
+    "tailwind-merge": "catalog:"
+  },
   "devDependencies": {
     "@tanstack/react-query": "catalog:",
     "@types/react": "catalog:",

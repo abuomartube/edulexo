@@ -2155,8 +2155,8 @@ export const translations = {
     ar: "افتح دورتي",
   },
   "english.course.cta.launchHint": {
-    en: "You're enrolled — open the LEXO English Mentor",
-    ar: "أنت مشترك — افتح مرشد LEXO للإنجليزية",
+    en: "You're enrolled — open your Lexo English Dashboard",
+    ar: "أنت مشترك — افتح لوحة ليكسو للإنجليزي",
   },
   "course.detail.invalid": {
     en: "Course not found.",

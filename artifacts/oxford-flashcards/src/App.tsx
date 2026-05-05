@@ -33,6 +33,11 @@ import ChatShowcase from "@/pages/ChatShowcase";
 import ComingSoon from "@/pages/ComingSoon";
 import NotFound from "@/pages/not-found";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import EnglishOnlyRoute from "@/components/EnglishOnlyRoute";
+import {
+  LexoLegacyHubRedirect,
+  LexoLegacyToolRedirect,
+} from "@/components/LexoLegacyRedirect";
 import { CartProvider } from "@/lib/cart-context";
 import { Toaster } from "@/components/ui/toaster";
 import AbandonedCartBanner from "@/components/AbandonedCartBanner";
@@ -79,15 +84,30 @@ export default function App() {
           </ProtectedRoute>
         </Route>
 
-        <Route path="/dashboard/lexo">
+        {/* Lexo for English dashboard — gated to active English enrollments
+            (admins bypass). Renamed from /dashboard/lexo in phase-2 L5 to
+            make English-only scope explicit. */}
+        <Route path="/dashboard/english">
           <ProtectedRoute>
-            <LexoHub />
+            <EnglishOnlyRoute>
+              <LexoHub />
+            </EnglishOnlyRoute>
           </ProtectedRoute>
         </Route>
-        <Route path="/dashboard/lexo/:tool">
+        <Route path="/dashboard/english/:tool">
           <ProtectedRoute>
-            <LexoTool />
+            <EnglishOnlyRoute>
+              <LexoTool />
+            </EnglishOnlyRoute>
           </ProtectedRoute>
+        </Route>
+
+        {/* Backward-compat: /dashboard/lexo[/:tool] → /dashboard/english[/:tool] */}
+        <Route path="/dashboard/lexo">
+          <LexoLegacyHubRedirect />
+        </Route>
+        <Route path="/dashboard/lexo/:tool">
+          <LexoLegacyToolRedirect />
         </Route>
 
         <Route path="/checkout/:course/:tier">

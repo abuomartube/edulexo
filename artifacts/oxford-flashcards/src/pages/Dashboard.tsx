@@ -34,6 +34,7 @@ import {
   fetchMyEnrollments,
   fetchMyEnglishEnrollments,
   fetchMyCertificates,
+  hasActiveEnglishAccess,
   uploadAvatar,
   updateMyProfile,
   avatarViewUrl,
@@ -59,10 +60,22 @@ const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 const ALLOWED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const t = useT();
   const { lang } = useLanguage();
   const [paymentBanner, setPaymentBanner] = useState<string | null>(null);
+
+  // Used to decide whether to show the "Lexo Tools" entry card. Admins always
+  // see it (preview/test). Other users only see it when they have an active
+  // English enrollment. The query shares its cache key with SummarySection
+  // and EnglishOnlyRoute so this does not trigger an extra request.
+  const englishEnrollmentsQuery = useQuery({
+    queryKey: ["my-english-enrollments"],
+    queryFn: fetchMyEnglishEnrollments,
+    enabled: !!user && !isAdmin,
+  });
+  const showLexoToolsCard =
+    isAdmin || hasActiveEnglishAccess(englishEnrollmentsQuery.data);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -137,17 +150,19 @@ export default function Dashboard() {
             description={t("dashboard.action.english.desc")}
             tone="from-blue-600 to-indigo-600"
           />
-          <ActionCard
-            href="/dashboard/lexo"
-            icon={<Sparkles size={22} />}
-            title={lang === "ar" ? "أدوات ليكسو" : "Lexo Tools"}
-            description={
-              lang === "ar"
-                ? "تحدّث، اكتب، استمع، اقرأ، شاهد الدروس، وراجع البطاقات."
-                : "Speak, write, listen, read, watch lessons, and review flashcards."
-            }
-            tone="from-fuchsia-600 to-pink-600"
-          />
+          {showLexoToolsCard && (
+            <ActionCard
+              href="/dashboard/english"
+              icon={<Sparkles size={22} />}
+              title={lang === "ar" ? "أدوات ليكسو" : "Lexo Tools"}
+              description={
+                lang === "ar"
+                  ? "تحدّث، اكتب، استمع، اقرأ، شاهد الدروس، وراجع البطاقات."
+                  : "Speak, write, listen, read, watch lessons, and review flashcards."
+              }
+              tone="from-fuchsia-600 to-pink-600"
+            />
+          )}
           <ActionCard
             href="/assessment"
             icon={<Sparkles size={22} />}

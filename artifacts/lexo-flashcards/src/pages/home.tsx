@@ -8,7 +8,7 @@ import {
 } from "framer-motion";
 import { Search, GraduationCap, Brain } from "lucide-react";
 import { useListLevels, useListWords } from "@workspace/api-client-react";
-import { Flashcard } from "@/components/Flashcard";
+import { Flashcard } from "@workspace/flashcards-ui";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Shuffle, Check, BookOpen, Bookmark, Layers, X } from "lucide-react";
@@ -16,8 +16,7 @@ import { cn } from "@/lib/utils";
 import { useStudyStatus, type StudyStatus } from "@/lib/studyStatus";
 import { useStudyStats, type Achievement } from "@/lib/studyStats";
 import { sounds, isMuted, setMuted } from "@/lib/sounds";
-import { StatsHeader } from "@/components/StatsHeader";
-import { AchievementToast } from "@/components/AchievementToast";
+import { StatsHeader, AchievementToast } from "@workspace/flashcards-ui";
 import { THEMES, getThemeById, buildThemeWordSet } from "@/lib/themes";
 
 const LEVEL_STYLES: Record<

@@ -1,7 +1,7 @@
 import { Flame, Sparkles, Volume2, VolumeX } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
-import { levelForXp, type StudyStats } from "@/lib/studyStats";
+import { cn } from "./lib/utils";
+import { levelForXp, type StudyStats } from "./lib/studyStats";
 
 interface Props {
   stats: StudyStats;

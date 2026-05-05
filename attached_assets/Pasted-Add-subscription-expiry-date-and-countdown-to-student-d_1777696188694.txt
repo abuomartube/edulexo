@@ -1,0 +1,94 @@
+Add subscription expiry date and countdown to student dashboard.
+
+## SUBSCRIPTION EXPIRY SYSTEM
+
+1. ENROLLMENT DATE & EXPIRY DATE
+   - When student enrolls in LEXO for IELTS or LEXO for English:
+     ├─ Record enrollment_date (today)
+     ├─ Calculate expiry_date = enrollment_date + 1 year
+     └─ Store in database (enrollments table)
+
+2. DISPLAY IN STUDENT DASHBOARD
+   - For LEXO for IELTS card, show:
+     ├─ Course name: "LEXO for IELTS"
+     ├─ Tier: "Intro / Advanced / Comprehensive"
+     ├─ Status: "Active" (if not expired)
+     ├─ Enrollment Date: "May 2, 2026"
+     ├─ Expiry Date: "May 2, 2027"
+     ├─ Days Remaining: "365 days" (countdown, updates daily)
+     └─ Launch Button: Green (active) or Red (expired)
+
+   - For LEXO for English card, show:
+     ├─ Course name: "LEXO for English"
+     ├─ Tier: "[Student's tier]"
+     ├─ Status: "Active" (if not expired)
+     ├─ Enrollment Date: "May 2, 2026"
+     ├─ Expiry Date: "May 2, 2027"
+     ├─ Days Remaining: "365 days" (countdown, updates daily)
+     └─ Launch Button: Green (active) or Red (expired)
+
+3. EXPIRY DATE FORMAT
+   - Show in student's timezone
+   - Format: "DD/MM/YYYY" (or preferred format)
+   - Update countdown every day
+
+4. WHEN SUBSCRIPTION EXPIRES
+   - Expiry Date = Enrollment Date + 365 days
+   - On expiry (for both courses):
+     ├─ Status changes to "Expired"
+     ├─ Launch button becomes red + disabled
+     ├─ Show message: "اشتراكك انتهى"
+     │                (Your subscription has expired)
+     └─ Show button: "جدد الاشتراك" (Renew Now)
+
+5. RENEWAL FLOW
+   - When student clicks "Renew Now" (for either course):
+     ├─ Redirect to /checkout for same course/tier
+     ├─ Show: "Renew your [course name] subscription"
+     ├─ Price: 150 SAR
+     └─ New expiry date = current_date + 365 days
+
+6. DATABASE UPDATES
+   - enrollments table:
+     ├─ Add: enrollment_date (timestamp)
+     ├─ Add: expiry_date (timestamp)
+     ├─ Add: is_expired (boolean, auto-calculated)
+     ├─ course_id: references both LEXO for IELTS and LEXO for English
+     └─ tier_id: references the student's tier
+
+7. FRONTEND LOGIC
+   - Calculate days_remaining = expiry_date - today
+   - If days_remaining <= 0 → mark as expired
+   - Update countdown in real-time or daily
+   - Show warning if days_remaining < 7 (optional: "7 days left")
+   - Apply to both LEXO for IELTS and LEXO for English cards
+
+8. BILINGUAL (EN + AR)
+   - "Days Remaining: 365 days" (EN)
+   - "الأيام المتبقية: 365 يوم" (AR)
+   - "Your subscription has expired" (EN)
+   - "اشتراكك انتهى" (AR)
+   - "Renew Now" (EN)
+   - "جدد الاشتراك" (AR)
+   - "Enrollment Date: May 2, 2026" (EN)
+   - "تاريخ الالتحاق: 2 مايو 2026" (AR)
+   - "Expiry Date: May 2, 2027" (EN)
+   - "تاريخ الانتهاء: 2 مايو 2027" (AR)
+
+APPLIES TO:
+- LEXO for IELTS (all tiers: Intro, Advanced, Comprehensive)
+- LEXO for English (all packages)
+
+TESTING:
+- Enroll in LEXO for IELTS
+- Verify enrollment_date records correctly
+- Verify expiry_date = enrollment_date + 1 year
+- Verify countdown displays correctly
+- Verify countdown updates daily
+- Enroll in LEXO for English
+- Verify same expiry system works for English course
+- Verify renewal flow works for both courses
+- Test expired subscription (simulate date forward)
+- Verify messages display in AR + EN for both courses
+
+Build subscription expiry system for both LEXO for IELTS and LEXO for English now.

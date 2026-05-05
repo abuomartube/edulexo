@@ -1,0 +1,71 @@
+FIX THE COURSE DETAIL PAGE - CRITICAL
+
+PROBLEM:
+When student clicks on IELTS tier card from dashboard, 
+it shows login page (❌ WRONG).
+
+SOLUTION:
+Build a course detail page that shows:
+
+1. VIDEO SECTION
+   - Course introduction video/teaser
+   - Engaging and professional presentation
+
+2. DESCRIPTIVE TEXT
+   - Clear explanation of what the course offers
+   - Course benefits and outcomes
+
+3. COURSE GOALS SECTION
+   - Display 3-4 main objectives
+   - What student will achieve
+
+4. ILLUSTRATIVE IMAGES
+   - Visual representations of course content
+   - Screenshots or diagrams showing course structure
+
+5. PREVIEW SECTION
+   - Sample lesson video clip
+   - Include downloadable lesson material/PDF file
+   - Show what students get
+
+6. FAQ SECTION
+   - Common questions about the course
+   - Accordion style (click to expand/collapse)
+
+7. STUDENT TESTIMONIALS
+   - Display student reviews and feedback
+   - Include student names, photos, and results
+   - Show before/after or achievement (e.g., "Band 7.5 ✓")
+   - Text + Image format
+
+8. REVIEW & COMMENT BOX
+   - Allow students to rate the course (star rating)
+   - Add comments/reviews
+   - Display existing reviews below
+
+9. CALL TO ACTION BUTTONS
+   - "Add to Cart" button
+   - "Buy Now" button
+   - At bottom and floating at bottom-right
+
+KEY REQUIREMENTS:
+- NO LOGIN PAGE - students view course details directly
+- NO REGISTRATION REQUIRED - just view and buy
+- When student clicks "Buy Now", redirect to checkout/payment
+- When student clicks "Add to Cart", add to shopping cart
+- Mobile responsive
+- Smooth animations and transitions
+- Professional and modern design
+
+DESIGN INSTRUCTION:
+Make the page look premium and engaging.
+Use the platform's core colors (blue #0a1f44/#123b75 and orange #ff8a00).
+Do NOT introduce new colors - stick to existing palette.
+Add visual polish, smooth animations, and professional touches.
+Keep it modern but not overdone.
+
+This page replaces the login redirect completely.
+Students go: Dashboard → Click Card → Course Detail Page
+Then: "Buy Now" → Payment/Checkout
+
+Build it now and show live preview.

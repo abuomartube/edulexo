@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1777635927013,
+      "tag": "0000_closed_mandarin",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777699271278,
+      "tag": "0001_intro_tables",
+      "breakpoints": true
+    }
+  ]
+}

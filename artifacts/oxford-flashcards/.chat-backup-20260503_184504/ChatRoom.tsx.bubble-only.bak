@@ -1,0 +1,1022 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams, useLocation } from "wouter";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  ArrowLeft,
+  Loader2,
+  Mic,
+  Send,
+  Image as ImageIcon,
+  Lightbulb,
+  Sparkles,
+  Users,
+  ShieldAlert,
+  Headphones,
+  RefreshCw,
+  MoreVertical,
+} from "lucide-react";
+import Header from "@/components/Header";
+import { useLanguage } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import {
+  fetchRoom,
+  fetchMessages,
+  sendTextMessage,
+  sendAttachmentMessage,
+  deleteMessage,
+  heartbeat,
+  fetchIceBreaker,
+  uploadFileAndGetPath,
+  containsArabic,
+  type ChatMessage,
+} from "@/lib/chat-api";
+import VoiceRecorder from "@/components/chat/VoiceRecorder";
+import MessageBubble from "@/components/chat-lovable/LovableMessageBubble";
+import TopicGenerator from "@/components/chat/TopicGenerator";
+
+function VoiceOnlyComingSoon({ slug }: { slug: string }) {
+  const { lang } = useLanguage();
+  void slug;
+  return (
+    <div
+      className="min-h-screen text-white relative"
+      style={{
+        background:
+          "radial-gradient(ellipse 80% 60% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 55%, #02040e 100%)",
+      }}
+    >
+      <Header />
+      <main className="relative max-w-md mx-auto px-4 py-10 text-center">
+        <Link
+          href="/chat"
+          className="inline-flex items-center gap-1 text-purple-300 text-sm mb-8"
+        >
+          <ArrowLeft size={16} className="rtl:rotate-180" />{" "}
+          {lang === "ar" ? "رجوع" : "Back"}
+        </Link>
+        <div className="rounded-[28px] bg-gradient-to-br from-slate-800/55 to-slate-900/65 backdrop-blur-2xl ring-1 ring-white/10 p-8 shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85),0_8px_24px_-8px_rgba(124,58,237,0.45),inset_0_1px_0_rgba(255,255,255,0.06)]">
+          <div className="mx-auto w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-700 flex items-center justify-center mb-6 shadow-[0_0_60px_rgba(124,58,237,0.55)] ring-8 ring-purple-500/20">
+            <Headphones size={56} />
+          </div>
+          <h1 className="text-2xl font-extrabold mb-2">
+            🎧 {lang === "ar" ? "غرفة الصوت فقط" : "Voice Only Room"}
+          </h1>
+          <span className="inline-block px-3 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-bold uppercase tracking-wider mb-4">
+            {lang === "ar"
+              ? "قريباً — المرحلة الثانية"
+              : "Coming Soon — Phase 2"}
+          </span>
+          <p className="text-purple-100 leading-relaxed text-sm mb-6">
+            {lang === "ar"
+              ? "محادثة صوتية مباشرة على غرار كلب هاوس. يستمع الجميع لمن يتحدث في الوقت الفعلي مع نظام رفع اليد ومُشرفين."
+              : "Live audio practice — Clubhouse-style. Everyone hears the speaker in real time, with raise-hand and moderator controls."}
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs text-purple-200">
+            <Feature label={lang === "ar" ? "WebRTC مباشر" : "Live WebRTC"} />
+            <Feature label={lang === "ar" ? "رفع اليد" : "Raise hand"} />
+            <Feature label={lang === "ar" ? "حد للمتحدث" : "Speaker limit"} />
+            <Feature label={lang === "ar" ? "كتم تلقائي" : "Auto-mute"} />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+function Feature({ label }: { label: string }) {
+  return (
+    <div className="rounded-xl bg-white/[0.05] backdrop-blur-xl ring-1 ring-white/10 px-3 py-2 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+      {label}
+    </div>
+  );
+}
+
+export default function ChatRoomPage() {
+  const params = useParams() as { slug: string };
+  const slug = params.slug;
+  const { lang } = useLanguage();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [, navigate] = useLocation();
+
+  const [stage, setStage] = useState<"preview" | "chat">("preview");
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [showTopic, setShowTopic] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
+  const [arabicWarn, setArabicWarn] = useState(false);
+  const lastTimeRef = useRef<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const roomQ = useQuery({
+    queryKey: ["chat-room", slug],
+    queryFn: () => fetchRoom(slug),
+  });
+  const room = roomQ.data?.room;
+
+  // Initial messages
+  useEffect(() => {
+    if (stage !== "chat" || !room) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await fetchMessages(slug);
+        if (cancelled) return;
+        setMessages(r.messages);
+        if (r.messages.length > 0) {
+          lastTimeRef.current = r.messages[r.messages.length - 1].createdAt;
+        }
+        scrollToBottom();
+      } catch (e) {
+        toast({ title: (e as Error).message, variant: "destructive" });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, slug, room?.id]);
+
+  // Polling + heartbeat
+  useEffect(() => {
+    if (stage !== "chat" || !room) return;
+    let stop = false;
+    const poll = async () => {
+      try {
+        const r = await fetchMessages(slug, lastTimeRef.current ?? undefined);
+        if (stop) return;
+        if (r.messages.length > 0) {
+          setMessages((prev) => {
+            const seen = new Set(prev.map((m) => m.id));
+            const merged = [...prev];
+            for (const m of r.messages) if (!seen.has(m.id)) merged.push(m);
+            return merged;
+          });
+          lastTimeRef.current = r.messages[r.messages.length - 1].createdAt;
+          requestAnimationFrame(scrollToBottom);
+        }
+      } catch {
+        /* ignore transient */
+      }
+    };
+    const beat = async () => {
+      try {
+        const h = await heartbeat(slug);
+        if (!stop) setOnlineCount(h.onlineCount);
+      } catch {
+        /* ignore */
+      }
+    };
+    void beat();
+    const pollId = window.setInterval(poll, 3000);
+    const beatId = window.setInterval(beat, 15000);
+    return () => {
+      stop = true;
+      window.clearInterval(pollId);
+      window.clearInterval(beatId);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, slug, room?.id]);
+
+  function scrollToBottom() {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }
+
+  async function handleSendText(e?: React.FormEvent) {
+    e?.preventDefault();
+    const text = input.trim();
+    if (!text || sending) return;
+    if (containsArabic(text)) {
+      setArabicWarn(true);
+      window.setTimeout(() => setArabicWarn(false), 3500);
+    }
+    setSending(true);
+    try {
+      const r = await sendTextMessage(slug, text);
+      setMessages((m) => [...m, r.message]);
+      lastTimeRef.current = r.message.createdAt;
+      setInput("");
+      requestAnimationFrame(scrollToBottom);
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleSendVoice(clip: {
+    blob: Blob;
+    mime: string;
+    durationSec: number;
+  }) {
+    const ext =
+      clip.mime === "audio/mp4"
+        ? "m4a"
+        : clip.mime === "audio/ogg"
+          ? "ogg"
+          : "webm";
+    const filename = `voice-${Date.now()}.${ext}`;
+    const objectPath = await uploadFileAndGetPath(
+      clip.blob,
+      filename,
+      clip.mime,
+    );
+    const r = await sendAttachmentMessage(slug, "voice", {
+      objectPath,
+      mime: clip.mime,
+      sizeBytes: clip.blob.size,
+      audioDurationSec: clip.durationSec,
+    });
+    setMessages((m) => [...m, r.message]);
+    lastTimeRef.current = r.message.createdAt;
+    setRecording(false);
+    requestAnimationFrame(scrollToBottom);
+  }
+
+  async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: lang === "ar" ? "الصور فقط" : "Only image files are allowed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: lang === "ar" ? "أقصى حجم 10 ميجا" : "Max image size is 10 MB",
+        variant: "destructive",
+      });
+      return;
+    }
+    setSending(true);
+    try {
+      const objectPath = await uploadFileAndGetPath(file, file.name, file.type);
+      const r = await sendAttachmentMessage(slug, "image", {
+        objectPath,
+        mime: file.type,
+        sizeBytes: file.size,
+      });
+      setMessages((m) => [...m, r.message]);
+      lastTimeRef.current = r.message.createdAt;
+      requestAnimationFrame(scrollToBottom);
+    } catch (err) {
+      toast({ title: (err as Error).message, variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleIceBreaker() {
+    try {
+      const r = await fetchIceBreaker();
+      setInput(r.icebreaker.en);
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
+    }
+  }
+
+  async function handleDelete(id: string) {
+    try {
+      await deleteMessage(id);
+      setMessages((m) =>
+        m.map((x) => (x.id === id ? { ...x, deleted: true, body: null } : x)),
+      );
+    } catch (e) {
+      toast({ title: (e as Error).message, variant: "destructive" });
+    }
+  }
+
+  const rules = useMemo<string[]>(() => {
+    const raw = lang === "ar" ? room?.rulesAr : room?.rulesEn;
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, [room, lang]);
+
+  if (roomQ.isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-gray-950">
+        <Loader2 className="animate-spin text-purple-500" size={32} />
+      </div>
+    );
+  }
+  if (!room) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-gray-950">
+        <Header />
+        <main className="max-w-md mx-auto p-8 text-center">
+          <p className="text-slate-700 dark:text-slate-300">Room not found</p>
+          <Link
+            href="/chat"
+            className="text-purple-600 dark:text-purple-400 underline mt-3 inline-block"
+          >
+            ← Back to chat
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  if (room.kind === "voice") {
+    return <VoiceOnlyComingSoon slug={slug} />;
+  }
+
+  // ───────────── PREVIEW STAGE ─────────────
+  if (stage === "preview") {
+    return (
+      <div
+        className="dark min-h-screen text-slate-100 relative"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 60% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 55%, #02040e 100%)",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at top, rgba(124,58,237,0.18), transparent 60%)",
+          }}
+        />
+        <Header />
+        <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-6">
+          <Link
+            href="/chat"
+            className="inline-flex items-center gap-1 text-purple-300 text-sm mb-4 font-semibold"
+          >
+            <ArrowLeft size={16} className="rtl:rotate-180" />{" "}
+            {lang === "ar" ? "رجوع" : "Back"}
+          </Link>
+
+          <div className="rounded-[28px] bg-gradient-to-br from-slate-800/55 to-slate-900/65 backdrop-blur-2xl ring-1 ring-white/10 overflow-hidden shadow-[0_30px_80px_-20px_rgba(0,0,0,0.85),0_8px_24px_-8px_rgba(124,58,237,0.35),inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <div className="bg-gradient-to-br from-purple-600/30 via-indigo-600/15 to-transparent p-6">
+              <div className="flex flex-col items-center text-center">
+                <div className="relative flex items-center justify-center mb-3">
+                  <SoundWaves side="left" />
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-4xl shadow-[0_0_50px_rgba(124,58,237,0.55)] mx-3">
+                    {room.emoji ?? "💬"}
+                  </div>
+                  <SoundWaves side="right" />
+                </div>
+                <h1 className="text-xl font-extrabold text-white">
+                  {lang === "ar" ? room.nameAr : room.nameEn}
+                </h1>
+                <div className="mt-2 flex items-center justify-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 font-semibold">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                    </span>
+                    {room.onlineCount} {lang === "ar" ? "متصل" : "Online"}
+                  </span>
+                  {room.level && (
+                    <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 font-mono">
+                      {room.level}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {(lang === "ar" ? room.descriptionAr : room.descriptionEn) && (
+              <div className="px-6 pb-5">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  {lang === "ar" ? "عن الغرفة" : "About"}
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {lang === "ar" ? room.descriptionAr : room.descriptionEn}
+                </p>
+              </div>
+            )}
+
+            {rules.length > 0 && (
+              <div className="px-6 pb-5 border-t border-white/10 pt-5">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <ShieldAlert size={12} className="text-purple-400" />
+                  {lang === "ar" ? "قواعد الغرفة" : "Room Rules"}
+                </h3>
+                <ul className="space-y-2">
+                  {rules.map((r, i) => (
+                    <li
+                      key={i}
+                      className="flex items-start gap-2 text-sm text-slate-200"
+                    >
+                      <span className="mt-0.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold">
+                        ✓
+                      </span>
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {(roomQ.data?.activeUsers?.length ?? 0) > 0 && (
+              <div className="px-6 pb-6 border-t border-white/10 pt-5">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">
+                  {lang === "ar" ? "الموجودون الآن" : "People inside now"}
+                </h3>
+                <div className="flex -space-x-2 rtl:space-x-reverse items-center">
+                  {(roomQ.data?.activeUsers ?? []).slice(0, 6).map((u) => (
+                    <div
+                      key={u.id}
+                      title={u.name}
+                      className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 text-white flex items-center justify-center text-xs font-bold border-2 border-slate-900"
+                    >
+                      {u.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  ))}
+                  {(roomQ.data?.activeUsers?.length ?? 0) > 6 && (
+                    <div className="ms-3 ps-3 text-xs text-slate-400 font-semibold">
+                      +{(roomQ.data?.activeUsers?.length ?? 0) - 6}{" "}
+                      {lang === "ar" ? "آخرون" : "more"}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex flex-col gap-3">
+            <button
+              onClick={() => setStage("chat")}
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl text-white font-bold transition hover:brightness-110 active:scale-[0.99] shadow-[0_18px_44px_-10px_rgba(124,58,237,0.7),0_4px_14px_-2px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.18)]"
+              style={{
+                background:
+                  "linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #4f46e5 100%)",
+              }}
+              type="button"
+            >
+              <Headphones size={18} />{" "}
+              {lang === "ar" ? "الانضمام إلى الغرفة" : "Join the Room"}
+            </button>
+            <button
+              onClick={() => setStage("chat")}
+              className="w-full text-center text-sm text-slate-400 hover:text-purple-300 py-2"
+              type="button"
+            >
+              {lang === "ar" ? "استمع أولاً" : "Listen first"}
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ───────────── CHAT STAGE ─────────────
+  const insiders = roomQ.data?.activeUsers ?? [];
+  return (
+    <div
+      className="dark min-h-screen flex flex-col text-slate-100"
+      style={{
+        background:
+          "radial-gradient(ellipse 90% 70% at 50% -10%, #1f1750 0%, #0d1330 28%, #060b1f 60%, #02040e 100%)",
+      }}
+    >
+      <header className="sticky top-0 z-30 backdrop-blur-2xl bg-slate-950/60 border-b border-white/10 px-3 sm:px-5 py-3 shadow-[0_8px_24px_-12px_rgba(0,0,0,0.7)]">
+        <div className="max-w-3xl mx-auto flex items-center gap-2">
+          <button
+            onClick={() => navigate("/chat")}
+            className="p-2 rounded-full hover:bg-white/10 text-slate-200 transition"
+            aria-label="Back"
+            type="button"
+          >
+            <ArrowLeft size={18} className="rtl:rotate-180" />
+          </button>
+          <div className="flex-1 min-w-0 text-center">
+            <h1 className="font-bold text-sm sm:text-base text-white truncate">
+              {lang === "ar" ? room.nameAr : room.nameEn}
+            </h1>
+            <div className="flex items-center justify-center gap-2 mt-1">
+              <div className="flex -space-x-1.5 rtl:space-x-reverse">
+                {insiders.slice(0, 3).map((u) => (
+                  <div
+                    key={u.id}
+                    title={u.name}
+                    className="w-5 h-5 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 border border-slate-950 text-[8px] font-bold text-white flex items-center justify-center"
+                  >
+                    {u.name.slice(0, 1).toUpperCase()}
+                  </div>
+                ))}
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                </span>
+                {messages.length === 0 ? 18 : (onlineCount ?? room.onlineCount)}{" "}
+                {lang === "ar" ? "متصل" : "online"}
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="w-9 h-9 rounded-full bg-white/[0.08] backdrop-blur-xl ring-1 ring-white/10 hover:bg-white/[0.14] text-purple-200 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition"
+            aria-label="Raise hand"
+            title={lang === "ar" ? "رفع اليد" : "Raise hand"}
+          >
+            ✋
+          </button>
+          <button
+            type="button"
+            className="w-9 h-9 rounded-full hover:bg-white/[0.1] text-slate-200 flex items-center justify-center transition"
+            aria-label="Menu"
+          >
+            <MoreVertical size={16} />
+          </button>
+        </div>
+        <div className="max-w-3xl mx-auto mt-2.5 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[10px] font-bold">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            English Only
+          </span>
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+            <Mic size={11} />
+            Hold mic to record
+          </div>
+        </div>
+      </header>
+
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-y-auto px-3 sm:px-5 py-4 max-w-3xl w-full mx-auto"
+      >
+        {messages.length === 0 && <DemoConversation lang={lang} />}
+        {messages.map((m) => (
+          <MessageBubble
+            key={m.id}
+            msg={m}
+            isMine={m.userId === user?.id}
+            canDelete={m.userId === user?.id || user?.role === "admin"}
+            onDelete={() => handleDelete(m.id)}
+            lang={lang}
+          />
+        ))}
+      </div>
+
+      {arabicWarn && (
+        <div className="max-w-3xl mx-auto w-full px-3 sm:px-5">
+          <div className="mb-2 px-3 py-2 rounded-xl bg-amber-500/10 backdrop-blur-xl ring-1 ring-amber-400/30 text-amber-200 text-xs flex items-center gap-2 shadow-[0_8px_24px_-10px_rgba(251,191,36,0.4)]">
+            <ShieldAlert size={14} />
+            {lang === "ar"
+              ? "حاول استخدام الإنجليزية فقط للحصول على أفضل ممارسة 💪"
+              : "Please try to use English only for the best practice 💪"}
+          </div>
+        </div>
+      )}
+
+      <footer className="sticky bottom-0 backdrop-blur-2xl bg-slate-950/70 border-t border-white/10 px-3 sm:px-5 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.7)]">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-2 mb-2.5 overflow-x-auto pb-1">
+            <ToolPill
+              onClick={() => setShowTopic(true)}
+              icon={<Sparkles size={13} />}
+              tone="purple"
+            >
+              Topic
+            </ToolPill>
+            <ToolPill
+              onClick={handleIceBreaker}
+              icon={<Lightbulb size={13} />}
+              tone="amber"
+            >
+              Ice Breaker
+            </ToolPill>
+            <ToolPill
+              onClick={handleIceBreaker}
+              icon={<RefreshCw size={13} />}
+              tone="cyan"
+            >
+              Rotate
+            </ToolPill>
+            <ToolPill
+              onClick={() => fileInputRef.current?.click()}
+              icon={<ImageIcon size={13} />}
+              tone="rose"
+            >
+              Image Talk
+            </ToolPill>
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={handleImagePick}
+          />
+          {recording ? (
+            <VoiceRecorder
+              onSend={handleSendVoice}
+              onCancel={() => setRecording(false)}
+            />
+          ) : (
+            <form
+              onSubmit={handleSendText}
+              dir="ltr"
+              className="flex items-center gap-2 rounded-full bg-white/[0.05] backdrop-blur-xl ring-1 ring-white/10 ps-3 pe-1.5 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_8px_24px_-12px_rgba(0,0,0,0.7)]"
+            >
+              <span className="text-lg select-none">😊</span>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type a message…"
+                className="flex-1 bg-transparent border-none focus:outline-none text-sm text-slate-100 placeholder:text-slate-500"
+                maxLength={2000}
+              />
+              {input.trim() ? (
+                <button
+                  type="submit"
+                  disabled={sending}
+                  className="w-9 h-9 rounded-full text-white flex items-center justify-center disabled:opacity-50 transition hover:brightness-110 active:scale-95 shadow-[0_8px_22px_-6px_rgba(124,58,237,0.7)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                  }}
+                  aria-label="Send"
+                >
+                  {sending ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} className="rtl:rotate-180" />
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setRecording(true)}
+                  className="w-9 h-9 rounded-full text-white flex items-center justify-center transition hover:brightness-110 active:scale-95 shadow-[0_8px_22px_-6px_rgba(124,58,237,0.7)]"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+                  }}
+                  aria-label="Record voice note"
+                >
+                  <Mic size={16} />
+                </button>
+              )}
+            </form>
+          )}
+        </div>
+      </footer>
+
+      {showTopic && (
+        <TopicGenerator
+          onClose={() => setShowTopic(false)}
+          onUseAsMessage={(t) => setInput(t)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SoundWaves({ side }: { side: "left" | "right" }) {
+  const heights = side === "left" ? [10, 18, 26, 14] : [14, 26, 18, 10];
+  return (
+    <div className="flex items-end gap-1 h-12">
+      {heights.map((h, i) => (
+        <span
+          key={i}
+          className="w-1 rounded-full bg-gradient-to-t from-purple-500 to-indigo-400 opacity-80"
+          style={{ height: `${h * 2}px` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ───────────── DEMO CONVERSATION ─────────────
+type DemoUser = {
+  name: string;
+  initials: string;
+  gradient: string;
+  nameColor: string;
+  online: boolean;
+  role?: "host";
+};
+
+const DEMO_USERS: Record<string, DemoUser> = {
+  omar: {
+    name: "Omar",
+    initials: "OM",
+    gradient: "from-purple-500 to-indigo-600",
+    nameColor: "text-purple-300",
+    online: true,
+    role: "host",
+  },
+  sara: {
+    name: "Sara",
+    initials: "SA",
+    gradient: "from-rose-500 to-pink-600",
+    nameColor: "text-rose-300",
+    online: true,
+  },
+  james: {
+    name: "James",
+    initials: "JA",
+    gradient: "from-cyan-500 to-blue-600",
+    nameColor: "text-cyan-300",
+    online: false,
+  },
+  lina: {
+    name: "Lina",
+    initials: "LI",
+    gradient: "from-emerald-500 to-teal-600",
+    nameColor: "text-emerald-300",
+    online: true,
+  },
+};
+
+function DemoConversation({ lang }: { lang: "en" | "ar" }) {
+  useEffect(() => {
+    console.log("Demo active");
+  }, []);
+
+  return (
+    <div className="space-y-1.5 pb-2">
+      {/* System: welcome pill */}
+      <DemoSystem
+        text={
+          lang === "ar"
+            ? "مرحباً بك في الغرفة 👋 الرجاء استخدام الإنجليزية فقط"
+            : "Welcome to the room 👋 Please try to use English only"
+        }
+      />
+
+      {/* Omar (host) — text */}
+      <DemoIncoming user={DEMO_USERS.omar!} time="10:21 AM">
+        <p className="text-sm">Hi everyone! 👋 How was your weekend?</p>
+      </DemoIncoming>
+
+      {/* Sara — text + reaction + seen */}
+      <DemoIncoming
+        user={DEMO_USERS.sara!}
+        time="10:22 AM"
+        reaction="❤️"
+        reactionCount={2}
+      >
+        <p className="text-sm">
+          It was great! I went hiking with my friends 🏞️
+        </p>
+      </DemoIncoming>
+
+      {/* You — voice (outgoing, gradient + waveform + seen) */}
+      <DemoOutgoing time="10:22 AM" seen>
+        <DemoVoice durationLabel="0:18" />
+      </DemoOutgoing>
+
+      {/* James — file (PDF) */}
+      <DemoIncoming user={DEMO_USERS.james!} time="10:23 AM">
+        <DemoFile name="Useful Phrases.pdf" size="1.2 MB" />
+      </DemoIncoming>
+
+      {/* Lina — image + reaction */}
+      <DemoIncoming
+        user={DEMO_USERS.lina!}
+        time="10:24 AM"
+        reaction="❤️"
+        reactionCount={3}
+      >
+        <DemoImage />
+        <p className="text-sm mt-2">Let's talk about this picture!</p>
+      </DemoIncoming>
+
+      {/* System: english-only nudge (warm yellow) */}
+      <DemoSystem
+        tone="amber"
+        text={
+          lang === "ar"
+            ? "حاول استخدام الإنجليزية فقط للحصول على أفضل ممارسة 💪"
+            : "Please try to use English only 💪"
+        }
+      />
+    </div>
+  );
+}
+
+function DemoSystem({
+  text,
+  tone = "neutral",
+}: {
+  text: string;
+  tone?: "neutral" | "amber";
+}) {
+  const cls =
+    tone === "amber"
+      ? "bg-amber-400/15 backdrop-blur-xl ring-1 ring-amber-300/30 text-amber-200 shadow-[0_8px_24px_-12px_rgba(251,191,36,0.45)]"
+      : "bg-white/[0.06] backdrop-blur-xl ring-1 ring-white/10 text-slate-300";
+  return (
+    <div className="my-3 flex justify-center">
+      <div className={`text-[11px] px-3.5 py-1.5 rounded-full ${cls}`}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+function DemoAvatar({ user }: { user: DemoUser }) {
+  return (
+    <div className="relative shrink-0">
+      <div
+        className={`w-8 h-8 rounded-full bg-gradient-to-br ${user.gradient} text-white flex items-center justify-center text-[11px] font-bold ring-2 ring-white/10 shadow-[0_6px_14px_-6px_rgba(0,0,0,0.6)]`}
+      >
+        {user.initials}
+      </div>
+      {user.online && (
+        <span className="absolute -bottom-0.5 -end-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
+      )}
+    </div>
+  );
+}
+
+function DemoIncoming({
+  user,
+  time,
+  children,
+  reaction,
+  reactionCount,
+}: {
+  user: DemoUser;
+  time: string;
+  children: React.ReactNode;
+  reaction?: string;
+  reactionCount?: number;
+}) {
+  return (
+    <div className="flex gap-2 my-2.5 items-end">
+      <DemoAvatar user={user} />
+      <div className="max-w-[78%] flex flex-col items-start">
+        <span className={`text-[11px] font-bold mb-1 px-1 ${user.nameColor}`}>
+          {user.name}
+          {user.role === "host" && (
+            <span className="ms-1.5 px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 text-[9px] uppercase tracking-wide">
+              Host
+            </span>
+          )}
+        </span>
+        <div className="relative">
+          <div className="px-3.5 py-2.5 rounded-2xl rounded-bl-md bg-white/[0.06] backdrop-blur-xl ring-1 ring-white/10 text-slate-100 shadow-[0_8px_22px_-12px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.04)]">
+            {children}
+            <div className="mt-1 text-[10px] text-slate-400">{time}</div>
+          </div>
+          {reaction && (
+            <div className="absolute -bottom-2 -end-2 px-1.5 py-0.5 rounded-full bg-slate-900/90 ring-1 ring-white/10 text-[10px] flex items-center gap-0.5 shadow-[0_4px_10px_-2px_rgba(0,0,0,0.6)]">
+              <span>{reaction}</span>
+              {reactionCount && (
+                <span className="text-slate-300 font-semibold">
+                  {reactionCount}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemoOutgoing({
+  time,
+  children,
+  seen,
+}: {
+  time: string;
+  children: React.ReactNode;
+  seen?: boolean;
+}) {
+  return (
+    <div className="flex gap-2 my-2.5 items-end flex-row-reverse">
+      <div className="max-w-[78%] flex flex-col items-end">
+        <span className="text-[11px] font-bold mb-1 px-1 text-purple-200">
+          You
+        </span>
+        <div
+          className="px-3.5 py-2.5 rounded-2xl rounded-br-md text-white shadow-[0_10px_28px_-10px_rgba(124,58,237,0.65),inset_0_1px_0_rgba(255,255,255,0.18)]"
+          style={{
+            background:
+              "linear-gradient(135deg, #7c3aed 0%, #6366f1 60%, #4f46e5 100%)",
+          }}
+        >
+          {children}
+          <div className="mt-1 flex items-center justify-end gap-1 text-[10px] text-white/80">
+            <span>{time}</span>
+            {seen && (
+              <span className="text-cyan-200 font-bold tracking-tighter">
+                ✓✓
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DemoVoice({ durationLabel }: { durationLabel: string }) {
+  const bars = [4, 8, 14, 10, 18, 22, 16, 12, 20, 14, 8, 16, 22, 12, 6];
+  return (
+    <div className="flex items-center gap-2 min-w-[180px]">
+      <button
+        type="button"
+        className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md ring-1 ring-white/30 flex items-center justify-center text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
+        aria-label="Play"
+      >
+        ▶
+      </button>
+      <div className="flex items-end gap-[2px] h-6 flex-1">
+        {bars.map((h, i) => (
+          <span
+            key={i}
+            className="w-[3px] rounded-full bg-white/80"
+            style={{ height: `${h}px` }}
+          />
+        ))}
+      </div>
+      <span className="text-[11px] font-semibold text-white/90 tabular-nums">
+        {durationLabel}
+      </span>
+    </div>
+  );
+}
+
+function DemoFile({ name, size }: { name: string; size: string }) {
+  return (
+    <div className="flex items-center gap-2.5 min-w-[200px]">
+      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white text-[10px] font-extrabold shadow-[0_6px_14px_-4px_rgba(244,63,94,0.5)]">
+        PDF
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-slate-100 truncate">{name}</p>
+        <p className="text-[10px] text-slate-400">{size}</p>
+      </div>
+    </div>
+  );
+}
+
+function DemoImage() {
+  return (
+    <div className="rounded-xl overflow-hidden ring-1 ring-white/10 shadow-[0_8px_22px_-8px_rgba(0,0,0,0.7)] max-w-[240px]">
+      <div
+        className="w-full h-[140px] relative"
+        style={{
+          background:
+            "linear-gradient(135deg, #6d28d9 0%, #1e3a8a 40%, #0f172a 100%)",
+        }}
+      >
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 30% 30%, rgba(251,191,36,0.45), transparent 50%), radial-gradient(circle at 70% 80%, rgba(236,72,153,0.35), transparent 55%)",
+          }}
+        />
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+        <span className="absolute bottom-2 left-2.5 text-[10px] font-bold text-white/90 tracking-wide">
+          🌅 Sunset over the bay
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function ToolPill({
+  children,
+  icon,
+  onClick,
+  tone,
+}: {
+  children: React.ReactNode;
+  icon: React.ReactNode;
+  onClick: () => void;
+  tone: "purple" | "amber" | "cyan" | "rose";
+}) {
+  const toneClasses: Record<typeof tone, string> = {
+    purple:
+      "bg-purple-500/15 text-purple-200 hover:bg-purple-500/25 ring-purple-400/25 shadow-[0_6px_16px_-8px_rgba(168,85,247,0.6)]",
+    amber:
+      "bg-amber-500/15 text-amber-200 hover:bg-amber-500/25 ring-amber-400/25 shadow-[0_6px_16px_-8px_rgba(251,191,36,0.5)]",
+    cyan: "bg-cyan-500/15 text-cyan-200 hover:bg-cyan-500/25 ring-cyan-400/25 shadow-[0_6px_16px_-8px_rgba(34,211,238,0.5)]",
+    rose: "bg-rose-500/15 text-rose-200 hover:bg-rose-500/25 ring-rose-400/25 shadow-[0_6px_16px_-8px_rgba(244,63,94,0.5)]",
+  };
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition ring-1 backdrop-blur-xl ${toneClasses[tone]}`}
+    >
+      {icon}
+      {children}
+    </button>
+  );
+}

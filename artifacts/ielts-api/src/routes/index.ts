@@ -1,0 +1,62 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import flashcardsRouter from "./flashcards";
+import vocabPdfRouter from "./vocab-pdf";
+import planPdfRouter from "./plan-pdf";
+import authRouter from "./auth";
+import essayCheckRouter from "./essay-check";
+import storiesRouter from "./stories";
+import storyExercisesRouter from "./story-exercises";
+import speakingRouter from "./speaking";
+import notificationsRouter from "./notifications";
+import adminNotificationsRouter from "./admin-notifications";
+import adminAiUsageRouter from "./admin-ai-usage";
+import adminDataFixesRouter from "./admin-data-fixes";
+import lexoAiRouter from "./lexo-ai";
+import orwellRouter from "./orwell";
+import lessonsRouter from "./lessons";
+import sentenceCheckRouter from "./sentence-check";
+import sentenceSessionsRouter from "./sentence-sessions";
+import spellItRouter from "./spell-it";
+import ssoRouter from "./sso";
+import introAuthRouter from "./intro-auth";
+import whisperRouter from "./whisper";
+import conversationRouter from "./conversation";
+import introListeningRouter, {
+  listeningAdminRouter,
+  listeningStorageRouter,
+} from "./intro-listening";
+import introReadingRouter, { readingAdminRouter } from "./intro-reading";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(ssoRouter);
+router.use(introAuthRouter);
+router.use(whisperRouter);
+router.use(conversationRouter);
+router.use(authRouter);
+router.use(flashcardsRouter);
+router.use(vocabPdfRouter);
+router.use(planPdfRouter);
+router.use(essayCheckRouter);
+router.use(storiesRouter);
+router.use(storyExercisesRouter);
+router.use(speakingRouter);
+router.use(notificationsRouter);
+router.use(adminNotificationsRouter);
+router.use(adminAiUsageRouter);
+router.use(adminDataFixesRouter);
+router.use(lexoAiRouter);
+router.use(orwellRouter);
+router.use(lessonsRouter);
+router.use(sentenceCheckRouter);
+router.use(sentenceSessionsRouter);
+router.use(spellItRouter);
+router.use(introListeningRouter);
+router.use(listeningAdminRouter);
+router.use(listeningStorageRouter);
+router.use(introReadingRouter);
+router.use(readingAdminRouter);
+
+export default router;

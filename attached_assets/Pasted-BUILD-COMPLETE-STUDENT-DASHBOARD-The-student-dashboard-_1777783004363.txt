@@ -1,0 +1,175 @@
+BUILD COMPLETE STUDENT DASHBOARD
+
+The student dashboard is currently empty. Add all essential features:
+
+MAIN DASHBOARD SECTIONS:
+
+1. ACCOUNT INFORMATION
+   - Display student name
+   - Email address
+   - Account creation date
+   - Member since badge
+
+2. ENROLLED COURSES
+   - Show all courses student purchased
+   - Display course progress
+   - Course completion percentage
+   - Time spent in each course
+   - Quick launch buttons for each course
+
+3. SUBSCRIPTION STATUS
+   - Enrollment date display
+   - Expiry date countdown (1 year from enrollment)
+   - Days remaining until expiration
+   - Visual countdown timer
+   - Renewal button when approaching expiry
+   - Active/Expired status indicator
+
+4. PROFILE SECTION
+   - Student profile picture (upload/change photo)
+   - Full name
+   - Bio/About me section
+   - Level/Tier (Intro/Advanced/Comprehensive)
+   - Learning statistics
+   - Edit profile button
+
+5. SETTINGS
+   - Change email
+   - Change password
+   - Language preferences (EN/AR)
+   - Notification settings
+   - Privacy settings
+   - Account preferences
+
+6. NOTIFICATIONS & MESSAGES
+   - Notification center
+   - Unread messages badge
+   - Message history
+   - Important alerts
+   - Course updates
+
+7. PAYMENT & INVOICES
+   - Payment history
+   - Download invoices
+   - Payment method display
+   - Transaction details
+   - Refund status (if applicable)
+
+8. SUPPORT & HELP
+   - Support tickets system
+   - Submit new ticket/complaint
+   - View ticket history
+   - Chat with support
+   - FAQ section
+   - Contact form
+
+9. ZOOM INTEGRATION (LIVE SESSIONS)
+   - Admin can add Zoom session links
+   - Display upcoming Zoom sessions/classes
+   - Session schedule and timing
+   - One-click join button
+   - Session countdown timer
+   - Automatic reminder notification before session starts
+   - Session recording links (if available)
+   - Add to calendar function
+
+10. ENGAGEMENT ALERTS
+    - Alert if student hasn't entered a course in 24 hours
+    - Notification message: "You haven't visited [Course Name] in 24 hours"
+    - Push notification
+    - Email notification option
+    - Dismiss/Snooze option
+
+ADDITIONAL FEATURES:
+
+PROFILE DATA FIELDS:
+- Profile picture with upload capability
+- Full name
+- Email (editable)
+- Phone number (optional)
+- Bio/About me
+- Learning level
+- Goals
+- Progress statistics
+- Member since date
+
+EMAIL CHANGE:
+- Current email display
+- Verify old email before change
+- Enter new email
+- Confirmation link sent to new email
+- Update email address
+
+SUBSCRIPTION COUNTDOWN:
+- Enrollment Date: Display when user enrolled
+- Expiry Date: Display exactly 1 year from enrollment
+- Days Remaining: Live countdown
+- Percentage progress bar
+- Renewal button appears 30 days before expiry
+- Urgent notification when less than 7 days remain
+
+ZOOM SESSION MANAGEMENT:
+- Admin adds Zoom links with:
+  - Session title
+  - Date and time
+  - Duration
+  - Zoom meeting URL
+  - Description/Topic
+  
+- Student dashboard displays:
+  - Upcoming sessions list
+  - Session countdown timer
+  - Join button (enabled 5 minutes before session)
+  - Session details
+  - Automatic reminder (15 min before, 1 hour before)
+  - Post-session recording (if available)
+  - Add to device calendar
+
+24-HOUR INACTIVITY ALERT:
+- Track last login/access to each course
+- If no access in 24 hours:
+  - Display notification on dashboard
+  - Send push notification
+  - Send optional email
+  - Show which course not visited
+  - Quick access link to course
+
+DASHBOARD LAYOUT:
+- Welcome message personalized with student name
+- Summary cards showing:
+  - Total courses enrolled
+  - Current streak/engagement
+  - Certificates earned
+  - Next session (if any)
+  - Days remaining in subscription
+  
+- Quick action buttons:
+  - Continue learning
+  - Join live session
+  - View invoices
+  - Edit profile
+  - Contact support
+
+DESIGN REQUIREMENTS:
+- Keep platform design consistency
+- Use existing color scheme
+- Modern and clean layout
+- Mobile responsive
+- Fast loading
+- Easy navigation
+- Professional appearance
+
+TECHNICAL REQUIREMENTS:
+- Real-time countdown timers
+- Automatic notifications
+- Database integration for user data
+- Email notification system
+- Push notification system
+- Integration with Zoom API (or manual link management)
+- Activity tracking
+- Data security and privacy
+
+Build this complete dashboard now.
+Make it fully functional.
+Show live preview.
+Ensure all features work correctly.

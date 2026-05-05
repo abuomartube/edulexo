@@ -1,0 +1,89 @@
+Important: AI feedback must stay private.
+
+Goal:
+AI feedback should be private during the chat, and after the student leaves/finishes the chat, they can see a full private feedback report for their whole chat session.
+
+Core rules:
+1. Correct / Translate / Explain results must appear only inside LearnPanel.
+2. Do not post AI feedback into the public chat.
+3. Other students must never see a user’s AI feedback.
+4. Keep AI feedback private to the current user only.
+
+Part A — AI Feedback toggle:
+1. Add a simple user control:
+   - AI Feedback: On / Off
+2. Default: On
+3. Store preference locally using localStorage for now.
+4. If Off:
+   - Hide learning action buttons under messages.
+   - Do not call AI endpoints.
+5. If On:
+   - Show learning action buttons as currently designed.
+
+Part B — Full private chat feedback report:
+After the student finishes or leaves the chat room, they should be able to open a private report for their own conversation.
+
+Report should include:
+1. Text messages written by the student.
+2. Voice messages sent by the student if transcripts already exist.
+3. If voice transcripts do not exist yet, show:
+   - “Voice feedback coming soon”
+   - Arabic: “تقييم الرسائل الصوتية قريبًا”
+4. Overall writing feedback:
+   - common grammar mistakes
+   - vocabulary suggestions
+   - fluency/naturalness suggestions
+   - 3 practical tips for improvement
+5. Do not show other students’ messages in the report.
+6. Do not make the report public.
+7. Do not add report results as chat messages.
+
+UI:
+1. Add a private button in the chat room header:
+   - EN: “My Feedback”
+   - AR: “تقييمي”
+2. Opens a private modal/panel.
+3. The panel shows:
+   - loading state
+   - feedback report
+   - error state
+4. Keep design consistent with LEXO glassmorphism.
+5. Keep mobile clean.
+
+Backend:
+1. Create a private endpoint for the current user’s chat-room feedback report.
+2. Use existing auth/session.
+3. Input:
+   - roomId or roomSlug
+4. Collect only the current user’s messages from that room.
+5. Generate feedback using AI from the user’s own messages only.
+6. Return structured JSON:
+   {
+     summary: string,
+     commonMistakes: string[],
+     vocabularySuggestions: string[],
+     fluencySuggestions: string[],
+     practicalTips: string[],
+     voiceNote: string | null
+   }
+7. Do not expose any other user’s messages.
+8. Add validation, timeout, and friendly errors.
+9. Add tests proving:
+   - unauthenticated request returns 401
+   - invalid room returns 400 or 404
+   - endpoint uses only current user messages
+   - empty user messages returns a friendly empty report
+
+Important:
+- Do not redesign the whole chat.
+- Do not change public chat behavior.
+- Do not change message sending.
+- Do not create public AI messages.
+- Keep Correct / Translate / Explain unchanged except for the visibility toggle.
+
+After:
+- Run typecheck.
+- Run tests.
+- Check logs.
+- Run code review.
+- Report exactly what changed.

@@ -1,0 +1,213 @@
+Build a complete Admin Dashboard for the platform.
+
+Goal:
+The admin must be able to manage the whole EduLexo platform from one place.
+
+Important:
+- Do NOT break existing user/student pages
+- Do NOT change current public design
+- Keep the admin dashboard separate
+- Route: /admin
+- Admin access only
+- If role system exists, use admin role
+- If not, create placeholder role protection
+
+Admin Dashboard must include:
+
+1. Overview Dashboard
+- Total students
+- Active students today
+- Total courses
+- Total enrollments
+- Revenue summary
+- New registrations
+- Recent activity
+- Quick action cards
+
+2. Students Management
+- View all students
+- Search students
+- Filter by course / level / status
+- Student profile
+- Enrollment history
+- Progress
+- Last login
+- Chat activity
+- Voice minutes
+- Notes about student
+- Activate / deactivate student
+
+3. Courses Management
+- Add course
+- Edit course
+- Delete / hide course
+- Course title
+- Level
+- Description
+- Price
+- Discount
+- Status: active / draft / hidden
+- Course image
+- Connected lessons
+- Connected books / PDFs
+
+4. Packages / Plans Management
+- Manage Lexo For English packages:
+  A1 → B1
+  B1+ → C1
+  A1 → C1
+
+- Manage Lexo For IELTS packages:
+  Lexo for Intro
+  Lexo for Advanced
+  Lexo for All-in-one
+
+- Set price
+- Set discount
+- Set badge like Best Value
+- Enable / disable package
+
+5. Lessons Management
+- Add lesson
+- Edit lesson
+- Delete / hide lesson
+- Upload video
+- Upload PDF
+- Attach exercises
+- Attach vocabulary
+- Mark lesson as free / paid
+- Organize lesson order
+
+6. Books / PDF Library
+- Upload Student Book
+- Upload Workbook
+- Upload answer key
+- Assign books to courses
+- Preview files
+- Download files
+- Replace file
+- Hide / publish file
+
+7. Chat Management
+- View chat rooms
+- Create room
+- Edit room
+- Delete / hide room
+- Room name
+- Level
+- Type: text / voice / IELTS / general
+- Online users
+- Room rules
+- Daily challenge
+- English-only mode
+- Moderate messages
+- Delete inappropriate messages
+- Pin message
+- Broadcast message
+
+8. AI / Feedback Management
+- View AI corrections usage
+- View common student mistakes
+- Manage feedback prompts
+- Enable / disable AI feedback
+- Set limits per student
+- Monitor sentence correction activity
+
+9. Progress & Analytics
+- Student progress reports
+- Course completion rates
+- Lesson views
+- Exercise completion
+- Chat participation
+- Voice minutes
+- Daily challenge completion
+- Most active students
+- Weak areas by student
+
+10. Orders / Payments
+- View orders
+- Payment status
+- Paid / pending / failed
+- Student name
+- Course/package purchased
+- Amount
+- Discount used
+- Invoice/payment reference
+- Refund status
+- Export orders
+
+11. Coupons / Discounts
+- Create coupon
+- Discount percentage
+- Expiry date
+- Usage limit
+- Apply to specific course/package
+- Active / inactive
+
+12. Notifications
+- Send notification to all students
+- Send notification to specific course students
+- Send email / platform notification
+- Announcement title
+- Message body
+- Schedule announcement
+- Notification history
+
+13. Support / Messages
+- Student support requests
+- Contact forms
+- Reply status
+- Assign status: open / replied / closed
+- Notes
+
+14. Content Moderation
+- Flagged messages
+- Reported users
+- Deleted content log
+- Admin action history
+
+15. Settings
+- Platform name
+- Logo
+- Brand colors
+- Language settings
+- Payment settings placeholder
+- Email settings placeholder
+- Chat settings
+- Maintenance mode
+
+16. Admin Roles
+- Super Admin
+- Course Manager
+- Support Agent
+- Teacher
+- Permissions per role
+
+17. Security / Logs
+- Admin login history
+- Important admin actions
+- Deleted items log
+- Failed payment logs
+- Error logs placeholder
+
+Design Requirements:
+- Professional admin layout
+- Sidebar navigation
+- Top bar
+- Cards and tables
+- Search and filters
+- Clean Arabic RTL support
+- English support if language is switched
+- Responsive desktop-first design
+- Do not make it childish
+- Use EduLexo brand style
+
+Start with:
+- Admin layout
+- Sidebar
+- Overview Dashboard
+- Students Management
+- Courses Management
+
+Do not build everything at once.
+Create the structure first, then we continue module by module.

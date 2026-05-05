@@ -1,0 +1,293 @@
+CRITICAL: REDESIGN CHAT TO MATCH IMAGE EXACTLY
+
+The current chat design does NOT match the provided design image.
+
+You must rebuild the chat UI to match the design image PIXEL-PERFECT.
+
+COMPARISON - CURRENT vs REQUIRED:
+
+CURRENT STATE (❌ WRONG):
+- Design doesn't match image
+- Layout is different
+- Colors/styling is off
+- Navigation structure differs
+- Component arrangement wrong
+
+REQUIRED STATE (✅ CORRECT):
+- Must match provided design image 100%
+- Same layout structure
+- Same color scheme
+- Same typography
+- Same icons/badges
+- Same component positioning
+- Pixel-perfect alignment
+
+═══════════════════════════════════════════════════════════════════
+
+DESIGN IMAGE BREAKDOWN:
+
+The provided design image shows:
+
+LEFT SIDEBAR:
+- "LEXO Chat" logo + title
+- "English Practice Community" subtitle
+- Arabic subtitle
+- Feature highlights with icons
+- LEXO FOR ENGLISH section with tiers
+- LEXO FOR IELTS section with tiers
+- Bottom navigation [Rooms | Messages | Profile]
+
+CENTER PANEL 1 (Rooms List):
+- 🔍 Search bar
+- Filter tabs [All] [Speaking] [Voice] [IELTS] [Casual]
+- Room cards with:
+  ├─ Icon
+  ├─ Name
+  ├─ Online count (👥 XX online)
+  └─ Status badge ([Enroll/Join])
+
+CENTER PANEL 2 (Room Preview):
+- ← Back button
+- Room name
+- Online count
+- Level info (A1 → B1, B1+ → C1)
+- About Room section
+- Rules section
+- People inside (avatars)
+- [🎧 Listen First] [🎤 Join & Speak] buttons
+
+CENTER PANEL 3 (Chat Screen):
+- Top bar (name, online count, controls)
+- Chat messages area
+- Tools: [🎯 Topic] [🧊 Ice Breaker] [🔄 Rotate] [🖼️ Image]
+- Input box
+- Voice message button
+
+RIGHT PANEL (Speaking Room):
+- "Speaking Room - Intermediate" header
+- Online count with avatars
+- "EN: English Only Mode ON"
+- Chat messages
+- Voice waveform indicator
+- User messages with timestamps
+- Message reactions
+- Tools bar
+- Input area with voice button
+
+BOTTOM SECTION (Additional Screens):
+- Voice Only Room
+- Topic Generator
+- Leaderboard
+- Settings
+- Profile
+
+═══════════════════════════════════════════════════════════════════
+
+REQUIRED DESIGN REBUILD:
+
+To match the image exactly, use these tools/approaches:
+
+OPTION A - DESIGN-TO-CODE (Recommended):
+✅ Use Figma → Export components
+✅ Tailwind CSS for styling
+✅ Component library (shadcn/ui or similar)
+✅ Exact color matching
+✅ Responsive grid layout
+
+OPTION B - CSS FRAMEWORK APPROACH:
+✅ Bootstrap Grid for layout
+✅ Custom CSS for exact styling
+✅ CSS variables for colors
+✅ Flexbox/Grid for alignment
+✅ BEM naming convention
+
+OPTION C - REACT COMPONENT LIBRARY:
+✅ Material-UI (MUI)
+✅ Chakra UI
+✅ shadcn/ui
+✅ React Bootstrap
+✅ Ant Design
+
+RECOMMENDED: Use Tailwind CSS + shadcn/ui
+- Fast development
+- Exact design matching
+- Responsive by default
+- Component reusability
+- Professional output
+
+═══════════════════════════════════════════════════════════════════
+
+SPECIFIC DESIGN ELEMENTS TO FIX:
+
+1. LAYOUT STRUCTURE
+   Current: ❌ Layout doesn't match
+   Required: ✅ 4-panel layout (Sidebar, List, Preview, Chat)
+   
+2. SIDEBAR STYLING
+   Current: ❌ Wrong colors/sizing
+   Required: ✅ Match image exactly
+   - Dark background
+   - Icon styling
+   - Text hierarchy
+   - Section organization
+   
+3. ROOM CARDS
+   Current: ❌ Different appearance
+   Required: ✅ Match image:
+   - Icon + name layout
+   - Online count display
+   - Status badge
+   - Join button placement
+   
+4. PREVIEW PANEL
+   Current: ❌ Layout differs
+   Required: ✅ Match image:
+   - Back button position
+   - Room info layout
+   - Rules display
+   - People avatars
+   - Action buttons
+   
+5. CHAT SCREEN
+   Current: ❌ Message display wrong
+   Required: ✅ Match image:
+   - Message bubbles
+   - User avatars
+   - Timestamps
+   - Voice indicator
+   - Reaction emojis
+   - Waveform display
+   
+6. INPUT AREA
+   Current: ❌ Wrong styling
+   Required: ✅ Match image:
+   - Text input field
+   - Voice button (large mic icon)
+   - Send button
+   - Attachment button
+   
+7. COLOR SCHEME
+   Current: ❌ Colors don't match
+   Required: ✅ Match image exactly:
+   - Background colors
+   - Text colors
+   - Accent colors
+   - Status indicators
+   
+8. TYPOGRAPHY
+   Current: ❌ Font sizes/weights wrong
+   Required: ✅ Match image:
+   - Header sizes
+   - Body text size
+   - Icon sizes
+   - Label styling
+   
+9. SPACING & ALIGNMENT
+   Current: ❌ Padding/margins off
+   Required: ✅ Match image:
+   - Component spacing
+   - Alignment precision
+   - Grid alignment
+   - Responsive spacing
+
+═══════════════════════════════════════════════════════════════════
+
+STEP-BY-STEP REBUILD PLAN:
+
+1. ANALYZE IMAGE
+   - Study layout structure
+   - Identify color palette
+   - Note typography
+   - Understand component arrangement
+
+2. CREATE DESIGN SYSTEM
+   - Define colors (exact hex codes from image)
+   - Define typography (fonts, sizes, weights)
+   - Define spacing scale
+   - Define component styles
+
+3. BUILD COMPONENTS
+   - Sidebar component
+   - Room card component
+   - Preview panel component
+   - Chat message component
+   - Input component
+   - Navigation bar
+
+4. LAYOUT
+   - Create 4-panel grid layout
+   - Responsive design
+   - Proper alignment
+   - Exact spacing
+
+5. STYLING
+   - Apply colors exactly
+   - Apply typography exactly
+   - Apply spacing exactly
+   - Apply icons exactly
+
+6. DETAILS
+   - Message timestamps
+   - Online indicators
+   - Status badges
+   - Reaction emojis
+   - Waveform visualizations
+
+7. TESTING
+   - Visual comparison with image
+   - Responsive testing
+   - Component interactions
+   - Real-time updates
+
+═══════════════════════════════════════════════════════════════════
+
+IMPLEMENTATION RECOMMENDATION:
+
+USE TAILWIND CSS + SHADCN/UI:
+
+Benefits:
+✅ Matches design quickly
+✅ Responsive by default
+✅ Professional appearance
+✅ Easy to customize
+✅ Component library ready
+✅ Fast development
+
+Steps:
+1. Install Tailwind CSS
+2. Install shadcn/ui
+3. Build components using shadcn
+4. Customize colors to match image
+5. Assemble into layout
+6. Test and refine
+
+═══════════════════════════════════════════════════════════════════
+
+CRITICAL REQUIREMENTS:
+
+❌ DO NOT approximate the design
+✅ DO match the image EXACTLY
+
+❌ DO NOT assume styling
+✅ DO verify each element matches
+
+❌ DO NOT skip details
+✅ DO implement all visual elements
+
+This is not about functionality - it's about design perfection.
+
+═══════════════════════════════════════════════════════════════════
+
+REDESIGN THE CHAT NOW:
+
+1. Study the provided design image carefully
+2. Identify each element and its styling
+3. Rebuild the UI to match exactly
+4. Use Tailwind CSS + shadcn/ui (recommended)
+5. Match colors, typography, spacing, icons
+6. Test against image
+7. Refine until pixel-perfect
+
+Show visual comparison when done.
+Compare current state vs image.
+Verify every element matches.

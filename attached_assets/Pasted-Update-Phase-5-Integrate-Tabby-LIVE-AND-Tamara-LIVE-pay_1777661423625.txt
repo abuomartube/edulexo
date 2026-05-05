@@ -1,0 +1,92 @@
+Update Phase 5 - Integrate Tabby (LIVE) AND Tamara (LIVE) payment methods.
+
+## PHASE 5: TABBY (LIVE) + TAMARA (LIVE) PAYMENT INTEGRATION
+
+Integrate both Tabby and Tamara LIVE for checkout flow.
+
+### PAYMENT PROVIDERS CREDENTIALS (LIVE)
+
+TABBY (LIVE):
+- Public Key: pk_0199be79-a704-0be2-06df-4181e024a6b2
+- Secret Key: sk_0199be79-a704-0be2-06df-41828f121c50
+- Merchant Code: TCI
+
+TAMARA (LIVE):
+- Merchant ID: e66269a7-6aa6-407b-aab1-8b62a34e0339
+- API URL: https://api.tamara.co
+- Merchant Key: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhY2NvdW50SWQiOiJlNjYyNjlhNy02YWE2LTQwN2ItYWFiMS04YjYyYTM0ZTAzMzkiLCJ0eXBlIjoibWVyY2hhbnQiLCJzYWx0IjoiODkxOTZkOTQtY2Y5Yi00MDQ5LTg1ZGUtNjc1OWQzOGNiMDIxIiwicm9sZXMiOlsiUk9MRV9NRVJDSEFOVCJdLCJpc010bHMiOmZhbHNlLCJpYXQiOjE3NjE4MjgyNDAsImlzcyI6IlRhbWFyYSBQUCJ9.p7vL9_IVD1-UAcrtK62O5QvUPGoBkGCpOyvvgZj6R7CjmFguEh93PBEGiPmZ7HKJ47F9WzwCDgJfpEP_PWnt-RypphBVHiHp6PT9qu_FdsWvz4M_FO-55QyYs1JwjjfSO7UHCPu-8Hbca7YylLOIMbDeLmWosxLm0eI6vrU8PYHeuJaOkgzcFvKRFFHEvLcSn2AsbG-NOAS8-Fr16cm4KBg16TVy4Al_h4HuzTtGEykJJmYCBaaO0pJZ-_TFCcmmQkOvswrWWqezcdtq54s9UvxJVCZ-y3NvxDyoQk2LeT0UDqGtmjyRji22vp3TxVkgp7VZHPlQVAolX78lDs2exw
+- Notification Token: e76d0026-8bda-454b-b277-b803b20413be
+- Public Key: f5d3586f-7f2d-4479-a3cd-0e769ef58013
+
+### CHECKOUT PAGE
+
+/checkout/[course-id]/[tier-id]
+
+Shows:
+1. Course details (name, tier, price SAR)
+2. Order summary
+3. Payment method selection:
+   - "Pay with Tabby" (Tabby logo)
+   - "Pay with Tamara" (Tamara logo)
+4. "Proceed to Payment" button
+5. Terms checkbox
+
+### FLOW
+
+**TABBY:**
+1. Select "Pay with Tabby"
+2. POST /api/checkout/tabby
+3. Redirect to Tabby portal
+4. Complete payment
+5. Webhook callback
+6. Mark enrollment "active"
+7. Send email
+8. Redirect to dashboard
+
+**TAMARA:**
+1. Select "Pay with Tamara"
+2. POST /api/checkout/tamara
+3. Redirect to Tamara portal
+4. Complete payment
+5. Webhook callback
+6. Mark enrollment "active"
+7. Send email
+8. Redirect to dashboard
+
+### DATABASE
+
+payments table:
+- id, user_id, course_id, tier_id, amount, payment_method, status, transaction_id, created_at, updated_at
+
+enrollments table:
+- Add payment_id (FK)
+- Add payment_status
+
+### API ENDPOINTS
+
+POST /api/checkout/tabby
+POST /api/checkout/tabby/callback
+POST /api/checkout/tamara
+POST /api/checkout/tamara/callback
+GET /api/payments (admin)
+
+### ADMIN FEATURES
+
+Payments tab:
+- View all payments
+- Filter by status/method
+- View transaction details
+
+### SECURITY
+
+- Store keys in environment variables
+- Verify webhook signatures
+- Validate amounts
+- Log all transactions
+
+### TESTING
+
+Test both payment methods thoroughly.
+These are LIVE credentials - be careful with amounts.
+
+Build complete Tabby (LIVE) + Tamara (LIVE) integration now.

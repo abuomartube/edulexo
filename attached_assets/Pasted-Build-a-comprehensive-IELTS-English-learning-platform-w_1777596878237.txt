@@ -1,0 +1,88 @@
+Build a comprehensive IELTS & English learning platform with the following structure:
+
+## 1. LANDING PAGE
+- Hero section showcasing two main products:
+  * LEXO FOR IELTS
+  * LEXO FOR ENGLISH
+- Features section highlighting platform benefits
+- Product cards with "View Details" buttons
+
+## 2. PRODUCT DETAIL PAGES
+- Each product has a dedicated page with:
+  * Detailed descriptions (text content)
+  * Hero images/screenshots
+  * Embedded video demonstrations (YouTube embeds)
+  * "Enroll Now" call-to-action button
+  * Clear value proposition
+
+## 3. ENROLLMENT & PAYMENT FLOW
+- Step 1: Student clicks "Enroll Now"
+- Step 2: Redirect to payment gateway
+  * Support: Tabby, Tamara, Visa/Stripe, Bank Transfer
+  * Show product price
+  * Display payment options
+- Step 3: After successful payment
+  * Send confirmation email
+  * Generate enrollment receipt
+  * Redirect to student dashboard
+
+## 4. STUDENT DASHBOARD
+- Display enrolled courses/products
+- Show course materials (organized by product)
+- Progress tracking (basic)
+- View enrollment details
+- Account settings/profile
+
+## 5. SIGN UP / AUTHENTICATION
+- Simple registration form (email, password, name, phone)
+- Email verification (optional but recommended)
+- Login system
+- Password reset functionality
+- Protected routes (only authenticated users can access dashboard)
+
+## 6. ADMIN DASHBOARD
+- Secure login (different from student login)
+- Manage Students:
+  * View all enrolled students
+  * Approve/Reject pending enrollments
+  * View enrollment status per student
+- Communication:
+  * Send bulk emails to students
+  * Send targeted emails (by course/status)
+- Analytics:
+  * Total sales revenue
+  * Number of enrollments per product
+  * Monthly revenue reports
+- Applicant Management:
+  * Queue of pending applications
+  * Approval/Rejection workflow
+  * Automated email notifications
+- Course/Product Management:
+  * Add/Edit product details
+  * Update prices
+  * Manage product images and videos
+
+## 7. TECHNICAL REQUIREMENTS
+- Stack: Node.js/Express (backend), React/HTML (frontend)
+- Database: Store students, enrollments, admin data
+- Email Integration: SendGrid or similar (send confirmation & admin emails)
+- Responsive design (mobile-friendly)
+- Arabic/English language support (bilingual UI ready)
+
+## 8. WORKFLOWS
+- Student Journey:
+  1. Visit landing page
+  2. View product details
+  3. Click "Enroll Now" → Payment
+  4. Complete payment → Confirmation email
+  5. Access dashboard → View course materials
+
+- Admin Journey:
+  1. Login to admin panel
+  2. View pending students
+  3. Approve/manage enrollments
+  4. Send communications
+  5. Monitor sales & analytics
+
+Start with the landing page and authentication, then payment integration, then admin panel.
+Keep the design clean, minimal, and professional (dark theme with gold/teal accents preferred).

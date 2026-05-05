@@ -1,0 +1,147 @@
+Fix and improve the cart + discount code system.
+
+Important:
+Do NOT break existing checkout or payment flow.
+Do NOT change course pages except where needed for cart behavior.
+
+1. Add Redeem / Discount Code in Cart Flow
+
+When a course is added to cart and user goes to cart page:
+
+Add a field:
+"Discount Code"
+
+Add button:
+"Redeem"
+
+Behavior:
+- User enters code
+- Clicks Redeem
+- Validate code
+- If valid: apply discount to cart total
+- If invalid: show clear error
+- If expired: show expired message
+- If not applicable to selected course: show message
+- If already used by this user: show message
+
+Show:
+- Subtotal
+- Discount amount
+- Total after discount
+
+2. Fix Checkout Button Logic
+
+Current issue:
+When cart has multiple courses, each course has its own checkout/payment button.
+
+Fix:
+- There must be only ONE checkout button for the whole cart
+- Even if the cart has multiple courses/packages
+- Button text:
+"Proceed to Checkout"
+
+Cart items should only have:
+- course title
+- price
+- remove button
+
+3. Payment Method Page
+
+When user reaches payment method selection page:
+
+Add button:
+"Back to Cart"
+
+Behavior:
+- Takes user back to /cart
+- Preserves cart items
+- Preserves applied discount code if valid
+
+4. Admin Discount Codes Management
+
+Add Admin module:
+"Discount Codes"
+
+Admin can create and manage discount codes.
+
+Fields:
+
+- Code name
+Example: IELTS20
+
+- Discount type:
+percentage / fixed amount
+
+- Discount value:
+Example: 20% or 100 SAR
+
+- Start date
+
+- End date
+
+- Option:
+Never expires
+
+- Scope:
+General code
+Specific course/package only
+
+- If specific:
+Select course/package
+
+- Total usage limit:
+Example: 100 uses
+
+- Usage limit per user:
+Example: 1 time per user
+
+- Option:
+One-time use per user ON/OFF
+
+- Status:
+Active / inactive
+
+5. Admin Discount Codes Table
+
+Show:
+- Code
+- Discount
+- Scope
+- Start date
+- End date / Never expires
+- Total used
+- Usage limit
+- Per-user limit
+- Status
+- Edit
+- Delete / deactivate
+
+6. Validation Rules
+
+A discount code is valid only if:
+- status is active
+- current date is after start date
+- current date is before end date OR never expires
+- usage limit not exceeded
+- user usage limit not exceeded
+- cart contains eligible course/package if code is course-specific
+
+7. UX Requirements
+
+- Cart page must look clean and premium
+- Discount field should be visible but not distracting
+- Show success toast:
+"Discount applied successfully"
+
+- Show discount line in summary:
+Discount Code: CODE_NAME
+Discount: -XX SAR
+
+8. Important
+
+- Do NOT create multiple checkout buttons
+- Do NOT apply expired codes
+- Do NOT allow users to reuse one-time codes
+- Do NOT allow course-specific codes on unrelated courses
+- Keep Arabic/English support
+- Keep RTL/LTR layout working

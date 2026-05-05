@@ -1,0 +1,99 @@
+modules = ["nodejs-24", "python-3.11", "postgresql-16"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[[ports]]
+localPort = 5173
+externalPort = 6000
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 8081
+externalPort = 80
+
+[[ports]]
+localPort = 8082
+externalPort = 3001
+
+[[ports]]
+localPort = 8083
+externalPort = 3003
+
+[[ports]]
+localPort = 8084
+externalPort = 5000
+
+[[ports]]
+localPort = 19123
+externalPort = 5173
+
+[[ports]]
+localPort = 22551
+externalPort = 6800
+
+[[ports]]
+localPort = 23227
+externalPort = 3000
+
+[[ports]]
+localPort = 23228
+externalPort = 8081
+
+[[ports]]
+localPort = 23567
+externalPort = 8000
+
+[[ports]]
+localPort = 24500
+externalPort = 3002
+
+[[ports]]
+localPort = 24600
+externalPort = 4200
+
+[[ports]]
+localPort = 26120
+externalPort = 8008
+
+[userenv]
+
+[userenv.shared]
+SSO_SHARED_SECRET = "2yQwCIR5ZyajD-nbLDL0Y9UHuAWG2bTwRqoanPjw8lo0bBtT11FfRn4AYRez4Ldw"
+TABBY_MODE = "live"
+TAMARA_MODE = "live"
+TABBY_MERCHANT_CODE = "TCI"
+TAMARA_LIVE_API_URL = "https://api.tamara.co"
+TAMARA_SANDBOX_API_URL = "https://api-sandbox.tamara.co"
+BANK_NAME = "Al Rajhi Bank"
+BANK_NAME_AR = "مصرف الراجحي"
+BANK_ACCOUNT_NAME = "TEST LIT company"
+BANK_ACCOUNT_NAME_AR = "شركة الاختبار الملهم"
+BANK_IBAN = "SA4680000133608016497687"
+BANK_SWIFT = "RJHISARI"
+EMAIL_FROM = "Abu Omar EduLexo <noreply@edulexo.com>"
+
+[userenv.production]
+ADMIN_EMAIL = "testlit2030@outlook.com"
+
+[nix]
+channel = "stable-25_05"

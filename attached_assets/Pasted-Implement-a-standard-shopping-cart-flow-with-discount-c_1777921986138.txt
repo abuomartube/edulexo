@@ -1,0 +1,83 @@
+Implement a standard shopping cart flow with discount code support.
+
+Goal:
+Do NOT send the visitor directly to payment after choosing a package.
+The visitor must add the package to cart, review it, optionally enter a discount code, then proceed to checkout.
+
+Required flow:
+Landing page → Package details page → Add to Cart → Cart page → Discount Code → Proceed to Checkout
+
+Cart requirements:
+1. Create or use route:
+   /cart
+   or
+   /lexo-english/cart
+
+2. Cart page must show:
+   - package name
+   - package level range
+   - original price
+   - discount amount if code is applied
+   - final price
+   - quantity fixed as 1
+   - remove button
+   - clear cart button
+   - proceed to checkout button
+
+3. Discount code:
+   - Add input field:
+     EN: Discount code
+     AR: كود الخصم
+   - Add button:
+     EN: Apply
+     AR: تطبيق
+   - Show success/error message
+   - If backend discount system exists, connect to it.
+   - If no backend exists, prepare the UI and logic but do not create fake active codes.
+   - Do not hardcode fake discount codes.
+
+4. Header:
+   - Add cart icon/button
+   - Show cart item count
+   - Clicking it opens the cart page
+
+5. Add to Cart:
+   - Add button on each package details page
+   - Button text:
+     EN: Add to Cart
+     AR: أضف إلى السلة
+
+6. Cart storage:
+   - If no cart backend exists, use localStorage for now.
+   - Store:
+     id
+     packageSlug
+     title
+     price
+     levelRange
+     checkoutUrl
+     discountCode if applied
+     discountAmount if validated
+
+7. Checkout:
+   - Proceed to Checkout should use the existing platform checkout/enrollment flow.
+   - Send/include the selected package and discount code if supported.
+   - Do NOT create a new payment system.
+
+Important:
+- Do not bypass the cart.
+- Do not send directly to payment from package selection.
+- Do not touch student video lessons.
+- Do not touch learning tools.
+- Keep EN/AR support.
+- Keep mobile-friendly design.
+
+After:
+- Run typecheck.
+- Check logs.
+- Report:
+  - cart route
+  - storage method
+  - discount code behavior
+  - files changed
+  - how checkout button works

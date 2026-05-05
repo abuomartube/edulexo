@@ -1,0 +1,238 @@
+Build a complete Discount Code System for the platform.
+
+Important:
+- Must integrate with Cart + Checkout
+- Must support multiple courses in cart
+- Must NOT break current payment flow
+
+------------------------------------
+
+1. Database Schema
+
+Create table: discount_codes
+
+Fields:
+- id
+- code (string, unique)
+- discount_type (percentage / fixed)
+- discount_value (number)
+- scope (general / course / package)
+- course_id (nullable)
+- package_id (nullable)
+- start_date
+- end_date
+- never_expires (boolean)
+- total_usage_limit (number, nullable)
+- usage_per_user (number, default 1)
+- first_purchase_only (boolean)
+- new_users_only (boolean)
+- is_active (boolean)
+- created_at
+
+------------------------------------
+
+Create table: discount_code_usages
+
+Fields:
+- id
+- discount_code_id
+- user_id
+- order_id (nullable)
+- used_at
+
+------------------------------------
+
+2. Cart Integration
+
+On Cart page:
+
+Add:
+- Input field: "Discount Code"
+- Button: "Redeem"
+
+When user clicks Redeem:
+
+Call API:
+POST /api/discount/validate
+
+Send:
+- code
+- user_id
+- cart_items (course_ids / package_ids)
+- cart_total
+
+------------------------------------
+
+3. Validation Logic (Backend)
+
+Validate in order:
+
+1. Code exists
+2. is_active = true
+3. Current date >= start_date
+4. Current date <= end_date OR never_expires = true
+5. total_usage_limit not exceeded
+6. user usage < usage_per_user
+7. Scope check:
+   - if general → OK
+   - if course → cart must include that course
+   - if package → cart must include that package
+8. If first_purchase_only:
+   - user must have 0 previous orders
+9. If new_users_only:
+   - user account must be new (define logic)
+
+------------------------------------
+
+4. Discount Calculation
+
+If valid:
+
+If percentage:
+discount = cart_total * (discount_value / 100)
+
+If fixed:
+discount = discount_value
+
+Rules:
+- Discount must NOT exceed cart total
+
+Return:
+- valid: true
+- discount_amount
+- code
+- message
+
+------------------------------------
+
+5. Cart UI Update
+
+After applying:
+
+Show:
+- Subtotal
+- Discount (CODE_NAME)
+- Total
+
+Example:
+
+Subtotal: 1200 SAR
+Discount (IELTS20): -240 SAR
+Total: 960 SAR
+
+Show success toast:
+"Discount applied successfully"
+
+------------------------------------
+
+6. Error Messages
+
+Return clear messages:
+
+- Code not found
+- Code expired
+- Usage limit reached
+- Already used
+- Not valid for this course
+- Only for new users
+
+------------------------------------
+
+7. Checkout Integration
+
+When user clicks:
+"Proceed to Checkout"
+
+Send:
+- cart items
+- applied discount code
+- discount amount
+
+Store discount in order before payment.
+
+------------------------------------
+
+8. Order Integration
+
+On successful payment:
+
+Insert into:
+discount_code_usages
+
+- discount_code_id
+- user_id
+- order_id
+- used_at
+
+Increase usage count.
+
+------------------------------------
+
+9. Admin Panel: Discount Codes
+
+Create page:
+Admin → Discount Codes
+
+Features:
+
+- Create code
+- Edit code
+- Disable / Enable code
+- Delete code
+
+Fields:
+- Code name
+- Discount type
+- Value
+- Scope
+- Course/package selector
+- Start date
+- End date
+- Never expires
+- Total usage limit
+- Usage per user
+- First purchase only
+- New users only
+- Active status
+
+------------------------------------
+
+10. Admin Table View
+
+Columns:
+- Code
+- Discount
+- Scope
+- Usage (current / limit)
+- Per-user limit
+- Start date
+- End date
+- Status
+- Actions (Edit / Disable)
+
+------------------------------------
+
+11. Security
+
+- Prevent reuse if limit reached
+- Prevent using same code multiple times if restricted
+- Validate again on checkout (not only cart)
+- Do NOT trust frontend validation
+
+------------------------------------
+
+12. UX Enhancements (optional but recommended)
+
+- Auto apply code from URL:
+  ?code=XXXX
+
+- Show applied code in cart clearly
+
+------------------------------------
+
+Start by building:
+- Database
+- Validation API
+- Cart integration
+
+Do NOT build everything at once.

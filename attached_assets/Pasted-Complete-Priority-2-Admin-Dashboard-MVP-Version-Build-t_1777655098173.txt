@@ -1,0 +1,86 @@
+Complete Priority 2 - Admin Dashboard (MVP Version).
+
+Build these sections in order:
+
+## SECTION 1: ADMIN OVERVIEW (Dashboard Home)
+Quick stats cards:
+- Total users (all time)
+- Active users (today, this week)
+- Total revenue (daily, monthly, all-time)
+- Conversion rate (signup → enrollment)
+- Enrollments breakdown (Advanced vs Complete)
+- Recent signups (last 5 users)
+
+Charts (basic):
+- Revenue trend (last 30 days)
+- Enrollment trend (last 30 days)
+
+## SECTION 2: USER MANAGEMENT
+- List all students
+- Search by email/name
+- Filter by status (active/inactive)
+- View student details:
+  * Email, name, phone
+  * Enrollment tier
+  * Enrollment date
+  * Last login
+  * Account status
+- Basic actions:
+  * Edit user info
+  * Delete user (with confirmation)
+  * View enrollment history
+
+## SECTION 3: ENROLLMENT MANAGEMENT
+- View all enrollments
+- Filter by course (IELTS / English)
+- Filter by tier
+- Filter by status (pending/active)
+- For each enrollment:
+  * Student name
+  * Course + tier
+  * Status (pending/active/expired)
+  * Enrollment date
+  * Actions: Approve/Reject/Delete
+
+## SECTION 4: FAQ MANAGEMENT
+- List all FAQs
+- Add new FAQ (modal form)
+  * Question field
+  * Answer field
+- Edit existing FAQ
+- Delete FAQ
+- Reorder FAQs (drag-drop or up/down buttons)
+
+## SECTION 5: COURSES MANAGEMENT
+- View both courses (IELTS, English)
+- For each course:
+  * Course name
+  * Description
+  * Number of enrollments
+  * List of tiers with enrollment counts
+- Edit course description
+
+## SECTION 6: COMMUNICATION (Basic)
+- Send email to all students (form)
+- Send email to specific course enrollees (form)
+- Simple email templates:
+  * Subject line field
+  * Body field
+  * Send button
+- Confirmation before sending
+
+## DESIGN
+- Clean, professional admin interface
+- Sidebar navigation
+- Responsive on desktop
+- Dark/light theme toggle (optional)
+- Mobile-friendly tabs
+
+## NAVIGATION
+- Sidebar with tabs: Overview, Users, Enrollments, FAQ, Courses, Communication
+- Breadcrumbs at top
+- Active tab highlighting
+
+Build this complete. No payment integration yet. Focus on full CRUD and data display.
+
+Start with Section 1 (Overview), then move through 2-6 in order.

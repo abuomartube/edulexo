@@ -1,0 +1,98 @@
+Start Phase 2 of MENTOR integration.
+
+Goal:
+Convert MENTOR from IELTS-focused content into General English practice for Lexo For English.
+
+Important:
+Do NOT delete the system.
+Do NOT remove the core tools.
+Do NOT break database, auth, tier gating, routes, or progress tracking.
+Only remove IELTS-specific content/copy/exercises and prepare the tools for General English.
+
+Tasks:
+
+1. Global cleanup
+- Search the Mentor codebase for IELTS-specific text, labels, prompts, exercises, examples, and categories.
+- Remove or replace IELTS wording with General English wording.
+- Keep the AI tool names:
+  - Churchill = Speaking practice
+  - Orwell = Writing/paragraph analysis
+  - Attenborough = Listening practice
+  - Hemingway = Reading practice
+
+2. Churchill Speaking
+- Remove IELTS speaking mode/copy/prompts.
+- Convert it to general English conversation practice.
+- Make it suitable for beginner adult learners.
+- Add simple free-conversation behavior:
+  - very easy questions
+  - short answers accepted
+  - supportive feedback
+  - no IELTS band scoring
+- Use CEFR levels instead of IELTS:
+  - A1 to B1
+  - B1+ to C1
+  - Full Package A1 to C1
+
+3. Orwell Writing
+- Remove IELTS writing task references.
+- Keep paragraph writing analysis.
+- Remove current IELTS assignments.
+- Prepare structure for new paragraph-based assignments.
+- Writing feedback should focus on:
+  - grammar
+  - vocabulary
+  - sentence structure
+  - paragraph organization
+  - clarity
+- No IELTS band score.
+
+4. Attenborough Listening
+- Remove all current IELTS listening exercises/content.
+- Keep the listening practice system.
+- Prepare it for new level-based listening exercises.
+- Use CEFR levels and package gating.
+
+5. Hemingway Reading
+- Remove all current IELTS reading exercises/content.
+- Keep the reading practice system.
+- Prepare it for new level-based reading exercises.
+- Use CEFR levels and package gating.
+
+6. Package/tier rules
+Create or align these 3 packages:
+- A1 to B1 package
+- B1+ to C1 package
+- Full Package A1 to C1
+
+Access rules:
+- A1 to B1 students can access only A1 to B1 content.
+- B1+ to C1 students can access only B1+ to C1 content.
+- Full Package students can access everything.
+- If a student clicks locked content, show a friendly locked message:
+  EN: "This content belongs to another package."
+  AR: "هذا المحتوى خاص بباقة أخرى."
+
+7. UI updates
+- Tool Choice Hub should reflect General English, not IELTS.
+- Replace IELTS labels with English learning labels.
+- Keep premium Lexo/EduLexo glassmorphism design.
+- Keep EN/AR bilingual support.
+- Keep locked states clear.
+
+8. Safety
+- Do not delete the lesson/progress system.
+- Do not delete tier gating.
+- Do not remove admin CRUD.
+- Do not remove authentication.
+- Do not break /tools or /tools/lessons.
+
+After:
+- Run typecheck.
+- Check logs.
+- Run code review.
+- Report:
+  - IELTS content removed
+  - files changed
+  - what remains as placeholder
+  - what is ready for adding new content

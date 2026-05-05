@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+.next
+.expo
+.expo-shared
+out-tsc
+coverage
+*.tsbuildinfo
+pnpm-lock.yaml
+.local
+.replit-artifact
+**/generated/**

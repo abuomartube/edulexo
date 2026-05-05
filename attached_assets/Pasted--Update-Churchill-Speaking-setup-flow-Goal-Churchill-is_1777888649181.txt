@@ -1,0 +1,99 @@
+انسخ له هذا:
+
+Update Churchill Speaking setup flow.
+Goal:
+Churchill is already a 1-to-1 AI conversation system. Now make the speaking practice organized by package, mode, level, and topic.
+Important:
+Do not rebuild the whole system.
+Do not add IELTS content.
+Do not use IELTS band scores.
+Do not change the lesson/progress system.
+Do not break package gating.
+Keep Churchill as General English conversation practice.
+User flow:
+1. Student opens Churchill Speaking.
+2. Student chooses practice mode:
+   - Text
+   - Voice
+3. After choosing the mode, show level options:
+   - A1
+   - A2
+   - B1
+   - B1+
+   - B2
+   - C1
+4. Lock levels based on package:
+   - A1 to B1 package: A1, A2, B1 only
+   - B1+ to C1 package: B1+, B2, C1 only
+   - Full Package A1 to C1: all levels
+5. After choosing level, show conversation type:
+   - Free conversation
+   - Topic-based conversation
+6. For topic-based conversation, show 30+ general English topics.
+7. Topics must be generated or organized based on the selected level.
+8. Then start the Churchill conversation.
+Conversation behavior:
+1. Churchill asks questions gradually based on the selected CEFR level.
+2. For A1/A2/B1:
+   - very simple questions
+   - short answers are accepted
+   - gentle correction
+   - beginner-friendly vocabulary
+3. For B1+/B2/C1:
+   - more advanced discussion
+   - deeper follow-up questions
+   - natural vocabulary improvement
+   - no exam language
+4. Churchill should keep the conversation going like a friendly English teacher.
+5. No IELTS language.
+6. No band scores.
+Voice mode:
+- If voice conversation is already implemented, keep it.
+- If not fully ready, show Voice Coming Soon but keep the option visible.
+- Do not break text mode.
+After conversation:
+Add a full conversation feedback report.
+Report should include:
+1. Overall summary
+2. Grammar mistakes
+3. Vocabulary suggestions
+4. Better natural expressions
+5. Fluency/naturalness comments
+6. Practical tips for improvement
+7. If voice mode is used and transcript exists, include voice-related feedback.
+8. If no voice transcript exists, show:
+   EN: "Voice feedback coming soon."
+   AR: "تقييم المحادثة الصوتية قريبًا."
+Backend:
+1. Use existing Churchill AI endpoint if available.
+2. If needed, extend it to accept:
+   - mode: text / voice
+   - level: A1 / A2 / B1 / B1+ / B2 / C1
+   - conversationType: free / topic
+   - topic: optional string
+3. Validate package access server-side:
+   - A1 to B1 package cannot use B1+, B2, C1
+   - B1+ to C1 package cannot use A1, A2, B1
+   - Full Package can use all
+4. Return 403 if level is outside the student package.
+5. AI prompt must generate questions and feedback based on selected level.
+6. Add timeout, validation, and rate limit if not already present.
+UI:
+1. Premium LEXO glassmorphism design.
+2. Clear step-by-step setup cards:
+   - Mode
+   - Level
+   - Conversation type/topic
+   - Start conversation
+3. Locked levels should show:
+   EN: "This level belongs to another package."
+   AR: "هذا المستوى خاص بباقة أخرى."
+4. EN/AR bilingual UI.
+5. Mobile-friendly.
+6. Loading/error states.
+After:
+- Run typecheck.
+- Add tests if practical.
+- Check logs.
+- Run code review.
+- Report exactly what changed.

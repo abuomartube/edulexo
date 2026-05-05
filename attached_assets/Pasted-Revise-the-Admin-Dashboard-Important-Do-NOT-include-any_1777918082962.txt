@@ -1,0 +1,233 @@
+Revise the Admin Dashboard.
+
+Important:
+Do NOT include anything related to lesson content management.
+The lesson programs are already installed.
+Any lesson changes will be handled separately by developer instructions.
+
+Focus only on platform management, course landing pages, cards, users, payments, chat, Zoom, and admin permissions.
+
+Admin Dashboard modules:
+
+1. Overview / Insights
+- Total students
+- Active students
+- New signups
+- Total enrollments
+- Revenue
+- Conversion rate
+- Course page views
+- Chat activity
+- Voice minutes
+- Daily challenge completions
+
+Important:
+Show insights as:
+- number cards
+- line charts
+- bar charts
+- donut charts
+- activity charts
+
+2. Course Landing Pages Management
+Admin can manage only the public informational/sales pages:
+- page title
+- subtitle
+- hero image
+- hero video link
+- intro video link
+- course description
+- benefits
+- target student
+- what students will learn
+- FAQ
+- CTA button text
+- CTA button link
+- publish / draft status
+
+3. Course Comments / Testimonials
+- approve
+- hide
+- delete
+- mark as featured
+- edit display order
+- assign testimonial to course page
+
+4. Lexo For English Cards
+Manage homepage/course cards:
+- A1 → B1
+- B1+ → C1
+- A1 → C1
+
+For each card:
+- title
+- level
+- description
+- image/icon
+- price
+- discount
+- badge
+- button text
+- button link
+- active / hidden
+- display order
+
+5. Lexo For IELTS Cards
+Manage:
+- Lexo for Intro
+- Lexo for Advanced
+- Lexo for All-in-one
+
+For each card:
+- title
+- target band / level
+- description
+- image/icon
+- price
+- discount
+- badge
+- button text
+- button link
+- active / hidden
+- display order
+
+6. Packages / Pricing
+- create package
+- edit package
+- hide package
+- set price
+- set discount
+- set installment text
+- set badge like Best Value
+- connect package to checkout/payment
+- assign package to English or IELTS
+
+7. Zoom Integration
+Admin can manually control Zoom links:
+- Zoom live class link
+- Zoom conversation class link
+- Zoom teacher session link
+- Zoom schedule text
+- meeting password
+- active / inactive
+- assign Zoom link to course/package
+- show/hide Zoom link for students
+
+8. Chat Management
+- view chat rooms
+- create room
+- edit room
+- hide room
+- set room level
+- set room type
+- set daily challenge
+- set room rules
+- English-only mode
+- pin message
+- broadcast message
+- delete inappropriate messages
+- view active users
+- view voice minutes
+- view challenge participation
+
+9. Users / Students
+- view all students
+- search students
+- filter by course/package/status
+- student profile
+- enrollment history
+- payment status
+- last login
+- platform activity
+- chat activity
+- voice minutes
+- activate / deactivate user
+- add internal admin notes
+
+10. Orders / Payments
+- view orders
+- payment status
+- paid / pending / failed
+- amount
+- package purchased
+- discount used
+- payment reference
+- refund status
+- export orders
+
+11. Coupons / Discounts
+- create coupon
+- discount percentage
+- expiry date
+- usage limit
+- assign to package/course card
+- active / inactive
+
+12. Notifications / Announcements
+- send announcement to all students
+- send to specific course/package students
+- platform notification
+- email placeholder
+- schedule announcement
+- notification history
+
+13. Support Requests
+- contact forms
+- student support tickets
+- status: open / replied / closed
+- admin notes
+- reply placeholder
+
+14. Admin Roles & Permissions
+Create admin role system:
+- Super Admin
+- Course Page Manager
+- Support Agent
+- Chat Moderator
+- Finance Manager
+
+Permissions:
+- control who can access each admin module
+- add admin
+- remove admin
+- edit admin role
+
+15. Settings
+- platform logo
+- brand colors
+- language settings
+- payment settings placeholder
+- notification settings
+- chat settings
+- maintenance mode
+
+16. Security / Logs
+- admin login history
+- admin actions log
+- deleted items log
+- payment logs
+- error logs placeholder
+
+Design:
+- Professional admin dashboard
+- Sidebar navigation
+- Top bar
+- Cards
+- Tables
+- Search and filters
+- Charts
+- Arabic RTL support
+- English support
+- Desktop-first responsive layout
+- EduLexo brand style
+
+Start only with:
+1. Admin layout
+2. Sidebar
+3. Overview with charts
+4. Course Landing Pages Management
+5. Lexo For English Cards
+6. Lexo For IELTS Cards
+7. Admin Roles & Permissions
+
+Do not build all modules at once.

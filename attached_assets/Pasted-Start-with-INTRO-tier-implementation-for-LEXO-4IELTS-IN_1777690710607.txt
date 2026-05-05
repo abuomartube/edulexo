@@ -1,0 +1,78 @@
+Start with INTRO tier implementation for LEXO-4IELTS.
+
+INTRO TIER: A2-B1 ONLY
+
+IMPORTANT: LEXO-4IELTS must be integrated into the main EduLexo dashboard.
+
+INTEGRATION FLOW:
+1. Student enrolls in LEXO for IELTS (Intro tier) on edulexo.com
+2. After payment, student is redirected to main dashboard (edulexo.com/dashboard)
+3. In the dashboard, show "LEXO for IELTS" card with "Launch" button
+4. When student clicks "Launch" → opens LEXO-4IELTS app
+5. LEXO pulls student data (name, tier, exam date) from edulexo database
+6. Show onboarding (name, plan, exam date)
+7. Student can study with Intro tier restrictions
+
+TASK: Lock down Intro tier enforcement in LEXO app
+
+1. IDENTIFY INTRO TIER CONTENT
+   - Find all A2 level content (flashcards, quizzes, stories, etc)
+   - Find all B1 level content
+   - Tag/mark them as "INTRO_ENABLED"
+
+2. DISABLE B2 AND C1 CONTENT FOR INTRO USERS
+   - When Intro user clicks B2 or C1 level:
+     └─ Show disabled state
+     └─ Show message: "هذا مخصص للمتقدم والشاملة"
+                      (This is for Advanced and Comprehensive tiers)
+   
+   Apply to:
+   ├─ Study Mode (flashcards)
+   ├─ Quiz Mode
+   ├─ Listening Tests
+   ├─ Reading Tests
+   ├─ Short Stories
+   └─ Browse Cards
+
+3. KEEP ENABLED FOR INTRO
+   - Grammar (all)
+   - Churchill AI (all)
+   - Orwell AI (all)
+   - Writing Templates (all)
+   - Topic Bank (all)
+   - Mock Tests (all)
+   - Progress Tracking (all)
+   - My Plan (all)
+   - Weak Words (all levels A2-B1)
+
+4. ONBOARDING FLOW FOR INTRO USERS
+   - When user enters LEXO after payment:
+     ├─ Show onboarding modal
+     ├─ Ask: "What's your name?"
+     ├─ Ask: "Choose your plan" (show selected plan)
+     ├─ Ask: "When will you take your exam?"
+     └─ Analyze and generate personalized study plan
+
+5. FRONTEND ENFORCEMENT
+   - Add tier check on each module load
+   - Disable B2/C1 buttons/links
+   - Show restriction message
+   - Prevent navigation to restricted content
+
+6. BACKEND PERSISTENCE
+   - Pull user tier from edulexo database
+   - Validate tier on API calls
+   - Prevent API access to restricted content
+
+TESTING:
+- Create test Intro user on edulexo.com
+- Complete payment
+- Verify LEXO card appears in dashboard
+- Launch LEXO
+- Verify onboarding flow works
+- Try accessing B2 content → should be disabled
+- Try accessing B1 content → should work
+- Verify Weak Words works for all levels
+- Verify message displays correctly (AR + EN)
+
+Build Intro tier enforcement integrated with EduLexo dashboard now.

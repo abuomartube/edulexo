@@ -1,0 +1,74 @@
+Move to Priority 4 - Course Certificates System.
+
+## COURSE CERTIFICATES (Priority 4)
+
+Build certificate generation system for course completion:
+
+### 1. CERTIFICATE GENERATION TRIGGER
+- Trigger: When student completes a course/tier
+- Automatically generate PDF certificate
+
+### 2. CERTIFICATE CONTENT
+Each certificate shows:
+- Student name (from database)
+- Course name (IELTS or English)
+- Tier completed (Advanced, Complete, etc.)
+- Completion date
+- Certificate ID (unique, sequential)
+- Abu Omar signature (or text: "Instructor: Abu Omar")
+- EduLexo logo
+- Professional border/design
+
+### 3. CERTIFICATE DESIGN
+- Professional layout (A4 size)
+- EduLexo branding (colors: purple/teal for IELTS, violet for English)
+- Arabic + English text support
+- Download-ready PDF quality
+
+### 4. STUDENT ACCESS
+- Certificate appears in dashboard after course completion
+- "Download Certificate" button
+- Shows certificate preview (optional)
+- Share option (optional)
+
+### 5. DATABASE
+- certificates table:
+  * id, user_id, course_id, tier_id, certificate_id, completion_date, pdf_url, created_at
+
+### 6. ADMIN FEATURES
+- View all issued certificates
+- Search by student/course
+- Download certificate (verification)
+- Certificate log (issued certificates)
+
+### 7. CERTIFICATE ID FORMAT
+Example: EDULEXO-2024-001234
+- Unique identifier
+- Date component
+- Sequential number
+
+### 8. VERIFICATION
+- PDF generation works
+- Certificate stores in database
+- Admin can view all certificates
+- Student can download from dashboard
+- Design is professional
+- Both EN/AR text renders correctly
+
+### BILINGUAL SUPPORT
+- Certificate text in both English and Arabic
+- Dynamic based on course language
+- Professional Arabic typography
+
+### TECHNICAL
+- PDF library: Use existing (pdfkit or similar)
+- No external API calls needed
+- Generate on-demand
+- Store reference in database
+
+### STUB MODE
+- For now: Generate simple PDF
+- Later: Enhanced design with custom fonts/images
+- Architecture supports adding templates
+
+Build complete certificate system now.

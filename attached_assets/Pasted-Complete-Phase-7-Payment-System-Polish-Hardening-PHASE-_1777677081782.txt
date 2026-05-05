@@ -1,0 +1,81 @@
+Complete Phase 7 - Payment System Polish & Hardening.
+
+## PHASE 7a - HARDENING (Security)
+
+1. Content-length validation on uploads
+2. Antivirus/MIME sniffing on proofs
+3. Rate-limit upload-URL minting per user
+4. Prevent duplicate submissions
+
+## PHASE 7b - ADMIN UX (Email Notifications)
+
+1. Auto-email student on Verify:
+   - Subject: "Payment Verified ✅"
+   - Body: "Your enrollment is now active. Access course here: [link]"
+   - Include: Course name, access date
+
+2. Auto-email student on Reject:
+   - Subject: "Payment Rejected ❌"
+   - Body: "Your payment proof was rejected. Reason: [admin reason]"
+   - Include: Re-upload link
+
+3. Audit log:
+   - Who verified/rejected
+   - When
+   - Reason (for rejects)
+
+## PHASE 7c - STUDENT UX (Payments Page)
+
+1. New "My Payments" page (/payments or in dashboard)
+2. Show all student's payments:
+   ├─ Course name + tier
+   ├─ Amount: 150 SAR
+   ├─ Payment method (Tabby/Tamara/Bank)
+   ├─ Status (completed/pending/rejected)
+   ├─ Date
+   └─ For Bank transfers only:
+      ├─ "Status: Pending Verification"
+      ├─ Button: "Re-upload Proof" (if rejected)
+      └─ Show rejection reason (if any)
+
+3. If bank transfer rejected:
+   - Allow student to re-submit new proof
+   - Clear upload history after new submission
+
+## PHASE 7d - REPORTING (Revenue Export)
+
+1. Admin → Reports tab
+2. Monthly revenue export (CSV):
+   ├─ Date range selector
+   ├─ Breakdown by payment method:
+   │  ├─ Tabby: X transactions, Y revenue
+   │  ├─ Tamara: X transactions, Y revenue
+   │  └─ Bank Transfer: X transactions, Y revenue
+   ├─ Columns:
+   │  ├─ Date
+   │  ├─ Student name
+   │  ├─ Course
+   │  ├─ Amount (150 SAR)
+   │  ├─ Payment method
+   │  └─ Status
+   └─ Export button: Download CSV
+
+## DATABASE
+
+Audit log for bank transfers:
+- id, payment_id, admin_id, action (verify/reject), reason, timestamp
+
+Student payments view should query:
+- All payments for logged-in user
+- Include rejection reasons for bank transfers
+
+## TESTING
+
+- E2E: Student receives email on verify
+- E2E: Student receives email on reject with reason
+- E2E: Student can re-upload proof if rejected
+- E2E: Admin can export monthly revenue
+- Security: Upload rate-limit enforced
+- Security: No IDOR on payment views
+
+Build Phase 7 complete now.

@@ -7,6 +7,7 @@ import {
   usersTable,
   englishEnrollmentsTable,
   englishAccessCodesTable,
+  englishLessonProgressTable,
   ENGLISH_TIER_VALUES,
   type EnglishTier,
 } from "@workspace/db";
@@ -59,6 +60,94 @@ function generateCode(): string {
 }
 
 // ----- Student endpoints -----
+
+const StudyTimeQuery = z.object({
+  range: z.enum(["week", "month"]).optional().default("week"),
+});
+
+// GET /english/me/study-time?range=week|month
+//
+// Aggregates `english_lesson_progress.watchedSeconds` for the current
+// student into a single total + a per-day breakdown across the requested
+// window (default: last 7 days, inclusive of today).
+//
+// IMPORTANT — daily breakdown is an approximation. The progress table
+// stores a single cumulative `watchedSeconds` per (user, lesson) plus a
+// single `updatedAt` (last write). We have no per-watch-event log, so a
+// lesson's full cumulative time is attributed to the date of its most
+// recent update. This is the best signal available without a new table.
+router.get("/english/me/study-time", requireAuth, async (req, res, next) => {
+  try {
+    const parsed = StudyTimeQuery.safeParse(req.query);
+    if (!parsed.success) {
+      res.status(400).json({ error: "Invalid range" });
+      return;
+    }
+    const userId = req.session.userId!;
+    const days = parsed.data.range === "month" ? 30 : 7;
+
+    // Build the inclusive [startOfDay(today - days+1), now] window in UTC.
+    // Days in the response are UTC calendar dates (YYYY-MM-DD).
+    const now = new Date();
+    const startUtc = new Date(
+      Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - (days - 1),
+      ),
+    );
+
+    // Sum cumulative watchedSeconds per UTC day of last update,
+    // restricted to rows updated within the window.
+    const rows = await db
+      .select({
+        day: sql<string>`to_char(${englishLessonProgressTable.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
+        seconds: sql<number>`COALESCE(SUM(${englishLessonProgressTable.watchedSeconds}), 0)::int`,
+      })
+      .from(englishLessonProgressTable)
+      .where(
+        and(
+          eq(englishLessonProgressTable.userId, userId),
+          sql`${englishLessonProgressTable.updatedAt} >= ${startUtc}`,
+        ),
+      )
+      .groupBy(
+        sql`to_char(${englishLessonProgressTable.updatedAt} AT TIME ZONE 'UTC', 'YYYY-MM-DD')`,
+      );
+
+    const byDay = new Map<string, number>();
+    let totalSeconds = 0;
+    for (const r of rows) {
+      const s = Number(r.seconds) || 0;
+      byDay.set(r.day, s);
+      totalSeconds += s;
+    }
+
+    const dailyBreakdown: { date: string; minutes: number }[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(
+        Date.UTC(
+          startUtc.getUTCFullYear(),
+          startUtc.getUTCMonth(),
+          startUtc.getUTCDate() + i,
+        ),
+      );
+      const key = d.toISOString().slice(0, 10);
+      const seconds = byDay.get(key) ?? 0;
+      dailyBreakdown.push({ date: key, minutes: Math.round(seconds / 60) });
+    }
+
+    // Total minutes is computed from raw total seconds (one rounding step),
+    // NOT from the sum of already-rounded per-day buckets — the latter can
+    // drift significantly when many days have small (sub-minute) values.
+    const totalMinutes = Math.round(totalSeconds / 60);
+
+    res.set("Cache-Control", "no-store");
+    res.json({ totalMinutes, dailyBreakdown });
+  } catch (err) {
+    next(err);
+  }
+});
 
 router.get("/english/me", requireAuth, async (req, res, next) => {
   try {

@@ -44,8 +44,8 @@ function isEmbeddedRequest(): boolean {
 function redirectTargetFor(path: string): string {
   if (path.startsWith("/package/")) return "/english";
   const toolSlug = TOOL_PATH_TO_DASHBOARD_SLUG[path];
-  if (toolSlug) return `/dashboard/lexo/${toolSlug}`;
-  if (path === "/tools" || path.startsWith("/tools/")) return "/dashboard/lexo";
+  if (toolSlug) return `/dashboard/english/${toolSlug}`;
+  if (path === "/tools" || path.startsWith("/tools/")) return "/dashboard/english";
   return "/dashboard";
 }
 
@@ -141,7 +141,7 @@ function Shell() {
                 onBack={() => navigate("/")}
                 onNavigate={(id) => {
                   if (id === "flashcards") {
-                    window.open("/dashboard/lexo/flashcards", "_blank", "noopener,noreferrer");
+                    window.open("/dashboard/english/flashcards", "_blank", "noopener,noreferrer");
                   } else {
                     navigate(`/tools/${id}`);
                   }

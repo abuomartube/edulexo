@@ -39,7 +39,7 @@ export default function LexoTool() {
             {isAr ? "أداة غير معروفة" : "Unknown tool"}
           </h1>
           <Link
-            href="/dashboard/lexo"
+            href="/dashboard/english"
             className="mt-4 inline-block text-indigo-700 dark:text-indigo-300 hover:underline"
           >
             {isAr ? "العودة إلى أدوات ليكسو" : "Back to Lexo tools"}
@@ -58,7 +58,7 @@ export default function LexoTool() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <div className="flex items-center justify-between gap-4 mb-4">
           <Link
-            href="/dashboard/lexo"
+            href="/dashboard/english"
             className="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-300"
             data-testid="link-back-lexo-hub"
           >

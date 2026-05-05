@@ -113,7 +113,7 @@ export default function LexoHub() {
           {TOOLS.map((tool) => (
             <Link
               key={tool.slug}
-              href={`/dashboard/lexo/${tool.slug}`}
+              href={`/dashboard/english/${tool.slug}`}
               data-testid={`card-lexo-tool-${tool.slug}`}
               className="group bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-2xl p-5 ring-1 ring-slate-200/70 dark:ring-gray-800 shadow hover:shadow-lg transition flex items-start gap-4"
             >

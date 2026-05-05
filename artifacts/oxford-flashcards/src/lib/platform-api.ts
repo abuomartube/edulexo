@@ -603,9 +603,24 @@ export async function redeemEnglishCode(
   return data.enrollment;
 }
 
-// English tools live inside the EduLexo dashboard hub; the standalone /lexo
-// landing was removed in phase 2 and now redirects here.
-export const ENGLISH_APP_URL = "/dashboard/lexo";
+// English tools live inside the EduLexo dashboard hub at the English-scoped
+// path /dashboard/english. The standalone /lexo landing was removed in
+// phase 2 and now redirects here. Phase-2 L5 renamed the path from
+// /dashboard/lexo to /dashboard/english to make English-only scope explicit.
+export const ENGLISH_APP_URL = "/dashboard/english";
+
+/**
+ * Returns true if the user has at least one currently-active English
+ * enrollment (status !== "revoked" AND isActive === true). Used as the gate
+ * for the /dashboard/english Lexo Tools dashboard. Strict semantics: expired
+ * enrollments do NOT grant access.
+ */
+export function hasActiveEnglishAccess(
+  enrollments: EnglishEnrollment[] | undefined | null,
+): boolean {
+  if (!enrollments) return false;
+  return enrollments.some((e) => e.status !== "revoked" && e.isActive);
+}
 
 export const ENGLISH_TIER_LABELS: Record<
   EnglishTier,

@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  Flame,
   Layers,
   Lock,
   PlayCircle,
@@ -20,6 +21,7 @@ import { useLanguage } from "@/lib/i18n";
 import {
   ENGLISH_TIER_LABELS,
   fetchEnglishLessons,
+  fetchEnglishStreak,
   fetchEnglishStudyTime,
   fetchMyEnglishEnrollments,
   hasActiveEnglishAccess,
@@ -83,6 +85,17 @@ export default function LexoHub() {
     retry: 1,
   });
   const studyMinutes = studyTimeQuery.data?.totalMinutes ?? 0;
+
+  // Daily Streak. On error/missing data we fall back to zeros so the card
+  // always renders (matches the Study Time fallback contract).
+  const streakQuery = useQuery({
+    queryKey: ["english-streak"],
+    queryFn: fetchEnglishStreak,
+    retry: 1,
+  });
+  const currentStreak = streakQuery.data?.currentStreak ?? 0;
+  const longestStreak = streakQuery.data?.longestStreak ?? 0;
+  const todayActive = streakQuery.data?.todayActive ?? false;
 
   const enrollments = enrollmentsQuery.data ?? [];
   const hasAccess = isAdmin || hasActiveEnglishAccess(enrollments);
@@ -210,7 +223,7 @@ export default function LexoHub() {
         )}
 
         {/* ── Stats row ──────────────────────────────────────────── */}
-        <section className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard
             icon={<CheckCircle2 size={20} />}
             tone="from-emerald-500 to-teal-600"
@@ -296,6 +309,26 @@ export default function LexoHub() {
                   : "Last 7 days"
             }
             testId="stat-study-time"
+          />
+          <StatCard
+            icon={<Flame size={20} />}
+            tone="from-orange-500 to-red-600"
+            label={isAr ? "السلسلة اليومية" : "Daily streak"}
+            value={
+              streakQuery.isLoading
+                ? "…"
+                : isAr
+                  ? `${currentStreak} يوم`
+                  : `${currentStreak} ${currentStreak === 1 ? "day" : "days"}`
+            }
+            note={
+              streakQuery.isLoading
+                ? ""
+                : isAr
+                  ? `الأطول: ${longestStreak} · ${todayActive ? "نشِط اليوم" : "تابع اليوم"}`
+                  : `Best: ${longestStreak} · ${todayActive ? "Active today" : "Resume today"}`
+            }
+            testId="stat-streak"
           />
         </section>
 

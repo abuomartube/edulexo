@@ -18,3 +18,9 @@ id = "y9tqisL_18RaCyI-w6MEE"
 uri = "file://screenshots/arabic-font-samples-6-7.jpeg"
 type = "image"
 title = "Arabic font samples — 6 & 7 (El Messiri, Noto Kufi Arabic)"
+
+[[outputs]]
+id = "-rxPje1vyFm-_GjGtlNv-"
+uri = "file://artifacts/oxford-flashcards/DATA_INTEGRATION_AUDIT.md"
+type = "text"
+title = "Data Integration Audit"

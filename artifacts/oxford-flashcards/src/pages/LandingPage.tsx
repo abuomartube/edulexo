@@ -185,7 +185,7 @@ export default function LandingPage() {
 
               <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                 <a
-                  href="/lexo/"
+                  href="/dashboard"
                   data-testid="link-hero-open-english"
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-700 text-white font-bold shadow-lg shadow-violet-500/30 hover:shadow-xl hover:shadow-violet-500/40 hover:scale-[1.03] active:scale-95 transition"
                 >
@@ -494,7 +494,7 @@ export default function LandingPage() {
               {t("english.cta.subtitle")}
             </p>
             <a
-              href="/lexo/"
+              href="/dashboard"
               data-testid="link-final-cta-english"
               className="mt-7 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white text-violet-700 font-bold shadow-xl hover:scale-105 active:scale-95 transition"
             >

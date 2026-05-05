@@ -603,8 +603,9 @@ export async function redeemEnglishCode(
   return data.enrollment;
 }
 
-// English uses the shared session cookie — no SSO needed; just navigate.
-export const ENGLISH_APP_URL = "/lexo/";
+// English tools live inside the EduLexo dashboard hub; the standalone /lexo
+// landing was removed in phase 2 and now redirects here.
+export const ENGLISH_APP_URL = "/dashboard/lexo";
 
 export const ENGLISH_TIER_LABELS: Record<
   EnglishTier,

@@ -680,6 +680,22 @@ export async function fetchEnglishStudyTime(
   return jsonOrThrow<EnglishStudyTimeResponse>(res);
 }
 
+export interface EnglishStreakResponse {
+  currentStreak: number;
+  longestStreak: number;
+  todayActive: boolean;
+  lastActiveDate: string | null;
+}
+
+export async function fetchEnglishStreak(): Promise<EnglishStreakResponse> {
+  const res = await fetch(`/api/english/me/streak`, {
+    ...init,
+    method: "GET",
+    cache: "no-store",
+  });
+  return jsonOrThrow<EnglishStreakResponse>(res);
+}
+
 // ─────────────────────────── Certificates ───────────────────────────
 
 export type CertificateCourse = "intro" | "english";

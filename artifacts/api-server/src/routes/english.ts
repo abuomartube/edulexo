@@ -8,6 +8,7 @@ import {
   englishEnrollmentsTable,
   englishAccessCodesTable,
   englishLessonProgressTable,
+  englishLessonCompletionsTable,
   ENGLISH_TIER_VALUES,
   type EnglishTier,
 } from "@workspace/db";
@@ -144,6 +145,103 @@ router.get("/english/me/study-time", requireAuth, async (req, res, next) => {
 
     res.set("Cache-Control", "no-store");
     res.json({ totalMinutes, dailyBreakdown });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// GET /english/me/streak
+//
+// Daily-activity streak for the current student, derived from the only
+// per-day signals we have today: english_lesson_progress.updatedAt and
+// english_lesson_completions.completedAt. No new table, no migrations.
+//
+// Day boundary is UTC. Lookback is 400 days (covers the longest plausible
+// streak; anything older is trimmed). Returns:
+//   - currentStreak:  consecutive UTC days ending today (or yesterday if
+//                     the student hasn't done anything yet today). 0 when
+//                     the most recent activity is older than yesterday.
+//   - longestStreak:  longest run of consecutive active days seen in the
+//                     400-day window.
+//   - todayActive:    true iff there's activity on today's UTC date.
+//   - lastActiveDate: most recent active UTC date as YYYY-MM-DD, or null.
+router.get("/english/me/streak", requireAuth, async (req, res, next) => {
+  try {
+    const userId = req.session.userId!;
+
+    // Distinct UTC days the user had any English lesson activity in the
+    // last ~400 days, ordered newest first. Single round-trip via UNION.
+    const rows = await db.execute<{ day: string }>(sql`
+      SELECT DISTINCT day FROM (
+        SELECT (${englishLessonProgressTable.updatedAt} AT TIME ZONE 'UTC')::date AS day
+        FROM ${englishLessonProgressTable}
+        WHERE ${englishLessonProgressTable.userId} = ${userId}
+          AND ${englishLessonProgressTable.updatedAt} >= now() - interval '400 days'
+        UNION
+        SELECT (${englishLessonCompletionsTable.completedAt} AT TIME ZONE 'UTC')::date AS day
+        FROM ${englishLessonCompletionsTable}
+        WHERE ${englishLessonCompletionsTable.userId} = ${userId}
+          AND ${englishLessonCompletionsTable.completedAt} >= now() - interval '400 days'
+      ) d
+      ORDER BY day DESC
+    `);
+
+    // pg returns DATE as a "YYYY-MM-DD" string under node-postgres' default
+    // type parser config in this project. Normalize defensively.
+    const days: string[] = [];
+    for (const r of rows.rows ?? []) {
+      const v = (r as { day: unknown }).day;
+      const s =
+        v instanceof Date
+          ? v.toISOString().slice(0, 10)
+          : typeof v === "string"
+            ? v.slice(0, 10)
+            : null;
+      if (s) days.push(s);
+    }
+
+    const todayUtc = new Date().toISOString().slice(0, 10);
+    const yesterdayUtc = new Date(Date.now() - 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    const lastActiveDate = days[0] ?? null;
+    const todayActive = lastActiveDate === todayUtc;
+
+    // Current streak: walk consecutive days backward from today (or
+    // yesterday — grace so the streak doesn't appear "broken" until a
+    // full day is missed). Stop at the first gap.
+    let currentStreak = 0;
+    if (lastActiveDate === todayUtc || lastActiveDate === yesterdayUtc) {
+      const set = new Set(days);
+      let cursor = new Date(`${lastActiveDate}T00:00:00Z`);
+      while (set.has(cursor.toISOString().slice(0, 10))) {
+        currentStreak += 1;
+        cursor = new Date(cursor.getTime() - 86_400_000);
+      }
+    }
+
+    // Longest streak across the window: scan ascending and track the
+    // longest run of consecutive dates.
+    let longestStreak = 0;
+    if (days.length > 0) {
+      const asc = [...days].reverse();
+      let run = 1;
+      longestStreak = 1;
+      for (let i = 1; i < asc.length; i++) {
+        const prev = new Date(`${asc[i - 1]}T00:00:00Z`).getTime();
+        const cur = new Date(`${asc[i]}T00:00:00Z`).getTime();
+        if (cur - prev === 86_400_000) {
+          run += 1;
+          if (run > longestStreak) longestStreak = run;
+        } else {
+          run = 1;
+        }
+      }
+    }
+
+    res.set("Cache-Control", "no-store");
+    res.json({ currentStreak, longestStreak, todayActive, lastActiveDate });
   } catch (err) {
     next(err);
   }
